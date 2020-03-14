@@ -1,0 +1,137 @@
+﻿The following portions of the YDLIDAR’s YDlidar SDK (“Software” referred to in the terms below) are made available to you under the terms of the MIT License provided below.  
+
+YDLidar-SDK
+├── cmake
+│   ├── cmake_uninstall.cmake.in
+│   ├── common
+│   │   ├── ydlidar_base.cmake
+│   │   └── ydlidar_parse.cmake
+│   ├── FindPackage.cmake.in
+│   ├── install_package.cmake
+│   ├── PackageConfig.cmake.in
+│   ├── PackageConfigVersion.cmake.in
+│   └── PkgConfig.pc.in
+├── CMakeLists.txt
+├── core
+│   ├── base
+│   │   ├── CMakeLists.txt
+│   │   ├── datatype.h
+│   │   ├── locker.h
+│   │   ├── thread.h
+│   │   ├── timer.cpp
+│   │   ├── timer.h
+│   │   ├── typedef.h
+│   │   ├── utils.h
+│   │   ├── v8stdint.h
+│   │   └── ydlidar.h
+│   ├── CMakeLists.txt
+│   ├── common
+│   │   ├── ChannelDevice.h
+│   │   ├── CMakeLists.txt
+│   │   ├── DriverInterface.h
+│   │   ├── ydlidar_datatype.h
+│   │   ├── ydlidar_def.cpp
+│   │   ├── ydlidar_def.h
+│   │   ├── ydlidar_help.h
+│   │   └── ydlidar_protocol.h
+│   ├── math
+│   │   ├── angles.h
+│   │   └── CMakeLists.txt
+│   ├── network
+│   │   ├── ActiveSocket.cpp
+│   │   ├── ActiveSocket.h
+│   │   ├── CMakeLists.txt
+│   │   ├── PassiveSocket.cpp
+│   │   ├── PassiveSocket.h
+│   │   ├── SimpleSocket.cpp
+│   │   ├── SimpleSocket.h
+│   │   └── StatTimer.h
+│   └── serial
+│       ├── CMakeLists.txt
+│       ├── common.h
+│       ├── impl
+│       │   ├── CMakeLists.txt
+│       │   ├── unix
+│       │   │   ├── CMakeLists.txt
+│       │   │   ├── list_ports_linux.cpp
+│       │   │   ├── lock.c
+│       │   │   ├── lock.h
+│       │   │   ├── unix.h
+│       │   │   ├── unix_serial.cpp
+│       │   │   └── unix_serial.h
+│       │   └── windows
+│       │       ├── CMakeLists.txt
+│       │       ├── list_ports_win.cpp
+│       │       ├── win.h
+│       │       ├── win_serial.cpp
+│       │       └── win_serial.h
+│       ├── serial.cpp
+│       └── serial.h
+├── csharp
+│   ├── CMakeLists.txt
+│   ├── examples
+│   │   └── CMakeLists.txt
+│   └── ydlidar_sdk.i
+├── LICENSE.txt
+├── python
+│   ├── CMakeLists.txt
+│   ├── examples
+│   │   ├── CMakeLists.txt
+│   │   ├── etlidar_test.py
+│   │   ├── plot_tof_test.py
+│   │   ├── plot_ydlidar_test.py
+│   │   ├── test.py
+│   │   ├── tof_test.py
+│   │   └── ydlidar_test.py
+│   ├── numpy.i
+│   ├── test
+│   │   └── pytest.py
+│   ├── ydlidar_numpy.i
+│   └── ydlidar_sdk.i
+├── README.md
+├── samples
+│   ├── CMakeLists.txt
+│   ├── etlidar_test.cpp
+│   ├── lidar_c_api_test.c
+│   ├── tof_test.cpp
+│   └── ydlidar_test.cpp
+├── setup.py
+├── src
+│   ├── CMakeLists.txt
+│   ├── CYdLidar.cpp
+│   ├── CYdLidar.h
+│   ├── ETLidarDriver.cpp
+│   ├── ETLidarDriver.h
+│   ├── ydlidar_driver.cpp
+│   ├── ydlidar_driver.h
+│   ├── ydlidar_sdk.cpp
+│   └── ydlidar_sdk.h
+├── startup
+│   └── initenv.sh
+└── ydlidar_config.h.in
+
+
+
+
+-------------------------------------------------------------
+The MIT License (MIT)
+
+Copyright (c) 2019-2020 EAIBOT. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
