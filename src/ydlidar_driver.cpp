@@ -1372,7 +1372,7 @@ result_t YDlidarDriver::getDeviceInfo(device_info &info, uint32_t timeout) {
       return RESULT_FAIL;
     }
 
-    if (response_header.size < sizeof(lidar_ans_header)) {
+    if (response_header.size < sizeof(device_info)) {
       return RESULT_FAIL;
     }
 
