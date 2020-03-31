@@ -71,6 +71,8 @@
 <tr><th> G4B       <td> 17	   <td>  512000   <td>   10           <td>  0.12~16         <td> 5~12        	<td> true(10)       <td> false    	  <td> 4.8~5.2
 <tr><th> G4C       <td> 18	   <td>  115200   <td>   4            <td>  0.1~12		    <td> 5~12           <td> false          <td> false    	  <td> 4.8~5.2
 <tr><th> G1        <td> 19	   <td>  230400   <td>   9            <td>  0.28~16         <td> 5~12      	    <td> false          <td> false    	  <td> 4.8~5.2
+<tr><th> G5        <td> 20	   <td>  230400   <td>   9/8/4        <td>  0.28/0.26/0.1~16<td> 5~12        	<td> false          <td> false    	  <td> 4.8~5.2
+<tr><th> G7        <td> 21         <td>  512000   <td>   18/16/8      <td>  0.28/0.26/0.1~25<td> 5~12        	<td> false          <td> false    	  <td> 4.8~5.2
 <tr><th> TX8    　 <td> 100	   <td>  115200   <td>   4            <td>  0.05~8      	<td> 4~8(PWM)       <td> false          <td> true      	  <td> 4.8~5.2
 <tr><th> TX20    　<td> 100	   <td>  115200   <td>   4            <td>  0.05~20      	<td> 4~8(PWM)       <td> false          <td> true     	  <td> 4.8~5.2
 <tr><th> TG15    　<td> 100	   <td>  512000   <td>   20/18/10     <td>  0.05~30      	<td> 3~16      	    <td> false          <td> false    	  <td> 4.8~5.2
@@ -81,7 +83,7 @@
  */
 
 /**
- * @par example: G4 LiDAR
+ * @par example: G4/G5 LiDAR
  * @code
   ///< Defining an CYdLidar instance.
   CYdLidar laser;
@@ -483,9 +485,9 @@
  * Set the sampling rate to match the LiDAR.
  * @remarks unit: kHz/s, Ranges: 2,3,4,5,6,8,9,10,16,18,20\n
  <table>
-      <tr><th>G4/F4               <td>4,8,9
+      <tr><th>G4/G5/F4            <td>4,8,9
       <tr><th>F4PRO               <td>4,6
-      <tr><th>G6                  <td>8,16,18
+      <tr><th>G6/G7               <td>8,16,18
       <tr><th>G4B                 <td>10
       <tr><th>G1                  <td>9
       <tr><th>G2A/G2/R2/X4        <td>5
@@ -507,8 +509,8 @@
  * @remarks unit: Hz\n
  <table>
       <tr><th>S2/X2/X2L/TX8/TX20              <td>4~8(PWM)
-      <tr><th>F4/F4PRO/G4/G4PRO/R2            <td>5~12
-      <tr><th>G6/G2A/G2/G2C/G4B/G4C/G1        <td>5~12
+      <tr><th>F4/F4PRO/G4/G5/G4PRO/R2         <td>5~12
+      <tr><th>G6/G7/G2A/G2/G2C/G4B/G4C/G1     <td>5~12
       <tr><th>S4/S4B/X4                       <td>5~12(PWM)
       <tr><th>TG15/TG30/TG50                  <td>3~16
       <tr><th>T5/T15                          <td>5~40
@@ -541,7 +543,7 @@
  <table>
       <tr><th>LiDAR                           <th>reversion
       <tr><th>G1/G2/G2A/G2C/F4/F4PRO/R2       <td>true
-      <tr><th>G4/G4PRO/G4B/G4C/G6             <td>true
+      <tr><th>G4/G5/G4PRO/G4B/G4C/G6/G7       <td>true
       <tr><th>TG15/TG30/TG50                  <td>true
       <tr><th>T5/T15                          <td>true
       <tr><th>S2/X2/X2L/X4/S4/S4B             <td>false
@@ -578,9 +580,9 @@
      <tr><th>F4/S2/X2/X2L/S4/TX8/TX20/G4C        <td>115200
      <tr><th>X4                                  <td>128000
      <tr><th>S4B                                 <td>153600
-     <tr><th>G1/G2/R2/G4/G4PRO/F4PRO             <td>230400
+     <tr><th>G1/G2/R2/G4/G5/G4PRO/F4PRO          <td>230400
      <tr><th>G2A/G2C                             <td>230400
-     <tr><th>G6/G4B/TG15/TG30/TG50               <td>512000
+     <tr><th>G6/G7/G4B/TG15/TG30/TG50            <td>512000
      <tr><th>T5/T15(network)                     <td>8000
  </table>
 * @see CYdLidar::lidarSetProp and CYdLidar::lidarGetProp
@@ -633,7 +635,7 @@
  * @remarks
  <table>
       <tr><th>G1/G2/G2A/G2C                          <td>false
-      <tr><th>G4/G4B/G4PRO/G6/F4/F4PRO               <td>false
+      <tr><th>G4/G5/G4B/G4PRO/G6/G7/F4/F4PRO         <td>false
       <tr><th>S4/S4B/X4/R2/G4C                       <td>false
       <tr><th>S2/X2/X2L                              <td>true
       <tr><th>TG15/TG30/TG50                         <td>false
@@ -652,8 +654,8 @@
 * @remarks
 <table>
      <tr><th>G1/G2A/G2/G2C                    <td>[TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE)
-     <tr><th>G4/G4B/G4C/G4PRO                 <td>[TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE)
-     <tr><th>G6/F4/F4PRO                      <td>[TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE)
+     <tr><th>G4/G5/G4B/G4C/G4PRO              <td>[TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE)
+     <tr><th>G6/G7/F4/F4PRO                   <td>[TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE)
      <tr><th>S4/S4B/X4/R2/S2/X2/X2L           <td>[TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE)
      <tr><th>TG15/TG30/TG50/TX8/TX20          <td>[TYPE_TOF](\ref LidarTypeID::TYPE_TOF)
      <tr><th>T5/T15                           <td>[TYPE_TOF_NET](\ref LidarTypeID::TYPE_TOF_NET)
@@ -672,7 +674,7 @@
  * @remarks
  <table>
       <tr><th>S4B/G2/G4B                             <td>true
-      <tr><th>G4/G4C/G4PRO/F4/F4PRO/G6               <td>false
+      <tr><th>G4/G5/G4C/G4PRO/F4/F4PRO/G6/G7         <td>false
       <tr><th>G1/G2A/G2C/R2                          <td>false
       <tr><th>S2/X2/X2L/X4                           <td>false
       <tr><th>TG15/TG30/TG50                         <td>false
@@ -707,7 +709,7 @@
  <table>
       <tr><th>S4/S4B/S2/X2/X2L/X4                    <td>true
       <tr><th>TX8/TX20                               <td>true
-      <tr><th>G4/G4C/G4PRO/F4/F4PRO/G6               <td>false
+      <tr><th>G4/G5/G4C/G4PRO/F4/F4PRO/G6/G7         <td>false
       <tr><th>G1/G2A/G2C/R2/G2/G4B                   <td>false
       <tr><th>TG15/TG30/TG50                         <td>false
       <tr><th>T5/T15                                 <td>false

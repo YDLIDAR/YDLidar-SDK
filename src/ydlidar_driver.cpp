@@ -1427,9 +1427,11 @@ void YDlidarDriver::checkTransDelay() {
 
   switch (model) {
     case YDLIDAR_G4://g4
+    case YDLIDAR_G5:
     case YDLIDAR_G4PRO:
     case YDLIDAR_F4PRO:
     case YDLIDAR_G6://g6
+    case YDLIDAR_G7:
     case YDLIDAR_TG15:
     case YDLIDAR_TG30:
     case YDLIDAR_TG50:

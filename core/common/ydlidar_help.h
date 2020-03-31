@@ -160,6 +160,16 @@ inline std::string lidarModelToString(int model) {
 
       break;
 
+    case DriverInterface::YDLIDAR_G5:
+      name = "G5";
+
+      break;
+
+    case DriverInterface::YDLIDAR_G7:
+      name = "G7";
+
+      break;
+
     case DriverInterface::YDLIDAR_TG15:
       name = "TG15";
 
@@ -265,6 +275,14 @@ inline int lidarModelDefaultSampleRate(int model) {
       sample_rate = 9;
       break;
 
+    case DriverInterface::YDLIDAR_G5:
+      sample_rate = 9;
+      break;
+
+    case DriverInterface::YDLIDAR_G7:
+      sample_rate = 18;
+      break;
+
     case DriverInterface::YDLIDAR_TG15:
       sample_rate = 20;
       break;
@@ -312,9 +330,11 @@ inline bool hasSampleRate(int model) {
   bool ret = false;
 
   if (model == DriverInterface::YDLIDAR_G4 ||
+      model == DriverInterface::YDLIDAR_G5 ||
       model == DriverInterface::YDLIDAR_G4PRO ||
       model == DriverInterface::YDLIDAR_F4PRO ||
       model == DriverInterface::YDLIDAR_G6 ||
+      model == DriverInterface::YDLIDAR_G7 ||
       model == DriverInterface::YDLIDAR_TG15 ||
       model == DriverInterface::YDLIDAR_TG50 ||
       model == DriverInterface::YDLIDAR_TG30) {
@@ -373,7 +393,7 @@ inline bool isSupportLidar(int model) {
   bool ret = true;
 
   if (model < DriverInterface::YDLIDAR_F4 ||
-      (model > DriverInterface::YDLIDAR_G1 &&
+      (model > DriverInterface::YDLIDAR_G7 &&
        model < DriverInterface::YDLIDAR_TG15) ||
       (model > DriverInterface::YDLIDAR_TG50 &&
        model < DriverInterface::YDLIDAR_T15)) {

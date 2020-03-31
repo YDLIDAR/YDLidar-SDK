@@ -125,7 +125,6 @@ We provide the following program options for connecting the specific units :
 ```
 [Please select the lidar baudrate:]: input LiDAR BaudRate.
 [Whether the Lidar is one-way communication[yes/no]:]: Whether The Current LiDAR is single-channel.
-[Whether the Lidar is a TOF Lidar [yes/no]:]: Whether The Current LiDAR is TOF Type LiDAR.
 [Please enter the lidar scan frequency[5-12]:]:input LiDAR Scan Frequency.
 ```
 
@@ -145,7 +144,6 @@ Baudrate:
 4. 512000
 Please select the lidar baudrate:4
 Whether the Lidar is one-way communication[yes/no]:no
-Whether the Lidar is a TOF Lidar [yes/no]:yes
 Please enter the lidar scan frequency[5-12]:10
 ```
 

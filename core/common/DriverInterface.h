@@ -24,7 +24,7 @@ class DriverInterface {
     * @remarks
     <table>
          <tr><th>G1/G2/G2A/G2C                          <td>false
-         <tr><th>G4/G4B/G4PRO/G6/F4/F4PRO               <td>false
+         <tr><th>G4/G5/G4B/G4PRO/G6/G7/F4/F4PRO         <td>false
          <tr><th>S4/S4B/X4/R2/G4C                       <td>false
          <tr><th>S2/X2/X2L                              <td>true
          <tr><th>TG15/TG30/TG50                         <td>false
@@ -42,8 +42,8 @@ class DriverInterface {
   * @remarks
   <table>
        <tr><th>G1/G2A/G2/G2C                    <td>[TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE)
-       <tr><th>G4/G4B/G4C/G4PRO                 <td>[TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE)
-       <tr><th>G6/F4/F4PRO                      <td>[TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE)
+       <tr><th>G4/G5/G4B/G4C/G4PRO              <td>[TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE)
+       <tr><th>G6/G7/F4/F4PRO                   <td>[TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE)
        <tr><th>S4/S4B/X4/R2/S2/X2/X2L           <td>[TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE)
        <tr><th>TG15/TG30/TG50/TX8/TX20          <td>[TYPE_TOF](\ref LidarTypeID::TYPE_TOF)
        <tr><th>T5/T15                           <td>[TYPE_TOF_NET](\ref LidarTypeID::TYPE_TOF_NET)
@@ -71,7 +71,7 @@ class DriverInterface {
    <table>
         <tr><th>S4/S4B/S2/X2/X2L/X4                    <td>true
         <tr><th>TX8/TX20                               <td>true
-        <tr><th>G4/G4C/G4PRO/F4/F4PRO/G6               <td>false
+        <tr><th>G4/G5/G4C/G4PRO/F4/F4PRO/G6/G7         <td>false
         <tr><th>G1/G2A/G2C/R2/G2/G4B                   <td>false
         <tr><th>TG15/TG30/TG50                         <td>false
         <tr><th>T5/T15                                 <td>false
@@ -354,6 +354,8 @@ class DriverInterface {
     YDLIDAR_G4B     = 17,/**< G4B LiDAR Model. */
     YDLIDAR_G4C     = 18,/**< G4C LiDAR Model. */
     YDLIDAR_G1      = 19,/**< G1 LiDAR Model. */
+    YDLIDAR_G5      = 20,/**< G5 LiDAR Model. */
+    YDLIDAR_G7      = 21,/**< G7 LiDAR Model. */
 
     YDLIDAR_TG15    = 100,/**< TG15 LiDAR Model. */
     YDLIDAR_TG30    = 101,/**< T30 LiDAR Model. */
