@@ -78,6 +78,7 @@ CYdLidar::CYdLidar(): lidarPtr(nullptr) {
   m_AllNode             = 0;
   m_DeviceType          = YDLIDAR_TYPE_SERIAL;
   m_SupportMotorDtrCtrl = true;
+  m_SupportHearBeat     = false;
   m_parsingCompleted    = false;
   m_isAngleOffsetCorrected = false;
   m_field_of_view       = 360.f;
@@ -183,6 +184,10 @@ bool CYdLidar::setlidaropt(int optname, const void *optval, int optlen) {
 
     case LidarPropSupportMotorDtrCtrl:
       m_SupportMotorDtrCtrl = *(bool *)(optval);
+      break;
+
+    case LidarPropSupportHeartBeat:
+      m_SupportHearBeat = *(bool *)(optval);
       break;
 
     case LidarPropMaxRange:
@@ -312,6 +317,10 @@ bool CYdLidar::getlidaropt(int optname, void *optval, int optlen) {
 
     case LidarPropSupportMotorDtrCtrl:
       memcpy(optval, &m_SupportMotorDtrCtrl, optlen);
+      break;
+
+    case LidarPropSupportHeartBeat:
+      memcpy(optval, &m_SupportHearBeat, optlen);
       break;
 
     case LidarPropMaxRange:
@@ -1111,6 +1120,10 @@ bool CYdLidar::getDeviceInfo() {
     checkScanFrequency();
   }
 
+  if (isSupportHeartBeat(devinfo.model)) {
+    checkHeartBeat();
+  }
+
   if (hasZeroAngle(devinfo.model)) {
     checkCalibrationAngle(serial_number);
   }
@@ -1238,6 +1251,30 @@ bool CYdLidar::checkScanFrequency() {
   m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
   printf("[YDLIDAR INFO] Current Scan Frequency: %fHz\n", m_ScanFrequency);
   return true;
+}
+
+bool CYdLidar::checkHeartBeat() {
+  if (!m_SupportHearBeat) {
+    lidarPtr->setHeartBeat(false);
+    return false;
+  }
+
+  bool ret = false;
+  scan_heart_beat beat;
+  int retry = 0;
+
+  do {
+    result_t ans = lidarPtr->setScanHeartbeat(beat);
+
+    if (IS_OK(ans) && !beat.enable) {
+      break;
+    }
+
+    retry++;
+  } while (retry < 3);
+
+  lidarPtr->setHeartBeat(m_SupportHearBeat);
+  return ret;
 }
 
 /*-------------------------------------------------------------

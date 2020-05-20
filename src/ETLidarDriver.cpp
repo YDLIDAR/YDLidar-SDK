@@ -870,6 +870,11 @@ result_t ETLidarDriver::getZeroOffsetAngle(offset_angle &angle,
   return RESULT_FAIL;
 }
 
+result_t ETLidarDriver::setScanHeartbeat(scan_heart_beat &beat,
+    uint32_t timeout) {
+  return RESULT_FAIL;
+}
+
 result_t ETLidarDriver::startAutoScan(bool force, uint32_t timeout) {
   result_t ans;
   {

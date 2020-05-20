@@ -291,6 +291,17 @@ class ETLidarDriver : public DriverInterface {
   virtual result_t getZeroOffsetAngle(offset_angle &angle,
                                       uint32_t timeout = DEFAULT_TIMEOUT);
 
+  /**
+   * @brief set lidar heart beat \n
+   * @param[in] beat    	  heart beat status
+   * @param[in] timeout      timeout
+   * @return return status
+   * @retval RESULT_OK       success
+   * @retval RESULT_FAILE    failed
+   * @note Non-scan state, perform currect operation.
+   */
+  virtual result_t setScanHeartbeat(scan_heart_beat &beat,
+                                    uint32_t timeout = DEFAULT_TIMEOUT);
 
   /**
   * @brief Get current scan configuration.

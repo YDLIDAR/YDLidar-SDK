@@ -717,6 +717,19 @@
 * @see CYdLidar::lidarSetProp and CYdLidar::lidarGetProp
 */
 
+/**
+* @par LidarPropSupportHeartBeat
+* @brief Set and Get LiDAR Support HeartBeat.
+* @note The current paramter settings are only valid
+* if the LiDAR is BigScreen or Interactive Lidar.\n
+* Set the LiDAR HeartBeat to match the LiDAR.
+* @remarks
+ <table>
+      <tr><th>G4/G4PRO         <td>true
+  </table>
+* @see CYdLidar::lidarSetProp and CYdLidar::lidarGetProp
+*/
+
 
 /// Provides a platform independent class to for LiDAR development.
 /// This class is designed to serial or socket communication development in a
@@ -938,6 +951,12 @@ class YDLIDAR_API CYdLidar {
    */
   bool checkScanFrequency();
 
+  /**
+   * @brief checkHeartBeat
+   * @return
+   */
+  bool checkHeartBeat();
+
   /*!
    * @brief check LiDAR sample rate
    */
@@ -1048,6 +1067,7 @@ class YDLIDAR_API CYdLidar {
   bool m_SingleChannel;             ///< LiDAR single channel
   bool m_Intensity;                 ///< LiDAR Intensity
   bool m_SupportMotorDtrCtrl;       ///< LiDAR Motor DTR
+  bool m_SupportHearBeat;           ///< LiDAR HeartBeat
 
   int m_SerialBaudrate;             ///< LiDAR serial baudrate or network port
   int m_LidarType;                  ///< LiDAR type

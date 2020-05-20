@@ -85,13 +85,17 @@ code
 ```
 double Angle_FSA = (FSA >> 1) / 64;
 double Angle_LSA = (LSA >> 1) / 64;
-double angle_diff = Angle_FSA - Angle_LSA；
+double angle_diff = Angle_LSA - Angle_FSA；
 if(angle_diff < 0) {
     angle_diff += 360;
 }
 double Angle[LSN];
 for(int i = 0; i < LSN; i++) {
-    Angle[i] = i* angle_diff / (LSN - 1) + Angle_FSA;
+    if(LSN > 1) {
+        Angle[i] = i* angle_diff / (LSN - 1) + Angle_FSA;
+    } else {
+        Angle[i] = Angle_FSA;
+    }
 }
 
 ```
@@ -202,7 +206,7 @@ No Intensity:
     <tr><th rowspan="2" >FSA <td rowspan="2" > 2   <td rowspan="2"> 0xAE53  <td rowspan="2">  Starting Angle   <td> 0x53 <tr> <td> 0xAE
     <tr><th rowspan="2" >LSA <td rowspan="2" > 2   <td rowspan="2"> 0xAE53  <td rowspan="2">  End Andgle       <td> 0x53 <tr> <td> 0xAE
     <tr><th rowspan="2" >CS  <td rowspan="2" > 2   <td rowspan="2"> 0x54AB  <td rowspan="2">  Check code       <td> 0xAB <tr> <td> 0x54
-    <tr><th rowspan="2" >S0  <td rowspan="2" > 2   <td rowspan="2"> 0x000   <td rowspan="2">  0 index Distance <td> 0x00 <tr> <td> 0x00
+    <tr><th rowspan="2" >S0  <td rowspan="2" > 2   <td rowspan="2"> 0x0000   <td rowspan="2">  0 index Distance <td> 0x00 <tr> <td> 0x00
 </table>
 
 ```
@@ -247,7 +251,11 @@ if(check_code == CS) {
         Angle_Diff = Angle_Diff + 360;
     }
     for(int i = 0; i < LSN; i++) {
-        Angle[i] = i * Angle_Diff/ (LSN- 1) + Angle_FSA;
+        if(LSN > 1) {
+            Angle[i] = i * Angle_Diff/ (LSN- 1) + Angle_FSA;
+        } else {
+            Angle[i] = Angle_FSA;
+        }
         if(Distance[i] > 0) {
             double AngCorrect = atan(21.8 * (155.3 - Distance[i]) / (155.3 * Distance[i]));
             Angle[i] = Angle[i] + AngCorrect * 180 / M_PI;
@@ -271,7 +279,7 @@ Intensity:
     <tr><th rowspan="2" >LSA <td rowspan="2" > 2   <td rowspan="2"> 0xAE53  <td rowspan="2">  End Andgle       <td> 0x53 <tr> <td> 0xAE
     <tr><th rowspan="2" >CS  <td rowspan="2" > 2   <td rowspan="2"> 0x54AB  <td rowspan="2">  Check code       <td> 0xAB <tr> <td> 0x54
     <tr><th>I0               <td> 1                <td> 0x00                <td> 0 index Intensity  	       <td> 0x00
-    <tr><th rowspan="2" >S0  <td rowspan="2" > 2   <td rowspan="2"> 0x000   <td rowspan="2">  0 index Distance <td> 0x00 <tr> <td> 0x00
+    <tr><th rowspan="2" >S0  <td rowspan="2" > 2   <td rowspan="2"> 0x0000   <td rowspan="2">  0 index Distance <td> 0x00 <tr> <td> 0x00
 </table>
 
 
@@ -321,7 +329,11 @@ if(check_code == CS) {
         Angle_Diff = Angle_Diff + 360;
     }
     for(int i = 0; i < LSN; i++) {
-        Angle[i] = i * Angle_Diff/ (LSN- 1) + Angle_FSA;
+        if(LSN > 1) {
+            Angle[i] = i * Angle_Diff/ (LSN- 1) + Angle_FSA;
+        } else {
+            Angle[i] = Angle_FSA;
+        }
         if(Distance[i] > 0) {
             double AngCorrect = atan(21.8 * (155.3 - Distance[i]) / (155.3 * Distance[i]));
             Angle[i] = Angle[i] + AngCorrect * 180 / M_PI;

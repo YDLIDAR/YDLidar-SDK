@@ -339,6 +339,18 @@ class YDlidarDriver : public DriverInterface {
   virtual result_t getZeroOffsetAngle(offset_angle &angle,
                                       uint32_t timeout = DEFAULT_TIMEOUT);
 
+  /**
+   * @brief set lidar heart beat \n
+   * @param[in] beat    	  heart beat status
+   * @param[in] timeout      timeout
+   * @return return status
+   * @retval RESULT_OK       success
+   * @retval RESULT_FAILE    failed
+   * @note Non-scan state, perform currect operation.
+   */
+  virtual result_t setScanHeartbeat(scan_heart_beat &beat,
+                                    uint32_t timeout = DEFAULT_TIMEOUT);
+
  protected:
 
   /**
@@ -514,6 +526,17 @@ class YDlidarDriver : public DriverInterface {
    */
   result_t checkAutoConnecting();
 
+  /**
+   * @brief autoHeartBeat
+   * @return
+   */
+  result_t autoHeartBeat();
+
+  /**
+   * @brief KeepLiveHeartBeat
+   */
+  void KeepLiveHeartBeat();
+
  private:
   /// package sample bytes
   int PackageSampleBytes;
@@ -570,6 +593,7 @@ class YDlidarDriver : public DriverInterface {
 
   int package_index;
   bool has_package_error;
+  uint32_t m_heartbeat_ts;
 
 };
 

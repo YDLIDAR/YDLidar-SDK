@@ -81,6 +81,19 @@ class DriverInterface {
   PropertyBuilderByName(bool, SupportMotorDtrCtrl, protected);
 
   /**
+  * @brief Set and Get LiDAR HeartBeat function.
+  * @note The current paramter settings are only valid
+  * if the LiDAR is BigScreen.\n
+  * Set the LiDAR HeartBeat to match the LiDAR.
+  * @remarks
+   <table>
+        <tr><th>G4/G4PRO                               <td>false
+    </table>
+  * @see DriverInterface::setHeartBeat and DriverInterface::getHeartBeat
+  */
+  PropertyBuilderByName(bool, HeartBeat, protected);
+
+  /**
    * @par Constructor
    *
    */
@@ -97,6 +110,7 @@ class DriverInterface {
     m_LidarType = TYPE_TRIANGLE;
     m_PointTime = 0;
     m_SupportMotorDtrCtrl = true;
+    m_HeartBeat  = false;
     m_isScanning = false;
     m_isConnected = false;
     m_config.motor_rpm = 1200;
@@ -332,6 +346,18 @@ class DriverInterface {
   virtual result_t getZeroOffsetAngle(offset_angle &angle,
                                       uint32_t timeout = DEFAULT_TIMEOUT) = 0;
 
+  /**
+   * @brief set lidar heart beat \n
+   * @param[in] beat    	  heart beat status
+   * @param[in] timeout      timeout
+   * @return return status
+   * @retval RESULT_OK       success
+   * @retval RESULT_FAILE    failed
+   * @note Non-scan state, perform currect operation.
+   */
+
+  virtual result_t setScanHeartbeat(scan_heart_beat &beat,
+                                    uint32_t timeout = DEFAULT_TIMEOUT) = 0;
 
  public:
   enum {

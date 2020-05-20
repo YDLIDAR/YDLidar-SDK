@@ -119,6 +119,8 @@
 #define LIDAR_CMD_ADD_EXPOSURE       	    0x96
 #define LIDAR_CMD_DIS_EXPOSURE       	    0x97
 
+#define LIDAR_CMD_SET_HEART_BEAT            0xD9
+
 /** @} LIDAR CMD Protocol */
 
 /// Maximuum number of samples in a packet

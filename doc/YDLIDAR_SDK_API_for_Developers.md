@@ -473,6 +473,8 @@ For additional information and examples, refer to [CYDLidar](#cydlidar)
 * - @ref LidarPropAutoReconnect
 * - @ref LidarPropSingleChannel
 * - @ref LidarPropIntenstiy
+* - @ref LidarPropSupportMotorDtrCtrl
+* - @ref LidarPropSupportHeartBeat
 * @note set bool property example
 * @code
 * CYdLidar laser;
@@ -533,6 +535,8 @@ bool setlidaropt(int optname, const void *optval, int optlen);
 * - @ref LidarPropAutoReconnect
 * - @ref LidarPropSingleChannel
 * - @ref LidarPropIntenstiy
+* - @ref LidarPropSupportMotorDtrCtrl
+* - @ref LidarPropSupportHeartBeat
 * @note get bool property example
 * @code
 * CYdLidar laser;
@@ -649,6 +653,8 @@ void lidarDestroy(YDLidar **lidar);
  * - @ref LidarPropAutoReconnect
  * - @ref LidarPropSingleChannel
  * - @ref LidarPropIntenstiy
+ * - @ref LidarPropSupportMotorDtrCtrl
+ * - @ref LidarPropSupportHeartBeat
  * @note set bool property example
  * @code
  * CYdLidar laser;
@@ -710,6 +716,8 @@ bool setlidaropt(YDLidar *lidar, int optname, const void *optval, int optlen);
  * - @ref LidarPropAutoReconnect
  * - @ref LidarPropSingleChannel
  * - @ref LidarPropIntenstiy
+ * - @ref LidarPropSupportMotorDtrCtrl
+ * - @ref LidarPropSupportHeartBeat
  * @note get bool property example
  * @code
  * CYdLidar laser;

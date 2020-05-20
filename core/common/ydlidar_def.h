@@ -75,6 +75,7 @@ typedef enum {
   LidarPropSingleChannel,/**< lidar single-channel flag */
   LidarPropIntenstiy,/**< lidar intensity flag */
   LidarPropSupportMotorDtrCtrl,/**< lidar support motor Dtr ctrl flag */
+  LidarPropSupportHeartBeat,/**< lidar support heartbeat flag */
 } LidarProperty;
 
 /// lidar instance

@@ -88,6 +88,10 @@ int main(int argc, char *argv[]) {
   /// Motor DTR
   b_optvalue = false;
   laser.setlidaropt(LidarPropSupportMotorDtrCtrl, &b_optvalue, sizeof(bool));
+  /// HeartBeat
+  b_optvalue = false;
+  laser.setlidaropt(LidarPropSupportHeartBeat, &b_optvalue, sizeof(bool));
+
 
   //////////////////////float property/////////////////
   /// unit: °

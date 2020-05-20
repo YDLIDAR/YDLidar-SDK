@@ -45,6 +45,7 @@ YDlidarDriver::YDlidarDriver(uint8_t type):
   isAutoconnting        = false;
   m_baudrate            = 230400;
   m_SupportMotorDtrCtrl = true;
+  m_HeartBeat           = false;
   scan_node_count       = 0;
   sample_rate           = 5000;
   m_PointTime           = 1e9 / 5000;
@@ -84,6 +85,7 @@ YDlidarDriver::YDlidarDriver(uint8_t type):
   get_device_health_success         = false;
   get_device_info_success           = false;
   IntervalSampleAngle_LastPackage   = 0.0;
+  m_heartbeat_ts = getms();
 }
 
 YDlidarDriver::~YDlidarDriver() {
@@ -468,6 +470,27 @@ result_t YDlidarDriver::checkAutoConnecting() {
 
 }
 
+result_t YDlidarDriver::autoHeartBeat() {
+  if (!m_isConnected) {
+    return RESULT_FAIL;
+  }
+
+  ScopedLocker lock(_lock);
+  result_t ans = sendCommand(LIDAR_CMD_SCAN);
+  return ans;
+}
+
+void YDlidarDriver::KeepLiveHeartBeat() {
+  if (m_HeartBeat) {
+    uint32_t end_ts = getms();
+
+    if (end_ts - m_heartbeat_ts > DEFAULT_HEART_BEAT) {
+      autoHeartBeat();
+      m_heartbeat_ts = end_ts;
+    }
+  }
+}
+
 int YDlidarDriver::cacheScanData() {
   node_info      local_buf[128];
   size_t         count = 128;
@@ -485,6 +508,7 @@ int YDlidarDriver::cacheScanData() {
 
   int timeout_count   = 0;
   retryCount = 0;
+  m_heartbeat_ts = getms();
 
   while (m_isScanning) {
     count = 128;
@@ -543,6 +567,8 @@ int YDlidarDriver::cacheScanData() {
         scan_count -= 1;
       }
     }
+
+    KeepLiveHeartBeat();
   }
 
   m_isScanning = false;
@@ -2002,6 +2028,49 @@ result_t YDlidarDriver::getZeroOffsetAngle(offset_angle &angle,
     }
 
     getData(reinterpret_cast<uint8_t *>(&angle), sizeof(angle));
+  }
+  return RESULT_OK;
+}
+
+/************************************************************************/
+/*  the set to heart beat                                               */
+/************************************************************************/
+result_t YDlidarDriver::setScanHeartbeat(scan_heart_beat &beat,
+    uint32_t timeout) {
+  result_t  ans;
+
+  if (!m_isConnected) {
+    return RESULT_FAIL;
+  }
+
+  disableDataGrabbing();
+  flushSerial();
+  {
+    ScopedLocker l(_lock);
+
+    if ((ans = sendCommand(LIDAR_CMD_SET_HEART_BEAT)) != RESULT_OK) {
+      return ans;
+    }
+
+    lidar_ans_header response_header;
+
+    if ((ans = waitResponseHeader(&response_header, timeout)) != RESULT_OK) {
+      return ans;
+    }
+
+    if (response_header.type != LIDAR_ANS_TYPE_DEVINFO) {
+      return RESULT_FAIL;
+    }
+
+    if (response_header.size != 1) {
+      return RESULT_FAIL;
+    }
+
+    if (waitForData(response_header.size, timeout) != RESULT_OK) {
+      return RESULT_FAIL;
+    }
+
+    getData(reinterpret_cast<uint8_t *>(&beat), sizeof(beat));
   }
   return RESULT_OK;
 }

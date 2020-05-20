@@ -566,6 +566,22 @@ inline bool isOldVersionTOFLidar(int model, int Major, int Minor) {
   return ret;
 }
 
+/*!
+ * @brief Whether to support Heartbeat.
+ * @param model   lidar model
+ * @return true if support heartbeat, otherwise false.
+ */
+inline bool isSupportHeartBeat(int model) {
+  bool ret = false;
+
+  if (model == DriverInterface::YDLIDAR_G4 ||
+      model == DriverInterface::YDLIDAR_G4PRO) {
+    ret = true;
+  }
+
+  return true;
+}
+
 /**
  * @brief Whether the sampling rate is valid
  * @param smap  sampling rate map
