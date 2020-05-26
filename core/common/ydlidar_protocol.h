@@ -177,6 +177,12 @@ struct PackageNode {
   uint16_t PakageSampleDistance;///< range
 } __attribute__((packed));
 
+/// TOF Intensity package node info
+struct TOFPackageNode {
+  uint16_t PakageSampleQuality;
+  uint16_t PakageSampleDistance;
+} __attribute__((packed));
+
 /// LiDAR Intensity Nodes Package
 struct node_package {
   uint16_t  package_Head;///< package header
@@ -186,6 +192,17 @@ struct node_package {
   uint16_t  packageLastSampleAngle;///< last sample angle
   uint16_t  checkSum;///< checksum
   PackageNode  packageSample[PackageSampleMaxLngth];
+} __attribute__((packed)) ;
+
+/// TOF LiDAR Intensity Nodes Package
+struct tof_node_package {
+  uint16_t  package_Head;
+  uint8_t   package_CT;
+  uint8_t   nowPackageNum;
+  uint16_t  packageFirstSampleAngle;
+  uint16_t  packageLastSampleAngle;
+  uint16_t  checkSum;
+  TOFPackageNode  packageSample[PackageSampleMaxLngth];
 } __attribute__((packed)) ;
 
 /// LiDAR Normal Nodes package
