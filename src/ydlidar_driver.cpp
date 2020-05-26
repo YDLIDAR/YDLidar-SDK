@@ -768,7 +768,8 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout) {
   int recvPos         = 0;
   uint32_t startTs    = getms();
   uint32_t waitTime   = 0;
-  uint8_t  *packageBuffer = (m_intensities) ? (uint8_t *)&package.package_Head :
+  uint8_t  *packageBuffer = (m_intensities) ? (isTOFLidar(m_LidarType) ?
+                            (uint8_t *)&tof_package.package_Head : (uint8_t *)&package.package_Head) :
                             (uint8_t *)&packages.package_Head;
   uint8_t  package_Sample_Num         = 0;
   int32_t  AngleCorrectForDistance    = 0;
@@ -935,7 +936,7 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout) {
         getData(globalRecvBuffer, recvSize);
 
         for (size_t pos = 0; pos < recvSize; ++pos) {
-          if (m_intensities) {
+          if (m_intensities && !isTOFLidar(m_LidarType)) {
             if (recvPos % 3 == 2) {
               Valu8Tou16 += globalRecvBuffer[pos] * 0x100;
               CheckSumCal ^= Valu8Tou16;
@@ -986,7 +987,11 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout) {
   uint8_t package_CT;
 
   if (m_intensities) {
-    package_CT = package.package_CT;
+    if (isTOFLidar(m_LidarType)) {
+      package_CT = tof_package.package_CT;
+    } else {
+      package_CT = package.package_CT;
+    }
   } else {
     package_CT = packages.package_CT;
   }
@@ -1032,9 +1037,9 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout) {
           package.packageSample[package_Sample_Index].PakageSampleDistance & 0xfffc;
       } else {
         (*node).sync_quality =
-          package.packageSample[package_Sample_Index].PakageSampleQuality;
+          tof_package.packageSample[package_Sample_Index].PakageSampleQuality;
         (*node).distance_q2 =
-          package.packageSample[package_Sample_Index].PakageSampleDistance;
+          tof_package.packageSample[package_Sample_Index].PakageSampleDistance;
       }
     } else {
       (*node).distance_q2 = packages.packageSampleDistance[package_Sample_Index];
@@ -1093,7 +1098,11 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout) {
   uint8_t nowPackageNum;
 
   if (m_intensities) {
-    nowPackageNum = package.nowPackageNum;
+    if (isTOFLidar(m_LidarType)) {
+      nowPackageNum = tof_package.nowPackageNum;
+    } else {
+      nowPackageNum = package.nowPackageNum;
+    }
   } else {
     nowPackageNum = packages.nowPackageNum;
   }
@@ -1423,14 +1432,22 @@ void YDlidarDriver::setIntensities(const bool &isintensities) {
       globalRecvBuffer = NULL;
     }
 
-    globalRecvBuffer = new uint8_t[isintensities ? sizeof(node_package) : sizeof(
-                                     node_packages)];
+    if (isintensities && isTOFLidar(m_LidarType)) {
+      globalRecvBuffer = new uint8_t[sizeof(tof_node_package)];
+    } else {
+      globalRecvBuffer = new uint8_t[isintensities ? sizeof(node_package) : sizeof(
+                                       node_packages)];
+    }
   }
 
   m_intensities = isintensities;
 
   if (m_intensities) {
-    PackageSampleBytes = 3;
+    if (isTOFLidar(m_LidarType)) {
+      PackageSampleBytes = 4;
+    } else {
+      PackageSampleBytes = 3;
+    }
   } else {
     PackageSampleBytes = 2;
   }

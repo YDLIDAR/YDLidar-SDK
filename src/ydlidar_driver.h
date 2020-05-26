@@ -555,6 +555,8 @@ class YDlidarDriver : public DriverInterface {
 
   /// has intensity protocol package
   node_package package;
+  /// TOF Lidar has intensity protocol package
+  tof_node_package tof_package;
   /// non-intensity protocol package
   node_packages packages;
 
