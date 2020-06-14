@@ -1271,7 +1271,7 @@ bool CYdLidar::checkHeartBeat() {
     }
 
     retry++;
-  } while (retry < 3);
+  } while (retry < 4);
 
   lidarPtr->setHeartBeat(m_SupportHearBeat);
   return ret;
