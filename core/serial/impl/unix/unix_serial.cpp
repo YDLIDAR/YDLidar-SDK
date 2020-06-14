@@ -641,9 +641,10 @@ Serial::SerialImpl::SerialImpl(const string &port, unsigned long baudrate,
                                bytesize_t bytesize,
                                parity_t parity, stopbits_t stopbits,
                                flowcontrol_t flowcontrol)
-  : port_(port), fd_(-1), is_open_(false), xonxoff_(false), rtscts_(false),
-    baudrate_(baudrate), parity_(parity),
-    bytesize_(bytesize), stopbits_(stopbits), flowcontrol_(flowcontrol) {
+  : port_(port), fd_(-1), pid(-1), is_open_(false), xonxoff_(false),
+    rtscts_(false), timeout_(Timeout()), baudrate_(baudrate), byte_time_ns_(0),
+    parity_(parity), bytesize_(bytesize), stopbits_(stopbits),
+    flowcontrol_(flowcontrol) {
   pthread_mutex_init(&this->read_mutex, NULL);
   pthread_mutex_init(&this->write_mutex, NULL);
 
@@ -660,7 +661,7 @@ bool Serial::SerialImpl::open() {
     return false;
   }
 
-  if (is_open_ == true) {
+  if (isOpen()) {
     return true;
   }
 
@@ -698,10 +699,7 @@ bool Serial::SerialImpl::open() {
 
       default:
 //        fprintf(stderr, "Default: %d\n", errno);
-#ifdef USE_LOCK_FILE
-        UNLOCK(port_.c_str(), pid);
-        pid = -1;
-#endif
+        close();
         return false;
     }
   }
@@ -709,9 +707,7 @@ bool Serial::SerialImpl::open() {
   termios tio;
 
   if (!getTermios(&tio)) {
-#ifdef USE_LOCK_FILE
-    UNLOCK(port_.c_str(), pid);
-#endif
+    close();
     return false;
   }
 
@@ -722,16 +718,12 @@ bool Serial::SerialImpl::open() {
   set_flowcontrol(&tio, flowcontrol_);
 
   if (!setTermios(&tio)) {
-#ifdef USE_LOCK_FILE
-    UNLOCK(port_.c_str(), pid);
-#endif
+    close();
     return false;
   }
 
   if (!setBaudrate(baudrate_)) {
-#ifdef USE_LOCK_FILE
-    UNLOCK(port_.c_str(), pid);
-#endif
+    close();
     return false;
   }
 
@@ -827,18 +819,24 @@ Serial::SerialPortError Serial::SerialImpl::getSystemError(
 }
 
 void Serial::SerialImpl::close() {
-  if (is_open_ == true) {
-    if (fd_ != -1) {
-      ::close(fd_);
-    }
-
-#ifdef USE_LOCK_FILE
-    UNLOCK(port_.c_str(), pid);
-    pid = -1;
-#endif
-    fd_ = -1;
+  if (isOpen()) {
     is_open_ = false;
   }
+
+  if (fd_ != -1) {
+    ::close(fd_);
+  }
+
+#ifdef USE_LOCK_FILE
+
+  if (pid != -1) {
+    UNLOCK(port_.c_str(), pid);
+  }
+
+  pid = -1;
+#endif
+  fd_ = -1;
+
 }
 
 bool Serial::SerialImpl::isOpen() const {
@@ -894,6 +892,10 @@ bool Serial::SerialImpl::waitReadable(uint32_t timeout) {
 
 int Serial::SerialImpl::waitfordata(size_t data_count, uint32_t timeout,
                                     size_t *returned_size) {
+  if (!isOpen()) {
+    return -2;
+  }
+
   size_t length = 0;
 
   if (returned_size == NULL) {
@@ -902,20 +904,7 @@ int Serial::SerialImpl::waitfordata(size_t data_count, uint32_t timeout,
 
   *returned_size = 0;
 
-  int max_fd;
-  fd_set input_set;
-  struct timeval timeout_val;
-
-  /* Initialize the input set */
-  FD_ZERO(&input_set);
-  FD_SET(fd_, &input_set);
-  max_fd = fd_ + 1;
-
-  /* Initialize the timeout structure */
-  timeout_val.tv_sec = timeout / 1000;
-  timeout_val.tv_usec = (timeout % 1000) * 1000;
-
-  if (is_open_) {
+  if (isOpen()) {
     if (ioctl(fd_, FIONREAD, returned_size) == -1) {
       return -2;
     }
@@ -925,9 +914,14 @@ int Serial::SerialImpl::waitfordata(size_t data_count, uint32_t timeout,
     }
   }
 
+  fd_set readfds;
+  /* Initialize the input set */
+  FD_ZERO(&readfds);
+  FD_SET(fd_, &readfds);
+
   MillisecondTimer total_timeout(timeout);
 
-  while (is_open_) {
+  while (isOpen()) {
     int64_t timeout_remaining_ms = total_timeout.remaining();
 
     if ((timeout_remaining_ms <= 0)) {
@@ -935,8 +929,11 @@ int Serial::SerialImpl::waitfordata(size_t data_count, uint32_t timeout,
       return -1;
     }
 
+    /* Initialize the timeout structure */
+    timespec timeout_val(timespec_from_ms(timeout_remaining_ms));
+
     /* Do the select */
-    int n = ::select(max_fd, &input_set, NULL, NULL, &timeout_val);
+    int n = pselect(fd_ + 1, &readfds, NULL, NULL, &timeout_val, NULL);
 
     if (n < 0) {
       if (errno == EINTR) {
@@ -950,22 +947,24 @@ int Serial::SerialImpl::waitfordata(size_t data_count, uint32_t timeout,
       return -1;
     } else {
       // data avaliable
-      assert(FD_ISSET(fd_, &input_set));
-
-      if (ioctl(fd_, FIONREAD, returned_size) == -1) {
-        return -2;
-      }
-
-      if (*returned_size >= data_count) {
-        return 0;
-      } else {
-        int remain_timeout = timeout_val.tv_sec * 1000000 + timeout_val.tv_usec;
-        int expect_remain_time = (data_count - *returned_size) * 1000000 * 8 /
-                                 baudrate_;
-
-        if (remain_timeout > expect_remain_time) {
-          usleep(expect_remain_time);
+      if (FD_ISSET(fd_, &readfds)) {
+        if (ioctl(fd_, FIONREAD, returned_size) < 0) {
+          return -2;
         }
+
+        if (*returned_size >= data_count) {
+          return 0;
+        } else {
+          int remain_timeout = timeout_val.tv_sec * 1000000 + timeout_val.tv_nsec / 1000;
+          int expect_remain_time = (data_count - *returned_size) * 1000000 * 8 /
+                                   baudrate_;
+
+          if (remain_timeout > expect_remain_time) {
+            usleep(expect_remain_time);
+          }
+        }
+      } else {
+        usleep(30);
       }
     }
   }
