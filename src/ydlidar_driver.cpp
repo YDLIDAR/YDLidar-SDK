@@ -95,6 +95,7 @@ YDlidarDriver::~YDlidarDriver() {
 
   isAutoReconnect = false;
   _thread.join();
+  delay(200);
 
   ScopedLocker lck(_cmd_lock);
 
@@ -428,7 +429,14 @@ result_t YDlidarDriver::checkAutoConnecting() {
       retryCount = 50;
     }
 
-    delay(200 * retryCount);
+    int tempCount = 0;
+
+    while (isAutoReconnect && isscanning() && tempCount < retryCount) {
+      delay(200);
+      tempCount++;
+    }
+
+    tempCount = 0;
     int retryConnect = 0;
 
     while (isAutoReconnect &&
@@ -439,7 +447,12 @@ result_t YDlidarDriver::checkAutoConnecting() {
         retryConnect = 25;
       }
 
-      delay(200 * retryConnect);
+      tempCount = 0;
+
+      while (isAutoReconnect && isscanning() && tempCount < retryConnect) {
+        delay(200);
+        tempCount++;
+      }
     }
 
     if (!isAutoReconnect) {
