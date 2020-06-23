@@ -8,10 +8,18 @@ set(YDLIDAR_SDK_VERSION_MINOR 0)
 set(YDLIDAR_SDK_VERSION_PATCH 1)
 set(YDLIDAR_SDK_VERSION ${YDLIDAR_SDK_VERSION_MAJOR}.${YDLIDAR_SDK_VERSION_MINOR}.${YDLIDAR_SDK_VERSION_PATCH})
 
+##########################################################
+# Detect wordsize:
+IF(CMAKE_SIZEOF_VOID_P EQUAL 8)  # Size in bytes!
+	SET(CMAKE_MRPT_WORD_SIZE 64)
+ELSE()
+	SET(CMAKE_MRPT_WORD_SIZE 32)
+ENDIF()
 ##################################################
 #c++ 11
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
+##########################################################
 # add -fPIC
 add_compile_options(-fPIC)
 #or
@@ -29,11 +37,18 @@ include(install_package)
 
 #############################################################################
 # Policy CMP0023 allows to mix old and new interfaces of target_link_libraries
-#cmake_policy(SET CMP0023 OLD)
-#cmake_policy(SET CMP0022 OLD)
-
-if(POLICY CMP0042)
-    cmake_policy(SET CMP0042 NEW) # MACOSX_RPATH
+if(COMMAND cmake_policy)
+	cmake_policy(SET CMP0003 NEW) # We don't want to mix relative and absolute paths in linker lib lists.
+	cmake_policy(SET CMP0005 NEW) # Escape definitions (-D) strings
+	if(POLICY CMP0053)
+		cmake_policy(SET CMP0053 OLD) # Simplify variable reference and escape sequence evaluation.
+	endif()
+	if(POLICY CMP0037)
+		cmake_policy(SET CMP0037 OLD)  # Allow defining target "test"
+	endif()
+	if(POLICY CMP0043)
+		cmake_policy(SET CMP0043 OLD) #  Ignore COMPILE_DEFINITIONS_<Config> properties.
+	endif()
 endif()
 
 #############################################################################
@@ -204,3 +219,6 @@ else()
 endif()
 
 include(CPack)
+
+# Summary
+include(cmake/script_show_final_summary.cmake REQUIRED)
