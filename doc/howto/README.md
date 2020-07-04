@@ -3,6 +3,8 @@
 ## Build
 - [How to build and install](how_to_build_and_install.md)
 - [How to build and debug using VSCode](how_to_build_and_debug_using_vscode.md)
+- [How to create a csharp project](how_to_create_a_csharp_project.md)
+
 
 ## Contribution
 - [How to create a pull request](how_to_create_a_pull.md)
