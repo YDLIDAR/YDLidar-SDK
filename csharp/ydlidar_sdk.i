@@ -17,7 +17,9 @@
 %define YDLIDAR_API
 %enddef
 
-
+namespace std {
+  %template(LaserPointVector) vector<LaserPoint>;
+}
 
 %extend YDLIDAR_API CYdLidar {
 public:
