@@ -44,7 +44,7 @@ note over UserProgram: doProcessSimple
 loop Laser Scan Data
   LaserScan->UserProgram: doProcessSimple
 end
-note over UserProgram: TurnOn
+note over UserProgram: TurnOff
 UserProgram->Command: TurnOff 
 note over UserProgram: disconnecting
 UserProgram->Command: disconnecting
