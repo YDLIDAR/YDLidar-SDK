@@ -9,7 +9,7 @@ If you are new to Linux/windows: You may find it helpful to first do a quick tut
     - [Writing a Simple Lidar Turorial (C++)](#writing-a-simple-lidar-tutorial-(c++))
     - [Writing a Simple Lidar Network Adapter Turorial (C++)](#writing-a-simple-lidar-network-adapter-tutorial-(c++))
     - [Writing a Simple Lidar Turorial (Python)](#writing-a-simple-lidar-tutorial-(python))
-    - [Writing a Simple Lidar Turorial (Ｃ)](#writing-a-simple-lidar-tutorial-(c))
+    - [Writing a Simple Lidar Turorial (C)](#writing-a-simple-lidar-tutorial-(c))
     - [Examining the simple lidar tutorial](#examining-the-simple-lidar-tutorial)
 
 ## Beginner Level
