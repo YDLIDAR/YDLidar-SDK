@@ -503,11 +503,19 @@ bool  CYdLidar::doProcessSimple(LaserScan &outscan) {
 
     uint64_t scan_time = m_PointTime * (count - 1 + offsetSize);
     int timeDiff = static_cast<int>(sys_scan_time - scan_time);
+
+    bool HighPayLoad = false;
+
+    if (global_nodes[0].stamp > 0 && global_nodes[0].stamp < tim_scan_start) {
+      tim_scan_end = global_nodes[0].stamp;
+      HighPayLoad = true;
+    }
+
     tim_scan_end -= m_PointTime;
-    tim_scan_end -= global_nodes[0].stamp;
+    tim_scan_end -= global_nodes[0].delay_time;
     tim_scan_start = tim_scan_end -  scan_time ;
 
-    if (tim_scan_start < startTs) {
+    if (!HighPayLoad && tim_scan_start < startTs) {
       tim_scan_start = startTs;
       tim_scan_end = tim_scan_start + scan_time;
     }

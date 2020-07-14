@@ -165,6 +165,7 @@ struct node_info {
   uint16_t   angle_q6_checkbit; ///< angle
   uint16_t   distance_q2; ///< range
   uint64_t   stamp; ///< time stamp
+  uint32_t   delay_time; ///< delay time
   uint8_t    scan_frequence;///< scan frequency. invalid: 0
   uint8_t    debugInfo;///< debug information
   uint8_t    index;///< package index

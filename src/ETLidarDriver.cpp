@@ -1007,6 +1007,7 @@ int ETLidarDriver::cacheScanData() {
         if ((local_scan[0].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT)) {
           _lock.lock();//timeout lock, wait resource copy
           local_scan[0].stamp = local_buf[pos].stamp;
+          local_scan[0].delay_time = local_buf[pos].delay_time;
           local_scan[0].scan_frequence = local_buf[pos].scan_frequence;
           memcpy(scan_node_buf, local_scan, scan_count * sizeof(node_info));
           scan_node_count = scan_count;
@@ -1117,7 +1118,8 @@ result_t ETLidarDriver::waitPackage(node_info *node, uint32_t timeout) {
 
   if (package_Sample_Index >= frame.dataNum) {
     (*node).sync_flag = frame.headFrameFlag ? Node_Sync : Node_NotSync;
-    (*node).stamp = (uint64_t)(frame.timestamp * 100);
+    (*node).stamp = getTime();//(uint64_t)(frame.timestamp * 100);
+    (*node).delay_time = 0;
     package_Sample_Index = 0;
     m_lastAngle = 0.f;
     m_currentAngle = 0.f;

@@ -564,7 +564,13 @@ int YDlidarDriver::cacheScanData() {
         if ((local_scan[0].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT)) {
           _lock.lock();//timeout lock, wait resource copy
           local_scan[0].stamp = local_buf[pos].stamp;
+
+          if (local_scan[0].stamp == 0) {
+            local_scan[0].stamp = getTime();
+          }
+
           local_scan[0].scan_frequence = local_buf[pos].scan_frequence;
+          local_scan[0].delay_time = local_buf[pos].delay_time;
           memcpy(scan_node_buf, local_scan, scan_count * sizeof(node_info));
           scan_node_count = scan_count;
           _dataEvent.set();
@@ -1037,6 +1043,7 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout) {
   }
 
   (*node).sync_quality = Node_Default_Quality;
+  (*node).delay_time = 0;
   (*node).stamp = 0;
 
   if (CheckSumResult) {
@@ -1162,9 +1169,9 @@ result_t YDlidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
         size_t Number = 0;
         size_t PackageSize = TrianglePackageDataSize;
 
-        if (isTOFLidar(m_LidarType)) {
-          PackageSize =  TOFPackageDataSize;
-        }
+//        if (isTOFLidar(m_LidarType)) {
+//          PackageSize =  TOFPackageDataSize;
+//        }
 
         packageNum = size / PackageSize;
         Number = size % PackageSize;
@@ -1175,8 +1182,9 @@ result_t YDlidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
         }
       }
 
-      nodebuffer[recvNodeCount - 1].stamp = size * trans_delay + delayTime;
+      nodebuffer[recvNodeCount - 1].delay_time = size * trans_delay + delayTime;
       nodebuffer[recvNodeCount - 1].scan_frequence = node.scan_frequence;
+      nodebuffer[recvNodeCount - 1].stamp = getTime();
       count = recvNodeCount;
       return RESULT_OK;
     }
