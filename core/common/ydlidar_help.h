@@ -314,7 +314,8 @@ inline int lidarModelDefaultSampleRate(int model) {
 inline bool isOctaveLidar(int model) {
   bool ret = false;
 
-  if (model == DriverInterface::YDLIDAR_G6) {
+  if (model == DriverInterface::YDLIDAR_G6 ||
+      model == DriverInterface::YDLIDAR_G7) {
     ret = true;
   }
 
