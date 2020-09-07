@@ -83,6 +83,20 @@ typedef struct {
   void *lidar;///< CYdLidar instance
 } YDLidar;
 
+typedef enum  {
+  NoError = 0,
+  DeviceNotFoundError,
+  PermissionError,
+  UnsupportedOperationError,
+  UnknownError,
+  TimeoutError,
+  NotOpenError,
+  BlockError,
+  NotBufferError,
+  TrembleError,
+  LaserFailureError,
+} DriverError;
+
 #pragma pack(1)
 
 /**
