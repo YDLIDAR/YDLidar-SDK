@@ -117,6 +117,9 @@ class DriverInterface {
     m_config.laserScanFrequency = 50;
     m_config.correction_angle = 20640;
     m_config.correction_distance = 6144;
+    m_driverErrno         = NoError;
+    m_InvalidNodeCount    = 0;
+    m_BufferSize          = 0;
   }
 
   virtual ~DriverInterface() {}
@@ -142,6 +145,58 @@ class DriverInterface {
    * @return error information
    */
   virtual const char *DescribeError(bool isTCP = true) = 0;
+
+  static const char *DescribeDriverError(DriverError err) {
+    char const *errorString = "Unknown error";
+
+    switch (err) {
+      case NoError:
+        errorString = ("No error");
+        break;
+
+      case DeviceNotFoundError:
+        errorString = ("Device is not found");
+        break;
+
+      case PermissionError:
+        errorString = ("Device is not permission");
+        break;
+
+      case UnsupportedOperationError:
+        errorString = ("unsupported operation");
+        break;
+
+      case NotOpenError:
+        errorString = ("Device is not open");
+        break;
+
+      case TimeoutError:
+        errorString = ("Operation timed out");
+        break;
+
+      case BlockError:
+        errorString = ("Device Block");
+        break;
+
+      case NotBufferError:
+        errorString = ("Device Failed");
+        break;
+
+      case TrembleError:
+        errorString = ("Device Tremble");
+        break;
+
+      case LaserFailureError:
+        errorString = ("Laser Failure");
+        break;
+
+      default:
+        // an empty string will be interpreted as "Unknown error"
+        break;
+    }
+
+    return errorString;
+  }
 
 
   /*!
@@ -359,6 +414,24 @@ class DriverInterface {
   virtual result_t setScanHeartbeat(scan_heart_beat &beat,
                                     uint32_t timeout = DEFAULT_TIMEOUT) = 0;
 
+  /**
+   * @brief setDriverError
+   * @param er
+   */
+  virtual void setDriverError(const DriverError &er) {
+    ScopedLocker l(_error_lock);
+    m_driverErrno = er;
+  }
+
+  /**
+   * @brief getDriverError
+   * @return
+   */
+  virtual DriverError getDriverError() {
+    ScopedLocker l(_error_lock);
+    return m_driverErrno;
+  }
+
  public:
   enum {
     YDLIDAR_F4      = 1,/**< F4 LiDAR Model. */
@@ -420,6 +493,9 @@ class DriverInterface {
   Thread          _thread;
   /// command locker
   Locker          _cmd_lock;
+  /// driver error locker
+  Locker          _error_lock;
+
 
   /// LiDAR com port or IP Address
   std::string serial_port;
@@ -441,6 +517,13 @@ class DriverInterface {
   /// auto connecting state
   bool isAutoconnting;
   lidarConfig     m_config;
+
+  /// number of last error
+  DriverError m_driverErrno;
+
+  ///invalid node count
+  int m_InvalidNodeCount;
+  size_t m_BufferSize;
 
 };
 
