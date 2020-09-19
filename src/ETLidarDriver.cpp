@@ -125,6 +125,7 @@ result_t ETLidarDriver::connect(const char *port_path, uint32_t baudrate) {
   m_isConnected = false;
 
   if (!configPortConnect(serial_port.c_str(), m_port)) {
+    setDriverError(NotOpenError);
     m_isValidDevice = false;
     return RESULT_FAIL;
   }
@@ -155,6 +156,7 @@ result_t ETLidarDriver::connect(const char *port_path, uint32_t baudrate) {
 
   if (!dataPortConnect(m_config.deviceIp, m_config.dataRecvPort)) {
     stopMeasure();
+    setDriverError(NotOpenError);
     return RESULT_FAIL;
   }
 
@@ -896,6 +898,8 @@ result_t ETLidarDriver::startAutoScan(bool force, uint32_t timeout) {
 result_t ETLidarDriver::checkAutoConnecting() {
   result_t ans = RESULT_FAIL;
   isAutoconnting = true;
+  m_InvalidNodeCount = 0;
+  setDriverError(TimeoutError);
 
   while (isAutoReconnect && isAutoconnting) {
     {
@@ -906,6 +910,21 @@ result_t ETLidarDriver::checkAutoConnecting() {
         return RESULT_FAIL;
       }
 
+      if (socket_data->isOpen()) {
+        size_t buffer_size = socket_data->available();
+
+        if (m_BufferSize && m_BufferSize % 90 == 0) {
+          setDriverError(BlockError);
+        } else {
+          if (buffer_size > 0 || m_BufferSize > 0) {
+            setDriverError(TrembleError);
+            m_BufferSize += buffer_size;
+          } else {
+            setDriverError(NotBufferError);
+          }
+        }
+      }
+
       socket_data->Close();
     }
     retryCount++;
@@ -914,7 +933,14 @@ result_t ETLidarDriver::checkAutoConnecting() {
       retryCount = 100;
     }
 
-    delay(100 * retryCount);
+    int tempCount = 0;
+
+    while (isAutoReconnect && isscanning() && tempCount < retryCount) {
+      delay(100);
+      tempCount++;
+    }
+
+    tempCount = 0;
     int retryConnect = 0;
 
     while (isAutoReconnect &&
@@ -925,7 +951,12 @@ result_t ETLidarDriver::checkAutoConnecting() {
         retryConnect = 25;
       }
 
-      delay(200 * retryConnect);
+      setDriverError(NotOpenError);
+
+      while (isAutoReconnect && isscanning() && tempCount < retryConnect) {
+        delay(200);
+        tempCount++;
+      }
     }
 
     if (!isAutoReconnect) {
@@ -944,14 +975,34 @@ result_t ETLidarDriver::checkAutoConnecting() {
       }
 
       if (IS_OK(ans)) {
+        if (getDriverError() == DeviceNotFoundError) {
+          setDriverError(NoError);
+        }
+
         isAutoconnting = false;
         return ans;
+      } else {
+        setDriverError(DeviceNotFoundError);
       }
     }
   }
 
   return RESULT_FAIL;
 
+}
+
+void ETLidarDriver::CheckLaserStatus() {
+  if (m_InvalidNodeCount < 2) {
+    if (m_driverErrno == NoError) {
+      setDriverError(LaserFailureError);
+    }
+  } else {
+    if (m_driverErrno == LaserFailureError) {
+      setDriverError(NoError);
+    }
+  }
+
+  m_InvalidNodeCount = 0;
 }
 
 int ETLidarDriver::cacheScanData() {
@@ -965,6 +1016,9 @@ int ETLidarDriver::cacheScanData() {
 
   int timeout_count   = 0;
   retryCount = 0;
+  m_BufferSize = 0;
+  m_InvalidNodeCount = 0;
+  bool m_last_frame_valid = false;
 
   while (m_isScanning) {
     count = 100;
@@ -980,6 +1034,11 @@ int ETLidarDriver::cacheScanData() {
           }
           return RESULT_FAIL;
         } else {
+          if (m_last_frame_valid) {
+            m_BufferSize = 0;
+            m_last_frame_valid = false;
+          }
+
           ans = checkAutoConnecting();
 
           if (IS_OK(ans)) {
@@ -993,12 +1052,23 @@ int ETLidarDriver::cacheScanData() {
       } else {
         timeout_count++;
         local_scan[0].sync_flag = Node_NotSync;
+
+        if (m_driverErrno == NoError) {
+          setDriverError(TimeoutError);
+        }
+
         fprintf(stderr, "timout count: %d\n", timeout_count);
         fflush(stderr);
       }
     } else {
       timeout_count = 0;
       retryCount = 0;
+      m_BufferSize = 0;
+      m_last_frame_valid = true;
+
+      if (retryCount != 0) {
+        setDriverError(NoError);
+      }
     }
 
 
@@ -1056,6 +1126,7 @@ result_t ETLidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
 
     if (node.sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT) {
       count = recvNodeCount;
+      CheckLaserStatus();
       return RESULT_OK;
     }
 
@@ -1089,6 +1160,10 @@ result_t ETLidarDriver::waitPackage(node_info *node, uint32_t timeout) {
   offset = frame.dataIndex + 4 * package_Sample_Index;
   (*node).distance_q2 = static_cast<uint16_t>(DSL(frame.frameBuf[offset + 2],
                         8) | DSL(frame.frameBuf[offset + 3], 0));
+
+  if ((*node).distance_q2 > 0) {
+    m_InvalidNodeCount++;
+  }
 
   if (isV1Protocol(frame.dataFormat)) {
     (*node).sync_quality = (uint16_t)(DSL(frame.frameBuf[offset],

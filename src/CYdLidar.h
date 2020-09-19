@@ -911,6 +911,12 @@ class YDLIDAR_API CYdLidar {
    */
   const char *DescribeError() const;
 
+  /**
+   * @brief getDriverError
+   * @return
+   */
+  DriverError getDriverError() const;
+
  private:
   /**
    * @brief check LiDAR instance and connect to LiDAR,

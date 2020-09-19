@@ -13,7 +13,7 @@ You can install these packages using apt:
 ```shell
 sudo apt install cmake pkg-config
 ```
-if you want to use python API, you need to install pyhton and swig:
+if you want to use python API, you need to install pyhton and swig(3.0 or higher):
 ```shell
 sudo apt-get install python swig
 sudo apt-get install python-pip

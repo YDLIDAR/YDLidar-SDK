@@ -69,6 +69,9 @@ YDlidarDriver::YDlidarDriver(uint8_t type):
   LastSampleAngleCal    = 0;
   CheckSumResult        = true;
   Valu8Tou16            = 0;
+  package_CT            = CT_Normal;
+  nowPackageNum         = 0;
+  package_Sample_Num    = 0;
 
   last_device_byte      = 0x00;
   asyncRecvPos          = 0;
@@ -86,6 +89,7 @@ YDlidarDriver::YDlidarDriver(uint8_t type):
   get_device_info_success           = false;
   IntervalSampleAngle_LastPackage   = 0.0;
   m_heartbeat_ts = getms();
+  m_BlockRevSize = 0;
 }
 
 YDlidarDriver::~YDlidarDriver() {
@@ -143,6 +147,7 @@ result_t YDlidarDriver::connect(const char *port_path, uint32_t baudrate) {
     ScopedLocker l(_lock);
 
     if (!_serial->open()) {
+      setDriverError(NotOpenError);
       return RESULT_FAIL;
     }
 
@@ -405,10 +410,14 @@ result_t YDlidarDriver::waitForData(size_t data_count, uint32_t timeout,
   return (result_t)_serial->waitfordata(data_count, timeout, returned_size);
 }
 
-result_t YDlidarDriver::checkAutoConnecting() {
+result_t YDlidarDriver::checkAutoConnecting(bool serialError) {
   result_t ans = RESULT_FAIL;
   isAutoconnting = true;
+  m_InvalidNodeCount = 0;
 
+  if (m_driverErrno != BlockError) {
+    setDriverError(TimeoutError);
+  }
 
   while (isAutoReconnect && isAutoconnting) {
     {
@@ -416,10 +425,29 @@ result_t YDlidarDriver::checkAutoConnecting() {
 
       if (_serial) {
         if (_serial->isOpen() || m_isConnected) {
-          m_isConnected = false;
-          _serial->closePort();
-          delete _serial;
-          _serial = NULL;
+          size_t buffer_size = _serial->available();
+          m_BufferSize += buffer_size;
+
+          if (m_BufferSize && m_BufferSize % 7 == 0) {
+            setDriverError(BlockError);
+          } else {
+            if (buffer_size > 0 || m_BufferSize > 0) {
+              if (m_driverErrno != BlockError) {
+                setDriverError(TrembleError);
+              }
+            } else {
+              setDriverError(NotBufferError);
+            }
+          }
+
+          if ((retryCount % 2 == 1) || serialError) {
+            m_isConnected = false;
+            _serial->closePort();
+            delete _serial;
+            _serial = NULL;
+          } else {
+            m_BufferSize -= buffer_size;
+          }
         }
       }
     }
@@ -448,6 +476,7 @@ result_t YDlidarDriver::checkAutoConnecting() {
       }
 
       tempCount = 0;
+      setDriverError(NotOpenError);
 
       while (isAutoReconnect && isscanning() && tempCount < retryConnect) {
         delay(200);
@@ -461,7 +490,22 @@ result_t YDlidarDriver::checkAutoConnecting() {
     }
 
     if (isconnected()) {
-      delay(100);
+      delay(50);
+
+      if (!m_SingleChannel && m_driverErrno != BlockError) {
+        device_info devinfo;
+        ans = getDeviceInfo(devinfo);
+
+        if (!IS_OK(ans)) {
+          stopScan();
+          ans = getDeviceInfo(devinfo);
+        }
+
+        if (!IS_OK(ans)) {
+          setDriverError(DeviceNotFoundError);
+          continue;
+        }
+      }
 
       {
         ScopedLocker l(_cmd_lock);
@@ -474,7 +518,14 @@ result_t YDlidarDriver::checkAutoConnecting() {
 
       if (IS_OK(ans)) {
         isAutoconnting = false;
+
+        if (getDriverError() == DeviceNotFoundError) {
+          setDriverError(NoError);
+        }
+
         return ans;
+      } else {
+        setDriverError(DeviceNotFoundError);
       }
     }
   }
@@ -504,6 +555,20 @@ void YDlidarDriver::KeepLiveHeartBeat() {
   }
 }
 
+void YDlidarDriver::CheckLaserStatus() {
+  if (m_InvalidNodeCount < 2) {
+    if (m_driverErrno == NoError) {
+      setDriverError(LaserFailureError);
+    }
+  } else {
+    if (m_driverErrno == LaserFailureError) {
+      setDriverError(NoError);
+    }
+  }
+
+  m_InvalidNodeCount = 0;
+}
+
 int YDlidarDriver::cacheScanData() {
   node_info      local_buf[128];
   size_t         count = 128;
@@ -521,11 +586,13 @@ int YDlidarDriver::cacheScanData() {
 
   int timeout_count   = 0;
   retryCount = 0;
+  m_BufferSize = 0;
   m_heartbeat_ts = getms();
+  bool m_last_frame_valid = false;
 
   while (m_isScanning) {
     count = 128;
-    ans = waitScanData(local_buf, count);
+    ans = waitScanData(local_buf, count, DEFAULT_TIMEOUT / 2);
 
     if (!IS_OK(ans)) {
       if (IS_FAIL(ans) || timeout_count > DEFAULT_TIMEOUT_COUNT) {
@@ -537,7 +604,12 @@ int YDlidarDriver::cacheScanData() {
           }
           return RESULT_FAIL;
         } else {
-          ans = checkAutoConnecting();
+          if (m_last_frame_valid) {
+            m_BufferSize = 0;
+            m_last_frame_valid = false;
+          }
+
+          ans = checkAutoConnecting(IS_FAIL(ans));
 
           if (IS_OK(ans)) {
             timeout_count = 0;
@@ -550,12 +622,24 @@ int YDlidarDriver::cacheScanData() {
       } else {
         timeout_count++;
         local_scan[0].sync_flag = Node_NotSync;
+
+        if (m_driverErrno == NoError) {
+          setDriverError(TimeoutError);
+        }
+
         fprintf(stderr, "timout count: %d\n", timeout_count);
         fflush(stderr);
       }
     } else {
       timeout_count = 0;
+      m_last_frame_valid = true;
+
+      if (retryCount != 0) {
+        setDriverError(NoError);
+      }
+
       retryCount = 0;
+      m_BufferSize = 0;
     }
 
 
@@ -783,238 +867,297 @@ result_t YDlidarDriver::waitDevicePackage(uint32_t timeout) {
 
 }
 
-result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout) {
+void YDlidarDriver::checkBlockStatus(uint8_t currentByte) {
+  switch (m_BlockRevSize) {
+    case 0:
+      if (currentByte == LIDAR_ANS_SYNC_BYTE1) {
+        m_BlockRevSize++;
+      }
+
+      break;
+
+    case 1:
+      if (currentByte == LIDAR_ANS_SYNC_BYTE2) {
+        setDriverError(BlockError);
+        m_BlockRevSize = 0;
+      }
+
+      break;
+
+    default:
+      break;
+  }
+}
+
+result_t YDlidarDriver::parseResponseHeader(uint8_t  *packageBuffer,
+    uint32_t timeout) {
   int recvPos         = 0;
   uint32_t startTs    = getms();
   uint32_t waitTime   = 0;
-  uint8_t  *packageBuffer = (m_intensities) ? (isTOFLidar(m_LidarType) ?
-                            (uint8_t *)&tof_package.package_Head : (uint8_t *)&package.package_Head) :
-                            (uint8_t *)&packages.package_Head;
-  uint8_t  package_Sample_Num         = 0;
-  int32_t  AngleCorrectForDistance    = 0;
-  int  package_recvPos    = 0;
+  m_BlockRevSize = 0;
+  package_Sample_Num         = 0;
   uint8_t package_type    = 0;
+  result_t ans = RESULT_TIMEOUT;
+
+  while ((waitTime = getms() - startTs) <= timeout) {
+    size_t remainSize   = PackagePaidBytes - recvPos;
+    size_t recvSize     = 0;
+    ans = waitForData(remainSize, timeout - waitTime, &recvSize);
+
+    if (!IS_OK(ans)) {
+      return ans;
+    }
+
+    if (recvSize > remainSize) {
+      recvSize = remainSize;
+    }
+
+    getData(globalRecvBuffer, recvSize);
+
+    for (size_t pos = 0; pos < recvSize; ++pos) {
+      uint8_t currentByte = globalRecvBuffer[pos];
+
+      switch (recvPos) {
+        case 0:
+          if (currentByte == (PH & 0xFF)) {
+          } else {
+            checkBlockStatus(currentByte);
+            continue;
+          }
+
+          break;
+
+        case 1:
+          CheckSumCal = PH;
+
+          if (currentByte == (PH >> 8)) {
+            if (m_driverErrno == BlockError) {
+              setDriverError(NoError);
+            }
+          } else {
+            has_package_error = true;
+            recvPos = 0;
+            continue;
+          }
+
+          break;
+
+        case 2:
+          SampleNumlAndCTCal = currentByte;
+          package_type = currentByte & 0x01;
+
+          if ((package_type == CT_Normal) || (package_type == CT_RingStart)) {
+            if (package_type == CT_RingStart) {
+              scan_frequence = (currentByte & 0xFE) >> 1;
+            }
+          } else {
+            has_package_error = true;
+            recvPos = 0;
+            continue;
+          }
+
+          break;
+
+        case 3:
+          SampleNumlAndCTCal += (currentByte * 0x100);
+          package_Sample_Num = currentByte;
+          break;
+
+        case 4:
+          if (currentByte & LIDAR_RESP_MEASUREMENT_CHECKBIT) {
+            FirstSampleAngle = currentByte;
+          } else {
+            has_package_error = true;
+            recvPos = 0;
+            continue;
+          }
+
+          break;
+
+        case 5:
+          FirstSampleAngle += currentByte * 0x100;
+          CheckSumCal ^= FirstSampleAngle;
+          FirstSampleAngle = FirstSampleAngle >> 1;
+          break;
+
+        case 6:
+          if (currentByte & LIDAR_RESP_MEASUREMENT_CHECKBIT) {
+            LastSampleAngle = currentByte;
+          } else {
+            has_package_error = true;
+            recvPos = 0;
+            continue;
+          }
+
+          break;
+
+        case 7:
+          LastSampleAngle = currentByte * 0x100 + LastSampleAngle;
+          LastSampleAngleCal = LastSampleAngle;
+          LastSampleAngle = LastSampleAngle >> 1;
+
+          if (package_Sample_Num == 1) {
+            IntervalSampleAngle = 0;
+          } else {
+            if (LastSampleAngle < FirstSampleAngle) {
+              if ((FirstSampleAngle > 270 * 64) && (LastSampleAngle < 90 * 64)) {
+                IntervalSampleAngle = (float)((360 * 64 + LastSampleAngle -
+                                               FirstSampleAngle) / ((
+                                                     package_Sample_Num - 1) * 1.0));
+                IntervalSampleAngle_LastPackage = IntervalSampleAngle;
+              } else {
+                IntervalSampleAngle = IntervalSampleAngle_LastPackage;
+              }
+            } else {
+              IntervalSampleAngle = (float)((LastSampleAngle - FirstSampleAngle) / ((
+                                              package_Sample_Num - 1) * 1.0));
+              IntervalSampleAngle_LastPackage = IntervalSampleAngle;
+            }
+          }
+
+          break;
+
+        case 8:
+          CheckSum = currentByte;
+          break;
+
+        case 9:
+          CheckSum += (currentByte * 0x100);
+          break;
+      }
+
+      packageBuffer[recvPos++] = currentByte;
+    }
+
+    if (recvPos == PackagePaidBytes) {
+      ans = RESULT_OK;
+      break;
+    }
+
+    ans = RESULT_TIMEOUT;
+  }
+
+  return ans;
+}
+
+result_t YDlidarDriver::parseResponseScanData(uint8_t *packageBuffer,
+    uint32_t timeout) {
+  int recvPos         = 0;
+  uint32_t startTs    = getms();
+  uint32_t waitTime   = 0;
+  result_t ans = RESULT_TIMEOUT;
+
+  while ((waitTime = getms() - startTs) <= timeout) {
+    size_t remainSize = package_Sample_Num * PackageSampleBytes - recvPos;
+    size_t recvSize = 0;
+    ans = waitForData(remainSize, timeout - waitTime, &recvSize);
+
+    if (!IS_OK(ans)) {
+      return ans;
+    }
+
+    if (recvSize > remainSize) {
+      recvSize = remainSize;
+    }
+
+    getData(globalRecvBuffer, recvSize);
+
+    for (size_t pos = 0; pos < recvSize; ++pos) {
+      if (m_intensities && !isTOFLidar(m_LidarType)) {
+        if (recvPos % 3 == 2) {
+          Valu8Tou16 += globalRecvBuffer[pos] * 0x100;
+          CheckSumCal ^= Valu8Tou16;
+        } else if (recvPos % 3 == 1) {
+          Valu8Tou16 = globalRecvBuffer[pos];
+        } else {
+          CheckSumCal ^= globalRecvBuffer[pos];
+        }
+      } else {
+        if (recvPos % 2 == 1) {
+          Valu8Tou16 += globalRecvBuffer[pos] * 0x100;
+          CheckSumCal ^= Valu8Tou16;
+        } else {
+          Valu8Tou16 = globalRecvBuffer[pos];
+        }
+      }
+
+      packageBuffer[PackagePaidBytes + recvPos] = globalRecvBuffer[pos];
+      recvPos++;
+    }
+
+    if (package_Sample_Num * PackageSampleBytes == recvPos) {
+      ans = RESULT_OK;
+      break;
+    }
+  }
+
+  if (package_Sample_Num * PackageSampleBytes != recvPos) {
+    return RESULT_FAIL;
+  }
+
+  return ans;
+}
+
+result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout) {
   (*node).index = 255;
   (*node).scan_frequence  = 0;
   (*node).error_package = 0;
   (*node).debugInfo = 0xff;
 
   if (package_Sample_Index == 0) {
-    recvPos = 0;
+    uint8_t  *packageBuffer = (m_intensities) ? (isTOFLidar(m_LidarType) ?
+                              (uint8_t *)&tof_package.package_Head : (uint8_t *)&package.package_Head) :
+                              (uint8_t *)&packages.package_Head;
+    result_t ans = parseResponseHeader(packageBuffer, timeout);
 
-    while ((waitTime = getms() - startTs) <= timeout) {
-      size_t remainSize   = PackagePaidBytes - recvPos;
-      size_t recvSize     = 0;
-      result_t ans = waitForData(remainSize, timeout - waitTime, &recvSize);
-
-      if (!IS_OK(ans)) {
-        return ans;
-      }
-
-      if (recvSize > remainSize) {
-        recvSize = remainSize;
-      }
-
-      getData(globalRecvBuffer, recvSize);
-
-      for (size_t pos = 0; pos < recvSize; ++pos) {
-        uint8_t currentByte = globalRecvBuffer[pos];
-
-        switch (recvPos) {
-          case 0:
-            if (currentByte == (PH & 0xFF)) {
-            } else {
-              continue;
-            }
-
-            break;
-
-          case 1:
-            CheckSumCal = PH;
-
-            if (currentByte == (PH >> 8)) {
-
-            } else {
-              has_package_error = true;
-              recvPos = 0;
-              continue;
-            }
-
-            break;
-
-          case 2:
-            SampleNumlAndCTCal = currentByte;
-            package_type = currentByte & 0x01;
-
-            if ((package_type == CT_Normal) || (package_type == CT_RingStart)) {
-              if (package_type == CT_RingStart) {
-                scan_frequence = (currentByte & 0xFE) >> 1;
-              }
-            } else {
-              has_package_error = true;
-              recvPos = 0;
-              continue;
-            }
-
-            break;
-
-          case 3:
-            SampleNumlAndCTCal += (currentByte * 0x100);
-            package_Sample_Num = currentByte;
-            break;
-
-          case 4:
-            if (currentByte & LIDAR_RESP_MEASUREMENT_CHECKBIT) {
-              FirstSampleAngle = currentByte;
-            } else {
-              has_package_error = true;
-              recvPos = 0;
-              continue;
-            }
-
-            break;
-
-          case 5:
-            FirstSampleAngle += currentByte * 0x100;
-            CheckSumCal ^= FirstSampleAngle;
-            FirstSampleAngle = FirstSampleAngle >> 1;
-            break;
-
-          case 6:
-            if (currentByte & LIDAR_RESP_MEASUREMENT_CHECKBIT) {
-              LastSampleAngle = currentByte;
-            } else {
-              has_package_error = true;
-              recvPos = 0;
-              continue;
-            }
-
-            break;
-
-          case 7:
-            LastSampleAngle = currentByte * 0x100 + LastSampleAngle;
-            LastSampleAngleCal = LastSampleAngle;
-            LastSampleAngle = LastSampleAngle >> 1;
-
-            if (package_Sample_Num == 1) {
-              IntervalSampleAngle = 0;
-            } else {
-              if (LastSampleAngle < FirstSampleAngle) {
-                if ((FirstSampleAngle > 270 * 64) && (LastSampleAngle < 90 * 64)) {
-                  IntervalSampleAngle = (float)((360 * 64 + LastSampleAngle -
-                                                 FirstSampleAngle) / ((
-                                                       package_Sample_Num - 1) * 1.0));
-                  IntervalSampleAngle_LastPackage = IntervalSampleAngle;
-                } else {
-                  IntervalSampleAngle = IntervalSampleAngle_LastPackage;
-                }
-              } else {
-                IntervalSampleAngle = (float)((LastSampleAngle - FirstSampleAngle) / ((
-                                                package_Sample_Num - 1) * 1.0));
-                IntervalSampleAngle_LastPackage = IntervalSampleAngle;
-              }
-            }
-
-            break;
-
-          case 8:
-            CheckSum = currentByte;
-            break;
-
-          case 9:
-            CheckSum += (currentByte * 0x100);
-            break;
-        }
-
-        packageBuffer[recvPos++] = currentByte;
-      }
-
-      if (recvPos  == PackagePaidBytes) {
-        package_recvPos = recvPos;
-        break;
-      }
+    if (!IS_OK(ans)) {
+      return ans;
     }
 
-    if (PackagePaidBytes == recvPos) {
-      startTs = getms();
-      recvPos = 0;
+    ans = parseResponseScanData(packageBuffer, timeout);
 
-      while ((waitTime = getms() - startTs) <= timeout) {
-        size_t remainSize = package_Sample_Num * PackageSampleBytes - recvPos;
-        size_t recvSize = 0;
-        result_t ans = waitForData(remainSize, timeout - waitTime, &recvSize);
-
-        if (!IS_OK(ans)) {
-          return ans;
-        }
-
-        if (recvSize > remainSize) {
-          recvSize = remainSize;
-        }
-
-        getData(globalRecvBuffer, recvSize);
-
-        for (size_t pos = 0; pos < recvSize; ++pos) {
-          if (m_intensities && !isTOFLidar(m_LidarType)) {
-            if (recvPos % 3 == 2) {
-              Valu8Tou16 += globalRecvBuffer[pos] * 0x100;
-              CheckSumCal ^= Valu8Tou16;
-            } else if (recvPos % 3 == 1) {
-              Valu8Tou16 = globalRecvBuffer[pos];
-            } else {
-              CheckSumCal ^= globalRecvBuffer[pos];
-            }
-          } else {
-            if (recvPos % 2 == 1) {
-              Valu8Tou16 += globalRecvBuffer[pos] * 0x100;
-              CheckSumCal ^= Valu8Tou16;
-            } else {
-              Valu8Tou16 = globalRecvBuffer[pos];
-            }
-          }
-
-          packageBuffer[package_recvPos + recvPos] = globalRecvBuffer[pos];
-          recvPos++;
-        }
-
-        if (package_Sample_Num * PackageSampleBytes == recvPos) {
-          package_recvPos += recvPos;
-          break;
-        }
-      }
-
-      if (package_Sample_Num * PackageSampleBytes != recvPos) {
-        return RESULT_FAIL;
-      }
-    } else {
-      return RESULT_FAIL;
+    if (!IS_OK(ans)) {
+      return ans;
     }
 
-    CheckSumCal ^= SampleNumlAndCTCal;
-    CheckSumCal ^= LastSampleAngleCal;
-
-    if (CheckSumCal != CheckSum) {
-      CheckSumResult = false;
-      has_package_error = true;
-      (*node).error_package = 1;
-    } else {
-      CheckSumResult = true;
-    }
-
+    calcuteCheckSum(node);
+    calcutePackageCT();
   }
 
-  uint8_t package_CT;
+  parseNodeDebugFromBuffer(node);
+  parseNodeFromeBuffer(node);
+  return RESULT_OK;
+}
 
+void YDlidarDriver::calcuteCheckSum(node_info *node) {
+  CheckSumCal ^= SampleNumlAndCTCal;
+  CheckSumCal ^= LastSampleAngleCal;
+
+  if (CheckSumCal != CheckSum) {
+    CheckSumResult = false;
+    has_package_error = true;
+    (*node).error_package = 1;
+  } else {
+    CheckSumResult = true;
+  }
+}
+
+void YDlidarDriver::calcutePackageCT() {
   if (m_intensities) {
     if (isTOFLidar(m_LidarType)) {
       package_CT = tof_package.package_CT;
+      nowPackageNum = tof_package.nowPackageNum;
     } else {
       package_CT = package.package_CT;
+      nowPackageNum = package.nowPackageNum;
     }
   } else {
     package_CT = packages.package_CT;
+    nowPackageNum = packages.nowPackageNum;
   }
+}
 
+void YDlidarDriver::parseNodeDebugFromBuffer(node_info *node) {
   if ((package_CT & 0x01) == CT_Normal) {
     (*node).sync_flag = Node_NotSync;
     (*node).debugInfo = 0xff;
@@ -1041,7 +1184,10 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout) {
       (*node).scan_frequence  = scan_frequence;
     }
   }
+}
 
+void YDlidarDriver::parseNodeFromeBuffer(node_info *node) {
+  int32_t  AngleCorrectForDistance    = 0;
   (*node).sync_quality = Node_Default_Quality;
   (*node).delay_time = 0;
   (*node).stamp = 0;
@@ -1084,6 +1230,8 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout) {
                                                       *node).distance_q2 / 4.0))) * 180.0 / 3.1415) * 64.0);
         }
       }
+
+      m_InvalidNodeCount++;
     } else {
       AngleCorrectForDistance = 0;
     }
@@ -1114,27 +1262,12 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout) {
     (*node).scan_frequence  = 0;
   }
 
-
-  uint8_t nowPackageNum;
-
-  if (m_intensities) {
-    if (isTOFLidar(m_LidarType)) {
-      nowPackageNum = tof_package.nowPackageNum;
-    } else {
-      nowPackageNum = package.nowPackageNum;
-    }
-  } else {
-    nowPackageNum = packages.nowPackageNum;
-  }
-
   package_Sample_Index++;
 
   if (package_Sample_Index >= nowPackageNum) {
     package_Sample_Index = 0;
     CheckSumResult = false;
   }
-
-  return RESULT_OK;
 }
 
 result_t YDlidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
@@ -1168,11 +1301,6 @@ result_t YDlidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
         size_t packageNum = 0;
         size_t Number = 0;
         size_t PackageSize = TrianglePackageDataSize;
-
-//        if (isTOFLidar(m_LidarType)) {
-//          PackageSize =  TOFPackageDataSize;
-//        }
-
         packageNum = size / PackageSize;
         Number = size % PackageSize;
         delayTime = packageNum * (PackageSize - PackagePaidBytes) * m_PointTime / 2;
@@ -1186,6 +1314,7 @@ result_t YDlidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
       nodebuffer[recvNodeCount - 1].scan_frequence = node.scan_frequence;
       nodebuffer[recvNodeCount - 1].stamp = getTime();
       count = recvNodeCount;
+      CheckLaserStatus();
       return RESULT_OK;
     }
 
@@ -1409,7 +1538,7 @@ result_t YDlidarDriver::getDeviceInfo(device_info &info, uint32_t timeout) {
     return RESULT_OK;
   }
 
-  disableDataGrabbing();
+//  disableDataGrabbing();
   flushSerial();
   {
     ScopedLocker l(_lock);

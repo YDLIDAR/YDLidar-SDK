@@ -399,6 +399,11 @@ class ETLidarDriver : public DriverInterface {
   result_t checkAutoConnecting();
 
   /**
+   * @brief CheckLaserStatus
+   */
+  void CheckLaserStatus();
+
+  /**
   * @brief parsing scan \n
   */
   int cacheScanData();

@@ -151,7 +151,7 @@ bool CYdLidar::setlidaropt(int optname, const void *optval, int optlen) {
       m_IgnoreString = (const char *)optval;
       m_IgnoreArray = ydlidar::split(m_IgnoreString, ',');
 
-      if (m_IgnoreArray.size() / 2 != 0) {
+      if (m_IgnoreArray.size() % 2 != 0) {
         m_IgnoreArray.clear();
         ret = false;
       }
@@ -430,7 +430,8 @@ bool  CYdLidar::turnOn() {
   if (checkLidarAbnormal()) {
     lidarPtr->stop();
     fprintf(stderr,
-            "[CYdLidar] Failed to turn on the Lidar, because the lidar is blocked or the lidar hardware is faulty.\n");
+            "[CYdLidar] Failed to turn on the Lidar, because the lidar is [%s].\n",
+            DriverInterface::DescribeDriverError(lidarPtr->getDriverError()));
     isScanning = false;
     return false;
   }
@@ -565,7 +566,6 @@ bool  CYdLidar::doProcessSimple(LaserScan &outscan) {
     float intensity = 0.0;
     float angle = 0.0;
     debug.MaxDebugIndex = 0;
-    std::vector<LaserPoint> points;
 
     for (int i = 0; i < count; i++) {
       if (isNetTOFLidar(m_LidarType)) {
@@ -658,6 +658,12 @@ bool  CYdLidar::doProcessSimple(LaserScan &outscan) {
       // Error? Retry connection
     }
 
+    if (lidarPtr->getDriverError() != NoError) {
+      fprintf(stderr, "[YDLIDAR ERROR]: %s\n",
+              DriverInterface::DescribeDriverError(lidarPtr->getDriverError()));
+      fflush(stderr);
+    }
+
     m_AllNode = 0;
     m_FristNodeTime = tim_scan_start;
   }
@@ -723,6 +729,18 @@ const char *CYdLidar::DescribeError() const {
   return value;
 }
 
+/*-------------------------------------------------------------
+                    getDriverError
+-------------------------------------------------------------*/
+DriverError CYdLidar::getDriverError() const {
+  DriverError er = UnknownError;
+
+  if (lidarPtr) {
+    return lidarPtr->getDriverError();
+  }
+
+  return er;
+}
 
 /*-------------------------------------------------------------
                     isRangeValid
@@ -865,6 +883,8 @@ bool CYdLidar::checkLidarAbnormal() {
             return !IS_OK(op_result);
           }
         }
+      } else {
+        check_abnormal_count++;
       }
     }
 

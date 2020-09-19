@@ -16,6 +16,10 @@ if __name__ == "__main__":
     laser.setlidaropt(ydlidar.LidarPropScanFrequency, 10.0);
     laser.setlidaropt(ydlidar.LidarPropSampleRate, 9);
     laser.setlidaropt(ydlidar.LidarPropSingleChannel, False);
+    laser.setlidaropt(ydlidar.LidarPropMaxAngle, 180.0);
+    laser.setlidaropt(ydlidar.LidarPropMinAngle, -180.0);
+    laser.setlidaropt(ydlidar.LidarPropMaxRange, 16.0);
+    laser.setlidaropt(ydlidar.LidarPropMinRange, 0.08);
 
     ret = laser.initialize();
     if ret:

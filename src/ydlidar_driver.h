@@ -412,6 +412,24 @@ class YDlidarDriver : public DriverInterface {
    * @retval RESULT_FAILE    failed
    */
   result_t waitDevicePackage(uint32_t timeout = DEFAULT_TIMEOUT);
+
+  /**
+   * @brief parseResponseHeader
+   * @param packageBuffer
+   * @param timeout
+   * @return
+   */
+  result_t parseResponseHeader(uint8_t  *packageBuffer,
+                               uint32_t timeout = DEFAULT_TIMEOUT);
+
+  /**
+   * @brief parseResponseScanData
+   * @param packageBuffer
+   * @param timeout
+   * @return
+   */
+  result_t parseResponseScanData(uint8_t  *packageBuffer,
+                                 uint32_t timeout = DEFAULT_TIMEOUT);
   /**
   * @brief Unpacking \n
   * @param[in] node lidar point information
@@ -524,7 +542,7 @@ class YDlidarDriver : public DriverInterface {
   /*!
    * @brief checkAutoConnecting
    */
-  result_t checkAutoConnecting();
+  result_t checkAutoConnecting(bool serialError = true);
 
   /**
    * @brief autoHeartBeat
@@ -536,6 +554,35 @@ class YDlidarDriver : public DriverInterface {
    * @brief KeepLiveHeartBeat
    */
   void KeepLiveHeartBeat();
+
+  /**
+   * @brief CheckLaserStatus
+   */
+  void CheckLaserStatus();
+
+  /**
+   * @brief checkBlockStatus
+   */
+  void checkBlockStatus(uint8_t currentByte);
+
+  /**
+   * @brief calcuteCheckSum
+   * @param node
+   */
+  void calcuteCheckSum(node_info *node);
+  /**
+   * @brief calcutePackageCT
+   */
+  void calcutePackageCT();
+  /**
+   * @brief parseNodeDebugFromBuffer
+   */
+  void parseNodeDebugFromBuffer(node_info *node);
+
+  /**
+   * @brief parseNodeFromeBuffer
+   */
+  void parseNodeFromeBuffer(node_info *node);
 
  private:
   /// package sample bytes
@@ -576,6 +623,9 @@ class YDlidarDriver : public DriverInterface {
   uint16_t LastSampleAngleCal;
   bool CheckSumResult;
   uint16_t Valu8Tou16;
+  uint8_t package_CT;
+  uint8_t nowPackageNum;
+  uint8_t package_Sample_Num;
 
   uint8_t *globalRecvBuffer;
   bool has_device_header;
@@ -596,6 +646,7 @@ class YDlidarDriver : public DriverInterface {
   int package_index;
   bool has_package_error;
   uint32_t m_heartbeat_ts;
+  uint8_t m_BlockRevSize;
 
 };
 
