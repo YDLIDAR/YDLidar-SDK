@@ -487,6 +487,7 @@ bool  CYdLidar::doProcessSimple(LaserScan &outscan) {
   uint64_t startTs = tim_scan_start;
   result_t op_result =  lidarPtr->grabScanData(global_nodes, count);
   uint64_t tim_scan_end = getTime();
+  uint64_t endTs = tim_scan_end;
   uint64_t sys_scan_time = tim_scan_end - tim_scan_start;
   outscan.points.clear();
 
@@ -521,7 +522,8 @@ bool  CYdLidar::doProcessSimple(LaserScan &outscan) {
       tim_scan_end = tim_scan_start + scan_time;
     }
 
-    if ((last_node_time + m_PointTime) >= tim_scan_start) {
+    if ((last_node_time + m_PointTime) >= tim_scan_start &&
+        (last_node_time + m_PointTime) < endTs - scan_time) {
       tim_scan_start = last_node_time + m_PointTime;
       tim_scan_end = tim_scan_start + scan_time;
     }
