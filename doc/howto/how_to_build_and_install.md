@@ -13,7 +13,7 @@ You can install these packages using apt:
 ```shell
 sudo apt install cmake pkg-config
 ```
-if you want to use python API, you need to install pyhton and swig(3.0 or higher):
+if you want to use python API, you need to install python and swig(3.0 or higher):
 ```shell
 sudo apt-get install python swig
 sudo apt-get install python-pip
@@ -30,7 +30,7 @@ For the 64-bit project:
 .\vcpkg install cmake:x64-windows
 .\vcpkg integrate install
 ```
-if you want to use python API, you need to install pyhton and swig:
+if you want to use python API, you need to install python and swig:
 [python office install](https://wiki.python.org/moin/BeginnersGuide/Download)
 [swig office install](http://www.swig.org/download.html)
 
