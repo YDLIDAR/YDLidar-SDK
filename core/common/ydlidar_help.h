@@ -594,7 +594,7 @@ inline bool isValidSampleRate(std::map<int, int>  smap) {
   }
 
   if (smap.size() == 1) {
-    if (smap.begin()->second > 1) {
+    if (smap.begin()->second > 2) {
       return true;
     }
 

@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
   optval = YDLIDAR_TYPE_SERIAL;
   laser.setlidaropt(LidarPropDeviceType, &optval, sizeof(int));
   /// sample rate
-  optval = isSingleChannel ? 3 : 9;
+  optval = isSingleChannel ? 3 : 4;
   laser.setlidaropt(LidarPropSampleRate, &optval, sizeof(int));
   /// abnormal count
   optval = 4;

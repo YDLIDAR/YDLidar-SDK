@@ -890,7 +890,7 @@ bool CYdLidar::checkLidarAbnormal() {
       }
     }
 
-    if (IS_OK(op_result)) {
+    if (IS_OK(op_result) && lidarPtr->getSingleChannel()) {
       data.push_back(count);
       int collection = 0;
 
@@ -935,7 +935,7 @@ bool CYdLidar::checkLidarAbnormal() {
         int total = accumulate(data.begin(), data.end(), 0);
         int mean =  total / data.size(); //mean value
         m_FixedSize = (static_cast<int>((mean + 5) / 10)) * 10;
-        printf("[YDLIDAR]:Fixed Size: %d\n", m_FixedSize);
+        printf("[YDLIDAR]:Single Fixed Size: %d\n", m_FixedSize);
         printf("[YDLIDAR]:Sample Rate: %dK\n", m_SampleRate);
         return false;
       }
@@ -1000,7 +1000,8 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time) {
     cnt++;
     SampleRateMap[samplerate] =  cnt;
 
-    if (isValidSampleRate(SampleRateMap) || defalutSampleRate == samplerate) {
+    if (isValidSampleRate(SampleRateMap) || defalutSampleRate == samplerate ||
+        m_SampleRate == samplerate) {
       m_SampleRate = samplerate;
       m_PointTime = 1e9 / (m_SampleRate * 1000);
       lidarPtr->setPointTime(m_PointTime);
@@ -1009,8 +1010,8 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time) {
         m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
       }
 
-      printf("[YDLIDAR]:Fixed Size: %d\n", m_FixedSize);
-      printf("[YDLIDAR]:Sample Rate: %dK\n", m_SampleRate);
+      printf("[YDLIDAR1]:Fixed Size: %d\n", m_FixedSize);
+      printf("[YDLIDAR1]:Sample Rate: %dK\n", m_SampleRate);
       return true;
     } else {
       if (SampleRateMap.size() > 1) {
@@ -1023,11 +1024,45 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time) {
     if (scan_time > 0.04 && scan_time < 0.4) {
       int samplerate = static_cast<int>((count / scan_time + 500) / 1000);
 
-      if (defalutSampleRate == samplerate) {
+      if (defalutSampleRate == samplerate || m_SampleRate == samplerate) {
         m_SampleRate = samplerate;
         m_PointTime = 1e9 / (m_SampleRate * 1000);
         lidarPtr->setPointTime(m_PointTime);
+
+        if (!m_SingleChannel) {
+          m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
+        }
+
+        printf("[YDLIDAR3]:Fixed Size: %d\n", m_FixedSize);
+        printf("[YDLIDAR3]:Sample Rate: %dK\n", m_SampleRate);
         return true;
+      } else {
+        int cnt = 0;
+
+        if (SampleRateMap.find(samplerate) != SampleRateMap.end()) {
+          cnt = SampleRateMap[samplerate];
+        }
+
+        cnt++;
+        SampleRateMap[samplerate] =  cnt;
+
+        if (SampleRateMap.size() > 1) {
+          SampleRateMap.clear();
+        }
+
+        if (isValidSampleRate(SampleRateMap)) {
+          m_SampleRate = samplerate;
+          m_PointTime = 1e9 / (m_SampleRate * 1000);
+          lidarPtr->setPointTime(m_PointTime);
+
+          if (!m_SingleChannel) {
+            m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
+          }
+
+          printf("[YDLIDAR2]:Fixed Size: %d\n", m_FixedSize);
+          printf("[YDLIDAR2]:Sample Rate: %dK\n", m_SampleRate);
+          return true;
+        }
       }
     }
   }
@@ -1114,7 +1149,7 @@ bool CYdLidar::getDeviceInfo() {
   frequencyOffset     = 0.4;
   lidar_model = devinfo.model;
   bool intensity = hasIntensity(devinfo.model);
-  int defalutSampleRate = lidarModelDefaultSampleRate(devinfo.model);
+  defalutSampleRate = lidarModelDefaultSampleRate(devinfo.model);
 
   intensity = m_Intensity;
   std::string serial_number;
@@ -1142,7 +1177,6 @@ bool CYdLidar::getDeviceInfo() {
   } else {
     m_PointTime = 1e9 / (defalutSampleRate * 1000);
     lidarPtr->setPointTime(m_PointTime);
-    m_SampleRate = defalutSampleRate;
   }
 
   if (hasScanFrequencyCtrl(devinfo.model) || ((isTOFLidar(m_LidarType)) &&
