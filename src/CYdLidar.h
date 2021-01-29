@@ -1097,22 +1097,22 @@ namespace ydlidar {
 /**
  * @brief system signal initialize
  */
-void os_init();
+YDLIDAR_API void os_init();
 /**
  * @brief Whether system signal is initialized.
  * @return
  */
-bool os_isOk();
+YDLIDAR_API bool os_isOk();
 /**
  * @brief shutdown system signal
  */
-void os_shutdown();
+YDLIDAR_API void os_shutdown();
 
 /**
  * @brief lidarPortList
  * @return
  */
-std::map<std::string, std::string> lidarPortList();
+YDLIDAR_API std::map<std::string, std::string> lidarPortList();
 
 }
 

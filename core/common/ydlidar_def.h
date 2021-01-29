@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <core/base/typedef.h>
+#include <core/base/utils.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -225,11 +226,11 @@ typedef struct {
  * @brief initialize LaserFan
  * @param to_init
  */
-void LaserFanInit(LaserFan *to_init);
+YDLIDAR_API void LaserFanInit(LaserFan *to_init);
 /**
  * Destroy an instance of LaserFan points
  */
-void LaserFanDestroy(LaserFan *to_destroy);
+YDLIDAR_API void LaserFanDestroy(LaserFan *to_destroy);
 
 #ifdef __cplusplus
 }

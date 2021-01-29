@@ -57,13 +57,13 @@ extern "C" {
  * @note call ::lidarDestroy destroy
  * @return created instance
  */
-YDLidar *lidarCreate(void);
+YDLIDAR_API YDLidar *lidarCreate(void);
 
 /**
  * @brief Destroy Lidar instance by ::lidarCreate create
  * @param lidar     CYdLidar instance
  */
-void lidarDestroy(YDLidar **lidar);
+YDLIDAR_API void lidarDestroy(YDLidar **lidar);
 
 /**
  * @brief set lidar properties
@@ -124,7 +124,8 @@ void lidarDestroy(YDLidar **lidar);
  * @return true if the Property is set successfully, otherwise false.
  * @see LidarProperty
  */
-bool setlidaropt(YDLidar *lidar, int optname, const void *optval, int optlen);
+YDLIDAR_API bool setlidaropt(YDLidar *lidar, int optname, const void *optval,
+                             int optlen);
 
 /**
  * @brief get lidar property
@@ -185,31 +186,32 @@ bool setlidaropt(YDLidar *lidar, int optname, const void *optval, int optlen);
  * @return true if the Property is get successfully, otherwise false.
  * @see LidarProperty
  */
-bool getlidaropt(YDLidar *lidar, int optname, void *optval, int optlen);
+YDLIDAR_API bool getlidaropt(YDLidar *lidar, int optname, void *optval,
+                             int optlen);
 
 /**
 * Return SDK's version information in a numeric form.
 * @param version Pointer to a version for returning the version information.
 */
-void GetSdkVersion(char *version);
+YDLIDAR_API void GetSdkVersion(char *version);
 
 /**
  * Initialize the SDK.
  * @return true if successfully initialized, otherwise false.
  */
-bool initialize(YDLidar *lidar);
+YDLIDAR_API bool initialize(YDLidar *lidar);
 
 /**
 * @brief Return LiDAR's version information in a numeric form.
 * @param version Pointer to a version structure for returning the version information.
 */
-void GetLidarVersion(YDLidar *lidar, LidarVersion *version);
+YDLIDAR_API void GetLidarVersion(YDLidar *lidar, LidarVersion *version);
 
 /**
  * Start the device scanning routine which runs on a separate thread.
  * @return true if successfully started, otherwise false.
  */
-bool turnOn(YDLidar *lidar);
+YDLIDAR_API bool turnOn(YDLidar *lidar);
 
 /**
  * @brief Get the LiDAR Scan Data. turnOn is successful before doProcessSimple scan data.
@@ -217,44 +219,44 @@ bool turnOn(YDLidar *lidar);
  * @param[out] outscan       LiDAR Scan Data
  * @return true if successfully started, otherwise false.
  */
-bool doProcessSimple(YDLidar *lidar, LaserFan *outscan);
+YDLIDAR_API bool doProcessSimple(YDLidar *lidar, LaserFan *outscan);
 /**
  * @brief Stop the device scanning thread and disable motor.
  * @return true if successfully Stoped, otherwise false.
  */
-bool turnOff(YDLidar *lidar);
+YDLIDAR_API bool turnOff(YDLidar *lidar);
 /**
  * @brief Uninitialize the SDK and Disconnect the LiDAR.
  */
-void disconnecting(YDLidar *lidar);
+YDLIDAR_API void disconnecting(YDLidar *lidar);
 
 /**
  * @brief Get the last error information of a (socket or serial)
  * @return a human-readable description of the given error information
  * or the last error information of a (socket or serial)
  */
-const char *DescribeError(YDLidar *lidar);
+YDLIDAR_API const char *DescribeError(YDLidar *lidar);
 
 /**
  * @brief initialize system signals
  */
-void os_init();
+YDLIDAR_API void os_init();
 /**
  * @brief isOk
  * @return true if successfully initialize, otherwise false.
  */
-bool os_isOk();
+YDLIDAR_API bool os_isOk();
 /**
  * @brief os_shutdown
  */
-void os_shutdown();
+YDLIDAR_API void os_shutdown();
 
 /**
  * @brief get lidar serial port
  * @param ports serial port lists
  * @return valid port number
  */
-int lidarPortList(LidarPort *ports);
+YDLIDAR_API int lidarPortList(LidarPort *ports);
 
 #ifdef __cplusplus
 }
