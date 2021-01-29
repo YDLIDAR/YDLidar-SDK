@@ -1192,8 +1192,8 @@ bool CYdLidar::getDeviceInfo() {
   if (isSupportHeartBeat(devinfo.model)) {
     ret &= checkHeartBeat();
 
-    if (ret) {
-      fprintf(stderr, "Failed to Set HeartBeat[%d] State.\n", m_SupportHearBeat);
+    if (!ret) {
+      fprintf(stderr, "Failed to Set HeartBeat[%d].\n", m_SupportHearBeat);
     }
   }
 
