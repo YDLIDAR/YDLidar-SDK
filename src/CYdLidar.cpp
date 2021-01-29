@@ -83,6 +83,7 @@ CYdLidar::CYdLidar(): lidarPtr(nullptr) {
   m_isAngleOffsetCorrected = false;
   m_field_of_view       = 360.f;
   memset(&m_LidarVersion, 0, sizeof(LidarVersion));
+  zero_offset_angle_scale = 4.f;
 }
 
 /*-------------------------------------------------------------
@@ -1112,6 +1113,7 @@ bool CYdLidar::getDeviceInfo() {
     return false;
   }
 
+  bool ret = false;
   device_info devinfo;
   result_t op_result = lidarPtr->getDeviceInfo(devinfo,
                        DriverInterface::DEFAULT_TIMEOUT / 2);
@@ -1154,6 +1156,7 @@ bool CYdLidar::getDeviceInfo() {
   intensity = m_Intensity;
   std::string serial_number;
   lidarPtr->setIntensities(intensity);
+  ret = true;
 
   if (printfVersionInfo(devinfo, m_SerialPort, m_SerialBaudrate)) {
     Major = (uint8_t)(devinfo.firmware_version >> 8);
@@ -1170,6 +1173,8 @@ bool CYdLidar::getDeviceInfo() {
 
     m_SerialNumber = serial_number;
     m_parsingCompleted = true;
+    zero_offset_angle_scale = lidarZeroOffsetAngleScale(devinfo.model,
+                              devinfo.firmware_version >> 8, devinfo.firmware_version & 0x00ff);
   }
 
   if (hasSampleRate(devinfo.model)) {
@@ -1185,14 +1190,18 @@ bool CYdLidar::getDeviceInfo() {
   }
 
   if (isSupportHeartBeat(devinfo.model)) {
-    checkHeartBeat();
+    ret &= checkHeartBeat();
+
+    if (ret) {
+      fprintf(stderr, "Failed to Set HeartBeat[%d] State.\n", m_SupportHearBeat);
+    }
   }
 
   if (hasZeroAngle(devinfo.model)) {
-    checkCalibrationAngle(serial_number);
+    ret &= checkCalibrationAngle(serial_number);
   }
 
-  return true;
+  return ret;
 }
 
 /*-------------------------------------------------------------
@@ -1320,7 +1329,7 @@ bool CYdLidar::checkScanFrequency() {
 bool CYdLidar::checkHeartBeat() {
   if (!m_SupportHearBeat) {
     lidarPtr->setHeartBeat(false);
-    return false;
+    return true;
   }
 
   bool ret = false;
@@ -1331,6 +1340,7 @@ bool CYdLidar::checkHeartBeat() {
     result_t ans = lidarPtr->setScanHeartbeat(beat);
 
     if (IS_OK(ans) && !beat.enable) {
+      ret = true;
       break;
     }
 
@@ -1344,7 +1354,8 @@ bool CYdLidar::checkHeartBeat() {
 /*-------------------------------------------------------------
                         checkCalibrationAngle
 -------------------------------------------------------------*/
-void CYdLidar::checkCalibrationAngle(const std::string &serialNumber) {
+bool CYdLidar::checkCalibrationAngle(const std::string &serialNumber) {
+  bool ret = false;
   m_AngleOffset = 0.0;
   result_t ans = RESULT_FAIL;
   offset_angle angle;
@@ -1355,7 +1366,8 @@ void CYdLidar::checkCalibrationAngle(const std::string &serialNumber) {
     ans = lidarPtr->getZeroOffsetAngle(angle);
 
     if (IS_OK(ans)) {
-      if (angle.angle > 1440 || angle.angle < -1440) {
+      if (angle.angle > zero_offset_angle_scale * 360 ||
+          angle.angle < -zero_offset_angle_scale * 360) {
         ans = lidarPtr->getZeroOffsetAngle(angle);
 
         if (!IS_OK(ans)) {
@@ -1364,12 +1376,13 @@ void CYdLidar::checkCalibrationAngle(const std::string &serialNumber) {
         }
       }
 
-      m_isAngleOffsetCorrected = (angle.angle != 720);
-      m_AngleOffset = angle.angle / 4.0;
+      m_isAngleOffsetCorrected = (angle.angle != 180 * zero_offset_angle_scale);
+      m_AngleOffset = angle.angle / zero_offset_angle_scale;
+      ret = true;
       printf("[YDLIDAR INFO] Successfully obtained the %s offset angle[%f] from the lidar[%s]\n"
              , m_isAngleOffsetCorrected ? "corrected" : "uncorrrected", m_AngleOffset,
              serialNumber.c_str());
-      return;
+      return ret;
     }
 
     retry++;
@@ -1377,6 +1390,7 @@ void CYdLidar::checkCalibrationAngle(const std::string &serialNumber) {
 
   printf("[YDLIDAR INFO] Current %s AngleOffset : %f°\n",
          m_isAngleOffsetCorrected ? "corrected" : "uncorrrected", m_AngleOffset);
+  return ret;
 }
 
 

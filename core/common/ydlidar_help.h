@@ -567,6 +567,21 @@ inline bool isOldVersionTOFLidar(int model, int Major, int Minor) {
   return ret;
 }
 
+inline float lidarZeroOffsetAngleScale(uint8_t model, uint8_t Major,
+                                       uint8_t Minor) {
+  float scale = 4.f;
+
+  if (model == DriverInterface::YDLIDAR_R2) {
+    scale = 100.f;
+
+    if ((Major == 1 && Minor <= 7) || Major < 1) {
+      scale = 4.0;
+    }
+  }
+
+  return scale;
+}
+
 /*!
  * @brief Whether to support Heartbeat.
  * @param model   lidar model
