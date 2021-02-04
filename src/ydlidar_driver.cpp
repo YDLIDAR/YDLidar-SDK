@@ -419,6 +419,7 @@ result_t YDlidarDriver::checkAutoConnecting(bool serialError) {
     setDriverError(TimeoutError);
   }
 
+
   while (isAutoReconnect && isAutoconnting) {
     {
       ScopedLocker l(_cmd_lock);
@@ -451,6 +452,13 @@ result_t YDlidarDriver::checkAutoConnecting(bool serialError) {
         }
       }
     }
+
+    if (!m_isConnected && ((retryCount % 2 == 1) || serialError)) {
+      if (!IS_OK(connect(serial_port.c_str(), m_baudrate))) {
+        setDriverError(NotOpenError);
+      }
+    }
+
     retryCount++;
 
     if (retryCount > 50) {
@@ -486,6 +494,7 @@ result_t YDlidarDriver::checkAutoConnecting(bool serialError) {
 
     if (!isAutoReconnect) {
       m_isScanning = false;
+      isAutoconnting = false;
       return RESULT_FAIL;
     }
 
@@ -530,6 +539,7 @@ result_t YDlidarDriver::checkAutoConnecting(bool serialError) {
     }
   }
 
+  isAutoconnting = false;
   return RESULT_FAIL;
 
 }
