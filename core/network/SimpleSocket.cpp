@@ -1,4 +1,4 @@
-/*---------------------------------------------------------------------------*/
+﻿/*---------------------------------------------------------------------------*/
 /*                                                                           */
 /* CSimpleSocket.cpp - CSimpleSocket Implementation                          */
 /*                                                                           */
@@ -225,7 +225,7 @@ size_t CSimpleSocket::available() {
 std::string CSimpleSocket::readSize(size_t size) {
   std::string buffer;
   uint8_t *buffer_ = static_cast<uint8_t *>(alloca(size * sizeof(uint8_t)));
-  size_t bytes_read = this->writeData(buffer_, size);
+  size_t bytes_read = this->readData(buffer_, size);
   buffer.append(reinterpret_cast<const char *>(buffer_), bytes_read);
   return buffer;
 }
