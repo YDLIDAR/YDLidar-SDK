@@ -48,6 +48,7 @@
 #include <core/common/DriverInterface.h>
 #include <string>
 #include <map>
+#include <core/base/locker.h>
 
 /**
  * @ref "Dataset"
@@ -1087,6 +1088,9 @@ class YDLIDAR_API CYdLidar {
   float m_MaxRange;                 ///< LiDAR maximum range
   float m_MinRange;                 ///< LiDAR minimum range
   float m_ScanFrequency;            ///< LiDAR scanning frequency
+
+  ydlidar::core::base::Locker         lidar_lock;
+  ydlidar::core::base::Locker         del_lidar_lock;
 
 
 };	// End of class

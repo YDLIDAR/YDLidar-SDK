@@ -99,7 +99,13 @@ YDlidarDriver::~YDlidarDriver() {
 
   isAutoReconnect = false;
   _thread.join();
-  delay(200);
+//  delay(200);
+  int delay_count = 0;
+
+  while (!_thread.isThreadFinshed() && delay_count < 5) {
+    delay(100);
+    delay_count++;
+  }
 
   ScopedLocker lck(_cmd_lock);
 
@@ -584,9 +590,9 @@ int YDlidarDriver::cacheScanData() {
   size_t         count = 128;
   node_info      local_scan[MAX_SCAN_NODES];
   size_t         scan_count = 0;
-  result_t       ans = RESULT_FAIL;
+  result_t       ans = RESULT_FAIL;  
   memset(local_scan, 0, sizeof(local_scan));
-
+  uint32_t thread_start_time = getms();
   if (m_SingleChannel) {
     waitDevicePackage();
   }
@@ -598,6 +604,7 @@ int YDlidarDriver::cacheScanData() {
   retryCount = 0;
   m_BufferSize = 0;
   m_heartbeat_ts = getms();
+  _thread.updateThreadState(false);
   bool m_last_frame_valid = false;
 
   while (m_isScanning) {
@@ -607,11 +614,13 @@ int YDlidarDriver::cacheScanData() {
     if (!IS_OK(ans)) {
       if (IS_FAIL(ans) || timeout_count > DEFAULT_TIMEOUT_COUNT) {
         if (!isAutoReconnect) {
-          fprintf(stderr, "exit scanning thread!!\n");
-          fflush(stderr);
+            fprintf(stderr, "[YDLIDAR][ERROR][%fs] Exit scan thread completed!!!\n",
+                    (getms() - thread_start_time) / 1000.f);
+            fflush(stderr);
           {
             m_isScanning = false;
           }
+          _thread.updateThreadState(true);
           return RESULT_FAIL;
         } else {
           if (m_last_frame_valid) {
@@ -626,6 +635,10 @@ int YDlidarDriver::cacheScanData() {
             local_scan[0].sync_flag = Node_NotSync;
           } else {
             m_isScanning = false;
+            _thread.updateThreadState(true);
+            fprintf(stdout, "[YDLIDAR][TIMEOUT][%fs] Exit scan thread completed.\n",
+                    (getms() - thread_start_time) / 1000.f);
+            fflush(stdout);
             return RESULT_FAIL;
           }
         }
@@ -685,6 +698,10 @@ int YDlidarDriver::cacheScanData() {
   }
 
   m_isScanning = false;
+  _thread.updateThreadState(true);
+  fprintf(stdout, "[YDLIDAR][END][%fs] Exit scan thread completed.\n",
+          (getms() - thread_start_time) / 1000.f);
+  fflush(stdout);
 
   return RESULT_OK;
 }
@@ -1682,6 +1699,13 @@ result_t YDlidarDriver::startScan(bool force, uint32_t timeout) {
     return RESULT_OK;
   }
 
+  int timeout_count = 0;
+
+  while (!_thread.isThreadFinshed() && timeout_count < 3) {
+    delay(100);
+    timeout_count++;
+  }
+
   stop();
   checkTransDelay();
   flushSerial();
@@ -1807,6 +1831,14 @@ result_t YDlidarDriver::stop() {
 
   if (isSupportMotorCtrl(model)) {
     stopMotor();
+  }
+
+  int timeout_count = 0;
+
+  //wait thread finished
+  while (!_thread.isThreadFinshed() && timeout_count < 3) {
+    delay(100);
+    timeout_count++;
   }
 
   return RESULT_OK;

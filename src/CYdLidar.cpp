@@ -408,6 +408,7 @@ void CYdLidar::GetLidarVersion(LidarVersion &version) {
                         turnOn
 -------------------------------------------------------------*/
 bool  CYdLidar::turnOn() {
+  ScopedLocker l(lidar_lock);
   if (isScanning && lidarPtr->isscanning()) {
     return true;
   }
@@ -486,7 +487,15 @@ bool  CYdLidar::doProcessSimple(LaserScan &outscan) {
   //wait Scan data:
   uint64_t tim_scan_start = getTime();
   uint64_t startTs = tim_scan_start;
-  result_t op_result =  lidarPtr->grabScanData(global_nodes, count);
+  result_t op_result =  RESULT_FAIL;
+  {
+    ScopedLocker dl(del_lidar_lock);
+
+    if (lidarPtr) {
+      op_result = lidarPtr->grabScanData(global_nodes, count);
+    }
+  }
+  outscan.points.clear();
   uint64_t tim_scan_end = getTime();
   uint64_t endTs = tim_scan_end;
   uint64_t sys_scan_time = tim_scan_end - tim_scan_start;
@@ -679,6 +688,7 @@ bool  CYdLidar::doProcessSimple(LaserScan &outscan) {
 						turnOff
 -------------------------------------------------------------*/
 bool  CYdLidar::turnOff() {
+  ScopedLocker l(lidar_lock);
   if (lidarPtr) {
     lidarPtr->stop();
   }
@@ -696,6 +706,8 @@ bool  CYdLidar::turnOff() {
                     disconnecting
 -------------------------------------------------------------*/
 void CYdLidar::disconnecting() {
+  ScopedLocker l(lidar_lock);
+  ScopedLocker dl(del_lidar_lock);
   if (lidarPtr) {
     lidarPtr->disconnect();
     delete lidarPtr;
@@ -1080,6 +1092,7 @@ bool CYdLidar::getDeviceHealth() {
     return false;
   }
 
+  ScopedLocker l(lidar_lock);
   lidarPtr->stop();
   result_t op_result;
   device_health healthinfo;
@@ -1112,6 +1125,7 @@ bool CYdLidar::getDeviceInfo() {
   if (!lidarPtr) {
     return false;
   }
+ // ScopedLocker l(lidar_lock);
 
   bool ret = false;
   device_info devinfo;
@@ -1237,6 +1251,7 @@ void CYdLidar::handleSingleChannelDevice() {
                     checkSampleRate
 -------------------------------------------------------------*/
 void CYdLidar::checkSampleRate() {
+  ScopedLocker l(lidar_lock);
   sampling_rate _rate;
   _rate.rate = 3;
   int _samp_rate = 9;
@@ -1268,6 +1283,7 @@ void CYdLidar::checkSampleRate() {
                         checkScanFrequency
 -------------------------------------------------------------*/
 bool CYdLidar::checkScanFrequency() {
+  ScopedLocker l(lidar_lock);
   float frequency = 7.4f;
   scan_frequency _scan_frequency;
   float hz = 0.f;
@@ -1327,6 +1343,7 @@ bool CYdLidar::checkScanFrequency() {
 }
 
 bool CYdLidar::checkHeartBeat() {
+  ScopedLocker l(lidar_lock);
   if (!m_SupportHearBeat) {
     lidarPtr->setHeartBeat(false);
     return true;
@@ -1355,6 +1372,7 @@ bool CYdLidar::checkHeartBeat() {
                         checkCalibrationAngle
 -------------------------------------------------------------*/
 bool CYdLidar::checkCalibrationAngle(const std::string &serialNumber) {
+  ScopedLocker l(lidar_lock);
   bool ret = false;
   m_AngleOffset = 0.0;
   result_t ans = RESULT_FAIL;
@@ -1399,6 +1417,8 @@ bool CYdLidar::checkCalibrationAngle(const std::string &serialNumber) {
 						checkCOMMs
 -------------------------------------------------------------*/
 bool  CYdLidar::checkCOMMs() {
+  ScopedLocker l(lidar_lock);
+  ScopedLocker dl(del_lidar_lock);
   if (!lidarPtr) {
     printf("YDLidar SDK initializing\n");
 
