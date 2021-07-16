@@ -1262,7 +1262,7 @@ void CYdLidar::checkSampleRate() {
   if (IS_OK(ans)) {
     _samp_rate = ConvertUserToLidarSmaple(lidar_model, m_SampleRate, _rate.rate);
 
-    while (_samp_rate != _rate.rate) {
+    while (_samp_rate != _rate.rate && lidar_model != DriverInterface::YDLIDAR_TG50) {
       ans = lidarPtr->setSamplingRate(_rate);
       try_count++;
 

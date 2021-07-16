@@ -702,7 +702,6 @@ inline int ConvertUserToLidarSmaple(int model, int m_SampleRate,
  */
 inline int ConvertLidarToUserSmaple(int model, int rate) {
   int _samp_rate = 9;
-
   switch (rate) {
     case DriverInterface::YDLIDAR_RATE_4K:
       _samp_rate = 10;
@@ -731,6 +730,10 @@ inline int ConvertLidarToUserSmaple(int model, int rate) {
 
       if (!isOctaveLidar(model)) {
         _samp_rate = 9;
+      }
+
+      if (model == DriverInterface::YDLIDAR_TG50){
+         _samp_rate = 10;
       }
 
       break;

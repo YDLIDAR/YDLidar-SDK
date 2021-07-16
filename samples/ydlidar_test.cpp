@@ -116,7 +116,8 @@ int main(int argc, char *argv[]) {
   baudrateList[1] = 128000;
   baudrateList[2] = 153600;
   baudrateList[3] = 230400;
-  baudrateList[4] = 512000;
+  baudrateList[4] = 460800;
+  baudrateList[5] = 512000;
 
   printf("Baudrate:\n");
 
@@ -162,7 +163,7 @@ int main(int argc, char *argv[]) {
 
   std::string input_frequency;
 
-  float frequency = 8.0;
+  float frequency = 7.0;
 
   while (ydlidar::os_isOk() && !isSingleChannel) {
     printf("Please enter the lidar scan frequency[5-12]:");
@@ -247,6 +248,7 @@ int main(int argc, char *argv[]) {
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
   bool ret = laser.initialize();
+ // return 0;
 
   if (ret) {
     ret = laser.turnOn();

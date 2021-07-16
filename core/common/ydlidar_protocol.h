@@ -79,6 +79,7 @@
 #define LIDAR_CMD_GET_EAI                   0x55
 #define LIDAR_CMD_GET_DEVICE_INFO           0x90
 #define LIDAR_CMD_GET_DEVICE_HEALTH         0x92
+#define LIDAR_CMD_GET_DEVICE_HEALTH_TOF     0x91
 #define LIDAR_ANS_TYPE_DEVINFO              0x4
 #define LIDAR_ANS_TYPE_DEVHEALTH            0x6
 #define LIDAR_CMD_SYNC_BYTE                 0xA5

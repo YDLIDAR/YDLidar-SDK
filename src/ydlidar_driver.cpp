@@ -1516,7 +1516,11 @@ result_t YDlidarDriver::getHealth(device_health &health, uint32_t timeout) {
   {
     ScopedLocker l(_lock);
 
-    if ((ans = sendCommand(LIDAR_CMD_GET_DEVICE_HEALTH)) != RESULT_OK) {
+    uint8_t  cmd = LIDAR_CMD_GET_DEVICE_HEALTH;
+    if(m_baudrate >= 460800){ // 三角雷达波特率一般不超过230400
+        cmd = LIDAR_CMD_GET_DEVICE_HEALTH_TOF;
+    }
+    if ((ans = sendCommand(cmd)) != RESULT_OK) {
       return ans;
     }
 
