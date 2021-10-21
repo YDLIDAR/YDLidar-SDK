@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
   if (ports.size() == 1) {
     port = ports.begin()->second;
   } else {
-    int id = 0;//11111111111111111111111111111
+    int id = 0;//
 
     for (it = ports.begin(); it != ports.end(); it++) {
       printf("%d. %s\n", id, it->first.c_str());
