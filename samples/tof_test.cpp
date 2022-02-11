@@ -257,7 +257,7 @@ int main(int argc, char *argv[]) {
 
     if (laser.doProcessSimple(scan)) {
       fprintf(stdout, "Scan received[%llu]: %u ranges is [%f]Hz\n",
-              scan.stamp,
+              scan.stamp/1000000,
               (unsigned int)scan.points.size(), 1.0 / scan.config.scan_time);
       fflush(stdout);
     } else {

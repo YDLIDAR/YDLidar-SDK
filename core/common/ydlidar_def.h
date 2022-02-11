@@ -62,6 +62,7 @@ typedef enum {
   LidarPropDeviceType,/**< lidar connection type code */
   LidarPropSampleRate,/**< lidar sample rate */
   LidarPropAbnormalCheckCount,/**< abnormal maximum check times */
+  LidarPropIntenstiyBit,/**< lidar intensity bit count */
   /* float properties */
   LidarPropMaxRange = 20,/**< lidar maximum range */
   LidarPropMinRange,/**< lidar minimum range */

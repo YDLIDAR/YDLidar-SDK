@@ -71,6 +71,7 @@ CYdLidar::CYdLidar(): lidarPtr(nullptr) {
   m_AngleOffset         = 0.0f;
   lidar_model           = DriverInterface::YDLIDAR_G2B;
   m_Intensity           = false;
+  m_IntensityBit = 10;
   last_node_time        = getTime();
   global_nodes          = new node_info[DriverInterface::MAX_SCAN_NODES];
   last_frequency        = 0;
@@ -181,6 +182,9 @@ bool CYdLidar::setlidaropt(int optname, const void *optval, int optlen) {
 
     case LidarPropIntenstiy:
       m_Intensity = *(bool *)(optval);
+      break;
+    case LidarPropIntenstiyBit:
+      m_IntensityBit = *(int *)(optval);
       break;
 
     case LidarPropSupportMotorDtrCtrl:
@@ -314,6 +318,9 @@ bool CYdLidar::getlidaropt(int optname, void *optval, int optlen) {
 
     case LidarPropIntenstiy:
       memcpy(optval, &m_Intensity, optlen);
+      break;
+    case LidarPropIntenstiyBit:
+      memcpy(optval, &m_IntensityBit, optlen);
       break;
 
     case LidarPropSupportMotorDtrCtrl:
@@ -592,6 +599,9 @@ bool  CYdLidar::doProcessSimple(LaserScan &outscan) {
       }
 
       intensity = static_cast<float>(global_nodes[i].sync_quality);
+
+//      printf("intensity: %f\n",  intensity);
+
       angle = math::from_degrees(angle);
 
       if (global_nodes[i].scan_frequence != 0) {
@@ -1156,6 +1166,8 @@ bool CYdLidar::getDeviceInfo() {
   intensity = m_Intensity;
   std::string serial_number;
   lidarPtr->setIntensities(intensity);
+//  printf("Set Lidar Intensity Bit count %d\n", m_IntensityBit);
+  lidarPtr->setIntensityBit(m_IntensityBit);
   ret = true;
 
   if (printfVersionInfo(devinfo, m_SerialPort, m_SerialBaudrate)) {

@@ -24,8 +24,8 @@ if ret:
         r = laser.doProcessSimple(scan);
         if r:
             print("Scan received[",scan.stamp,"]:",scan.points.size(),"ranges is [",1.0/scan.config.scan_time,"]Hz");
-            # for point in scan.points:
-            #     print("angle:", point.angle, " range: ", point.range)
+            for point in scan.points:
+                print("angle:", point.angle, " range: ", point.range)
         else :
             print("Failed to get Lidar Data")
         time.sleep(0.05);

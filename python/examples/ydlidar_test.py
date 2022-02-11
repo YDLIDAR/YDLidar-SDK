@@ -14,12 +14,13 @@ if __name__ == "__main__":
     laser.setlidaropt(ydlidar.LidarPropLidarType, ydlidar.TYPE_TRIANGLE);
     laser.setlidaropt(ydlidar.LidarPropDeviceType, ydlidar.YDLIDAR_TYPE_SERIAL);
     laser.setlidaropt(ydlidar.LidarPropScanFrequency, 10.0);
-    laser.setlidaropt(ydlidar.LidarPropSampleRate, 9);
+    laser.setlidaropt(ydlidar.LidarPropSampleRate, 5);
     laser.setlidaropt(ydlidar.LidarPropSingleChannel, False);
     laser.setlidaropt(ydlidar.LidarPropMaxAngle, 180.0);
     laser.setlidaropt(ydlidar.LidarPropMinAngle, -180.0);
     laser.setlidaropt(ydlidar.LidarPropMaxRange, 16.0);
     laser.setlidaropt(ydlidar.LidarPropMinRange, 0.08);
+    laser.setlidaropt(ydlidar.LidarPropIntenstiy, False);
 
     ret = laser.initialize();
     if ret:

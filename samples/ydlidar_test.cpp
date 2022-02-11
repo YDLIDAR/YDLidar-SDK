@@ -209,6 +209,9 @@ int main(int argc, char *argv[]) {
   /// abnormal count
   optval = 4;
   laser.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
+  /// Intenstiy bit count
+  optval = 10;
+  laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
@@ -223,7 +226,7 @@ int main(int argc, char *argv[]) {
   /// one-way communication
   laser.setlidaropt(LidarPropSingleChannel, &isSingleChannel, sizeof(bool));
   /// intensity
-  b_optvalue = false;
+  b_optvalue = true;
   laser.setlidaropt(LidarPropIntenstiy, &b_optvalue, sizeof(bool));
   /// Motor DTR
   b_optvalue = true;
@@ -257,17 +260,18 @@ int main(int argc, char *argv[]) {
 
   LaserScan scan;
 
-  while (ret && ydlidar::os_isOk()) {
-    if (laser.doProcessSimple(scan)) {
-      fprintf(stdout, "Scan received[%llu]: %u ranges is [%f]Hz\n",
-              scan.stamp,
-              (unsigned int)scan.points.size(), 1.0 / scan.config.scan_time);
-      fflush(stdout);
-    } else {
-      fprintf(stderr, "Failed to get Lidar Data\n");
-      fflush(stderr);
-    }
-
+  while (ret && ydlidar::os_isOk())
+  {
+      if (laser.doProcessSimple(scan)) {
+          fprintf(stdout, "Scan received[%llu]: %u ranges is [%f]Hz\n",
+                  scan.stamp/1000000,
+                  (unsigned int)scan.points.size(), 1.0 / scan.config.scan_time);
+          fflush(stdout);
+      } 
+	else {
+          fprintf(stderr, "Failed to get Lidar Data\n");
+          fflush(stderr);
+      }
   }
 
   laser.turnOff();

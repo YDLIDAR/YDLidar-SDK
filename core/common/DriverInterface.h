@@ -100,6 +100,7 @@ class DriverInterface {
   DriverInterface() :  serial_port(""),
     m_baudrate(8000),
     m_intensities(false),
+    m_intensityBit(10),
     scan_node_buf(NULL),
     scan_node_count(0),
     package_Sample_Index(0),
@@ -234,6 +235,7 @@ class DriverInterface {
    *   false no intensity
    */
   virtual void setIntensities(const bool &isintensities) = 0;
+  virtual void setIntensityBit(int bit) {m_intensityBit = bit;}
 
   /**
    * @brief whether to support hot plug \n
@@ -503,6 +505,8 @@ class DriverInterface {
   uint32_t m_baudrate;
   /// LiDAR intensity
   bool m_intensities;
+  /// LiDAR intensity bit
+  int m_intensityBit;
 
   /// LiDAR Point pointer
   node_info      *scan_node_buf;

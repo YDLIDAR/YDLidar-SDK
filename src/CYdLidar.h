@@ -1073,6 +1073,7 @@ class YDLIDAR_API CYdLidar {
   bool m_AutoReconnect;             ///< LiDAR hot plug
   bool m_SingleChannel;             ///< LiDAR single channel
   bool m_Intensity;                 ///< LiDAR Intensity
+  int m_IntensityBit;               ///< LiDAR Intensity bit
   bool m_SupportMotorDtrCtrl;       ///< LiDAR Motor DTR
   bool m_SupportHearBeat;           ///< LiDAR HeartBeat
 

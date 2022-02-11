@@ -1197,87 +1197,104 @@ void YDlidarDriver::parseNodeDebugFromBuffer(node_info *node) {
 }
 
 void YDlidarDriver::parseNodeFromeBuffer(node_info *node) {
-  int32_t  AngleCorrectForDistance    = 0;
-  (*node).sync_quality = Node_Default_Quality;
-  (*node).delay_time = 0;
-  (*node).stamp = 0;
+    int32_t  AngleCorrectForDistance    = 0;
+    (*node).sync_quality = Node_Default_Quality;
+    (*node).delay_time = 0;
+    (*node).stamp = 0;
 
-  if (CheckSumResult) {
-    if (m_intensities) {
-      if (isTriangleLidar(m_LidarType)) {
-        (*node).sync_quality = ((uint16_t)((
-                                             package.packageSample[package_Sample_Index].PakageSampleDistance & 0x03) <<
-                                           LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT) |
-                                (package.packageSample[package_Sample_Index].PakageSampleQuality));
-        (*node).distance_q2 =
-          package.packageSample[package_Sample_Index].PakageSampleDistance & 0xfffc;
-      } else {
-        (*node).sync_quality =
-          tof_package.packageSample[package_Sample_Index].PakageSampleQuality;
-        (*node).distance_q2 =
-          tof_package.packageSample[package_Sample_Index].PakageSampleDistance;
-      }
-    } else {
-      (*node).distance_q2 = packages.packageSampleDistance[package_Sample_Index];
+    if (CheckSumResult) {
+        if (m_intensities)
+        {
+            if (isTriangleLidar(m_LidarType))
+            {
+                if (8 == m_intensityBit)
+                {
+                    (*node).sync_quality = uint16_t(package.packageSample[package_Sample_Index].PakageSampleQuality);
+                }
+                else
+                {
+                    (*node).sync_quality = ((uint16_t)((package.packageSample[package_Sample_Index].PakageSampleDistance & 0x03) <<
+                                                       LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT) |
+                                            (package.packageSample[package_Sample_Index].PakageSampleQuality));
+                }
+//                printf("intensity(%d): %u 0x%x 0x%x\n",
+//                       m_intensityBit,
+//                       (*node).sync_quality,
+//                       uint8_t(package.packageSample[package_Sample_Index].PakageSampleDistance & 0x03),
+//                       uint8_t(package.packageSample[package_Sample_Index].PakageSampleQuality));
 
-      if (isTriangleLidar(m_LidarType)) {
-        (*node).sync_quality = ((uint16_t)(0xfc |
-                                           packages.packageSampleDistance[package_Sample_Index] &
-                                           0x0003)) << LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT;
-      }
-
-    }
-
-    if ((*node).distance_q2 != 0) {
-      if (isOctaveLidar(model)) {
-        AngleCorrectForDistance = (int32_t)(((atan(((21.8 * (155.3 - ((
-                                                *node).distance_q2 / 2.0))) / 155.3) / ((
-                                                    *node).distance_q2 / 2.0))) * 180.0 / 3.1415) * 64.0);
-      } else  {
-        if (isTriangleLidar(m_LidarType)) {
-          AngleCorrectForDistance = (int32_t)(((atan(((21.8 * (155.3 - ((
-                                                  *node).distance_q2 / 4.0))) / 155.3) / ((
-                                                      *node).distance_q2 / 4.0))) * 180.0 / 3.1415) * 64.0);
+                (*node).distance_q2 =
+                        package.packageSample[package_Sample_Index].PakageSampleDistance & 0xfffc;
+            }
+            else
+            {
+                (*node).sync_quality =
+                        tof_package.packageSample[package_Sample_Index].PakageSampleQuality;
+                (*node).distance_q2 =
+                        tof_package.packageSample[package_Sample_Index].PakageSampleDistance;
+            }
         }
-      }
+        else
+        {
+            (*node).distance_q2 = packages.packageSampleDistance[package_Sample_Index];
 
-      m_InvalidNodeCount++;
+            if (isTriangleLidar(m_LidarType)) {
+                (*node).sync_quality = ((uint16_t)(0xfc |
+                                                   packages.packageSampleDistance[package_Sample_Index] &
+                                                   0x0003)) << LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT;
+            }
+        }
+
+        if ((*node).distance_q2 != 0) {
+            if (isOctaveLidar(model)) {
+                AngleCorrectForDistance = (int32_t)(((atan(((21.8 * (155.3 - ((
+                                                                                  *node).distance_q2 / 2.0))) / 155.3) / ((
+                                                                                                                              *node).distance_q2 / 2.0))) * 180.0 / 3.1415) * 64.0);
+            } else  {
+                if (isTriangleLidar(m_LidarType)) {
+                    AngleCorrectForDistance = (int32_t)(((atan(((21.8 * (155.3 - ((
+                                                                                      *node).distance_q2 / 4.0))) / 155.3) / ((
+                                                                                                                                  *node).distance_q2 / 4.0))) * 180.0 / 3.1415) * 64.0);
+                }
+            }
+
+            m_InvalidNodeCount++;
+        } else {
+            AngleCorrectForDistance = 0;
+        }
+
+        float sampleAngle = IntervalSampleAngle * package_Sample_Index;
+
+        if ((FirstSampleAngle + sampleAngle +
+             AngleCorrectForDistance) < 0) {
+            (*node).angle_q6_checkbit = (((uint16_t)(FirstSampleAngle + sampleAngle +
+                                                     AngleCorrectForDistance + 23040)) << LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) +
+                    LIDAR_RESP_MEASUREMENT_CHECKBIT;
+        } else {
+            if ((FirstSampleAngle + sampleAngle + AngleCorrectForDistance) > 23040) {
+                (*node).angle_q6_checkbit = (((uint16_t)(FirstSampleAngle + sampleAngle +
+                                                         AngleCorrectForDistance - 23040)) << LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) +
+                        LIDAR_RESP_MEASUREMENT_CHECKBIT;
+            } else {
+                (*node).angle_q6_checkbit = (((uint16_t)(FirstSampleAngle + sampleAngle +
+                                                         AngleCorrectForDistance)) << LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) +
+                        LIDAR_RESP_MEASUREMENT_CHECKBIT;
+            }
+        }
     } else {
-      AngleCorrectForDistance = 0;
+        (*node).sync_flag       = Node_NotSync;
+        (*node).sync_quality    = Node_Default_Quality;
+        (*node).angle_q6_checkbit = LIDAR_RESP_MEASUREMENT_CHECKBIT;
+        (*node).distance_q2      = 0;
+        (*node).scan_frequence  = 0;
     }
 
-    float sampleAngle = IntervalSampleAngle * package_Sample_Index;
+    package_Sample_Index++;
 
-    if ((FirstSampleAngle + sampleAngle +
-         AngleCorrectForDistance) < 0) {
-      (*node).angle_q6_checkbit = (((uint16_t)(FirstSampleAngle + sampleAngle +
-                                    AngleCorrectForDistance + 23040)) << LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) +
-                                  LIDAR_RESP_MEASUREMENT_CHECKBIT;
-    } else {
-      if ((FirstSampleAngle + sampleAngle + AngleCorrectForDistance) > 23040) {
-        (*node).angle_q6_checkbit = (((uint16_t)(FirstSampleAngle + sampleAngle +
-                                      AngleCorrectForDistance - 23040)) << LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) +
-                                    LIDAR_RESP_MEASUREMENT_CHECKBIT;
-      } else {
-        (*node).angle_q6_checkbit = (((uint16_t)(FirstSampleAngle + sampleAngle +
-                                      AngleCorrectForDistance)) << LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) +
-                                    LIDAR_RESP_MEASUREMENT_CHECKBIT;
-      }
+    if (package_Sample_Index >= nowPackageNum) {
+        package_Sample_Index = 0;
+        CheckSumResult = false;
     }
-  } else {
-    (*node).sync_flag       = Node_NotSync;
-    (*node).sync_quality    = Node_Default_Quality;
-    (*node).angle_q6_checkbit = LIDAR_RESP_MEASUREMENT_CHECKBIT;
-    (*node).distance_q2      = 0;
-    (*node).scan_frequence  = 0;
-  }
-
-  package_Sample_Index++;
-
-  if (package_Sample_Index >= nowPackageNum) {
-    package_Sample_Index = 0;
-    CheckSumResult = false;
-  }
 }
 
 result_t YDlidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
