@@ -57,6 +57,7 @@ CYdLidar::CYdLidar(): lidarPtr(nullptr) {
   m_MaxRange            = 64.0;
   m_MinRange            = 0.01f;
   m_SampleRate          = 5;
+  m_SampleRatebyD1      = 5;
   defalutSampleRate     = 5;
   m_ScanFrequency       = 10;
   isScanning            = false;
@@ -821,6 +822,13 @@ void CYdLidar::handleVersionInfoByPackage(const LaserDebug &debug) {
 void CYdLidar::resample(int frequency, int count, uint64_t tim_scan_end,
                         uint64_t tim_scan_start) {
   //重新校准采样率
+    if( (lidar_model  == DriverInterface::YDLIDAR_TG15)
+        || (lidar_model  == DriverInterface::YDLIDAR_TG30)
+        || (lidar_model  == DriverInterface::YDLIDAR_TG50) )
+      {
+          m_SampleRate = m_SampleRatebyD1;
+      }
+
   if (frequency > 3 && frequency <= 15.7 &&
       (frequency - last_frequency) < 0.05) {
     int sample = static_cast<int>((frequency * count + 500) / 1000);
@@ -927,6 +935,14 @@ bool CYdLidar::checkLidarAbnormal() {
           if (scan_time > 0.05 && scan_time < 0.5 && lidarPtr->getSingleChannel()) {
             if (!ret) {
               m_SampleRate = static_cast<int>((count / scan_time + 500) / 1000);
+
+              if( (lidar_model  == DriverInterface::YDLIDAR_TG15)
+                  || (lidar_model  == DriverInterface::YDLIDAR_TG30)
+                  || (lidar_model  == DriverInterface::YDLIDAR_TG50) )
+              {
+                  m_SampleRate = m_SampleRatebyD1;
+              }
+
               m_PointTime = 1e9 / (m_SampleRate * 1000);
               lidarPtr->setPointTime(m_PointTime);
             }
@@ -946,6 +962,7 @@ bool CYdLidar::checkLidarAbnormal() {
         int total = accumulate(data.begin(), data.end(), 0);
         int mean =  total / data.size(); //mean value
         m_FixedSize = (static_cast<int>((mean + 5) / 10)) * 10;
+
         printf("[YDLIDAR]:Single Fixed Size: %d\n", m_FixedSize);
         printf("[YDLIDAR]:Sample Rate: %dK\n", m_SampleRate);
         return false;
@@ -1017,6 +1034,13 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time) {
       m_PointTime = 1e9 / (m_SampleRate * 1000);
       lidarPtr->setPointTime(m_PointTime);
 
+      if( (lidar_model  == DriverInterface::YDLIDAR_TG15)
+          || (lidar_model  == DriverInterface::YDLIDAR_TG30)
+          || (lidar_model  == DriverInterface::YDLIDAR_TG50) )
+      {
+          m_SampleRate = m_SampleRatebyD1;
+      }
+
       if (!m_SingleChannel) {
         m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
       }
@@ -1039,6 +1063,13 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time) {
         m_SampleRate = samplerate;
         m_PointTime = 1e9 / (m_SampleRate * 1000);
         lidarPtr->setPointTime(m_PointTime);
+
+        if( (lidar_model  == DriverInterface::YDLIDAR_TG15)
+            || (lidar_model  == DriverInterface::YDLIDAR_TG30)
+            || (lidar_model  == DriverInterface::YDLIDAR_TG50) )
+        {
+            m_SampleRate = m_SampleRatebyD1;
+        }
 
         if (!m_SingleChannel) {
           m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
@@ -1065,6 +1096,13 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time) {
           m_SampleRate = samplerate;
           m_PointTime = 1e9 / (m_SampleRate * 1000);
           lidarPtr->setPointTime(m_PointTime);
+
+          if( (lidar_model  == DriverInterface::YDLIDAR_TG15)
+              || (lidar_model  == DriverInterface::YDLIDAR_TG30)
+              || (lidar_model  == DriverInterface::YDLIDAR_TG50) )
+          {
+              m_SampleRate = m_SampleRatebyD1;
+          }
 
           if (!m_SingleChannel) {
             m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
@@ -1241,6 +1279,12 @@ void CYdLidar::handleSingleChannelDevice() {
   }
 
   lidar_model = devinfo.model;
+  if( (lidar_model  == DriverInterface::YDLIDAR_TG15)
+      || (lidar_model  == DriverInterface::YDLIDAR_TG30)
+      || (lidar_model  == DriverInterface::YDLIDAR_TG50) )
+  {
+      m_SampleRate = m_SampleRatebyD1;
+  }
   printf("[YDLIDAR INFO] Current Sampling Rate : %dK\n", m_SampleRate);
   return;
 }
@@ -1255,6 +1299,8 @@ void CYdLidar::checkSampleRate() {
   int try_count = 0;
   m_FixedSize = 1440;
   result_t ans = lidarPtr->getSamplingRate(_rate);
+
+  m_SampleRatebyD1 = _rate.rate;
 
   if (IS_OK(ans)) {
     _samp_rate = ConvertUserToLidarSmaple(lidar_model, m_SampleRate, _rate.rate);
@@ -1330,6 +1376,13 @@ bool CYdLidar::checkScanFrequency() {
   if (IS_OK(ans)) {
     frequency = _scan_frequency.frequency / 100.0f;
     m_ScanFrequency = frequency;
+  }
+
+  if( (lidar_model  == DriverInterface::YDLIDAR_TG15)
+      || (lidar_model  == DriverInterface::YDLIDAR_TG30)
+      || (lidar_model  == DriverInterface::YDLIDAR_TG50) )
+  {
+      m_SampleRate = m_SampleRatebyD1;
   }
 
   m_ScanFrequency -= frequencyOffset;

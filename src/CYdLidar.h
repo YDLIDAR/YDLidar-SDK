@@ -1081,6 +1081,7 @@ class YDLIDAR_API CYdLidar {
   int m_LidarType;                  ///< LiDAR type
   int m_DeviceType;                 ///< LiDAR device type
   int m_SampleRate;                 ///< LiDAR sample rate
+  int m_SampleRatebyD1;             ///< LiDAR sample rate by d1
   int m_AbnormalCheckCount;         ///< LiDAR abnormal count
 
   float m_MaxAngle;                 ///< LiDAR maximum angle
