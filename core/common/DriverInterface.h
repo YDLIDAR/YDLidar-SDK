@@ -462,7 +462,11 @@ class DriverInterface {
     YDLIDAR_TG30    = 101,/**< T30 LiDAR Model. */
     YDLIDAR_TG50    = 102,/**< TG50 LiDAR Model. */
 
+    YDLIDAR_TSA     = 130,/**< TSA LiDAR Model. */
+    YDLIDAR_Tmini   = 140,/**< Tmini LiDAR Model. */
+
     YDLIDAR_T15     = 200,/**< T15 LiDAR Model. */
+
     YDLIDAR_Tail,
   };
 

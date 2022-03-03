@@ -579,114 +579,118 @@ void YDlidarDriver::CheckLaserStatus() {
   m_InvalidNodeCount = 0;
 }
 
-int YDlidarDriver::cacheScanData() {
-  node_info      local_buf[128];
-  size_t         count = 128;
-  node_info      local_scan[MAX_SCAN_NODES];
-  size_t         scan_count = 0;
-  result_t       ans = RESULT_FAIL;
-  memset(local_scan, 0, sizeof(local_scan));
+//解析扫描数据线程主函数
+int YDlidarDriver::cacheScanData()
+{
+    node_info      local_buf[128];
+    size_t         count = 128;
+    node_info      local_scan[MAX_SCAN_NODES];
+    size_t         scan_count = 0;
+    result_t       ans = RESULT_FAIL;
+    memset(local_scan, 0, sizeof(local_scan));
 
-  if (m_SingleChannel) {
-    waitDevicePackage();
-  }
+    if (m_SingleChannel) {
+        waitDevicePackage();
+    }
 
-  flushSerial();
-  waitScanData(local_buf, count);
+    flushSerial();
+    waitScanData(local_buf, count);
 
-  int timeout_count   = 0;
-  retryCount = 0;
-  m_BufferSize = 0;
-  m_heartbeat_ts = getms();
-  bool m_last_frame_valid = false;
+    int timeout_count   = 0;
+    retryCount = 0;
+    m_BufferSize = 0;
+    m_heartbeat_ts = getms();
+    bool m_last_frame_valid = false;
 
-  while (m_isScanning) {
-    count = 128;
-    ans = waitScanData(local_buf, count, DEFAULT_TIMEOUT / 2);
+    while (m_isScanning)
+    {
+        count = 128;
+        ans = waitScanData(local_buf, count, DEFAULT_TIMEOUT / 2);
 
-    if (!IS_OK(ans)) {
-      if (IS_FAIL(ans) || timeout_count > DEFAULT_TIMEOUT_COUNT) {
-        if (!isAutoReconnect) {
-          fprintf(stderr, "exit scanning thread!!\n");
-          fflush(stderr);
-          {
-            m_isScanning = false;
-          }
-          return RESULT_FAIL;
+        if (!IS_OK(ans)) {
+            if (IS_FAIL(ans) || timeout_count > DEFAULT_TIMEOUT_COUNT) {
+                if (!isAutoReconnect) {
+                    fprintf(stderr, "exit scanning thread!!\n");
+                    fflush(stderr);
+                    {
+                        m_isScanning = false;
+                    }
+                    return RESULT_FAIL;
+                } else {
+                    if (m_last_frame_valid) {
+                        m_BufferSize = 0;
+                        m_last_frame_valid = false;
+                    }
+
+                    ans = checkAutoConnecting(IS_FAIL(ans));
+
+                    if (IS_OK(ans)) {
+                        timeout_count = 0;
+                        local_scan[0].sync_flag = Node_NotSync;
+                    } else {
+                        m_isScanning = false;
+                        return RESULT_FAIL;
+                    }
+                }
+            } else {
+                timeout_count++;
+                local_scan[0].sync_flag = Node_NotSync;
+
+                if (m_driverErrno == NoError) {
+                    setDriverError(TimeoutError);
+                }
+
+                fprintf(stderr, "timout count: %d\n", timeout_count);
+                fflush(stderr);
+            }
         } else {
-          if (m_last_frame_valid) {
-            m_BufferSize = 0;
-            m_last_frame_valid = false;
-          }
-
-          ans = checkAutoConnecting(IS_FAIL(ans));
-
-          if (IS_OK(ans)) {
             timeout_count = 0;
-            local_scan[0].sync_flag = Node_NotSync;
-          } else {
-            m_isScanning = false;
-            return RESULT_FAIL;
-          }
-        }
-      } else {
-        timeout_count++;
-        local_scan[0].sync_flag = Node_NotSync;
+            m_last_frame_valid = true;
 
-        if (m_driverErrno == NoError) {
-          setDriverError(TimeoutError);
+            if (retryCount != 0) {
+                setDriverError(NoError);
+            }
+
+            retryCount = 0;
+            m_BufferSize = 0;
         }
 
-        fprintf(stderr, "timout count: %d\n", timeout_count);
-        fflush(stderr);
-      }
-    } else {
-      timeout_count = 0;
-      m_last_frame_valid = true;
+        for (size_t pos = 0; pos < count; ++pos)
+        {
+            if (local_buf[pos].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT)
+            {
+                if (local_scan[0].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT)
+                {
+                    _lock.lock();//timeout lock, wait resource copy
+                    //将下一圈的第一个点的采集时间作为当前圈数据的采集时间
+//                    local_scan[0].stamp = local_buf[pos].stamp;
+//                    if (local_scan[0].stamp == 0) {
+//                        local_scan[0].stamp = getTime();
+//                    }
+//                    local_scan[0].scan_frequence = local_buf[pos].scan_frequence;
+                    local_scan[0].delay_time = local_buf[pos].delay_time;
+                    memcpy(scan_node_buf, local_scan, scan_count * sizeof(node_info));
+                    scan_node_count = scan_count;
+                    _dataEvent.set();
+                    _lock.unlock();
+                }
 
-      if (retryCount != 0) {
-        setDriverError(NoError);
-      }
+                scan_count = 0;
+            }
 
-      retryCount = 0;
-      m_BufferSize = 0;
+            local_scan[scan_count++] = local_buf[pos];
+
+            if (scan_count == _countof(local_scan)) {
+                scan_count -= 1;
+            }
+        }
+
+        KeepLiveHeartBeat();
     }
 
+    m_isScanning = false;
 
-    for (size_t pos = 0; pos < count; ++pos) {
-      if (local_buf[pos].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT) {
-        if ((local_scan[0].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT)) {
-          _lock.lock();//timeout lock, wait resource copy
-          local_scan[0].stamp = local_buf[pos].stamp;
-
-          if (local_scan[0].stamp == 0) {
-            local_scan[0].stamp = getTime();
-          }
-
-          local_scan[0].scan_frequence = local_buf[pos].scan_frequence;
-          local_scan[0].delay_time = local_buf[pos].delay_time;
-          memcpy(scan_node_buf, local_scan, scan_count * sizeof(node_info));
-          scan_node_count = scan_count;
-          _dataEvent.set();
-          _lock.unlock();
-        }
-
-        scan_count = 0;
-      }
-
-      local_scan[scan_count++] = local_buf[pos];
-
-      if (scan_count == _countof(local_scan)) {
-        scan_count -= 1;
-      }
-    }
-
-    KeepLiveHeartBeat();
-  }
-
-  m_isScanning = false;
-
-  return RESULT_OK;
+    return RESULT_OK;
 }
 
 result_t YDlidarDriver::checkDeviceInfo(uint8_t *recvBuffer, uint8_t byte,
@@ -1167,42 +1171,46 @@ void YDlidarDriver::calcutePackageCT() {
   }
 }
 
-void YDlidarDriver::parseNodeDebugFromBuffer(node_info *node) {
-  if ((package_CT & 0x01) == CT_Normal) {
-    (*node).sync_flag = Node_NotSync;
-    (*node).debugInfo = 0xff;
+void YDlidarDriver::parseNodeDebugFromBuffer(node_info *node)
+{
+    if ((package_CT & 0x01) == CT_Normal) {
+        (*node).sync_flag = Node_NotSync;
+        (*node).debugInfo = 0xff;
 
-    if (!has_package_error) {
-      if (package_Sample_Index == 0) {
-        package_index++;
-        (*node).debugInfo = (package_CT >> 1);
-        (*node).index = package_index;
-      }
+        if (!has_package_error) {
+            if (package_Sample_Index == 0) {
+                package_index++;
+                (*node).debugInfo = (package_CT >> 1);
+                (*node).index = package_index;
+            }
+        } else {
+            (*node).error_package = 1;
+            (*node).index = 255;
+            package_index = 0xff;
+        }
     } else {
-      (*node).error_package = 1;
-      (*node).index = 255;
-      package_index = 0xff;
-    }
-  } else {
-    (*node).sync_flag = Node_Sync;
-    package_index = 0;
+        (*node).sync_flag = Node_Sync;
+        package_index = 0;
 
-    if (CheckSumResult) {
-      has_package_error = false;
-      (*node).index = package_index;
-      (*node).debugInfo = (package_CT >> 1);
-      (*node).scan_frequence  = scan_frequence;
+        if (CheckSumResult) {
+            has_package_error = false;
+            (*node).index = package_index;
+            (*node).debugInfo = (package_CT >> 1);
+            (*node).scan_frequence = scan_frequence;
+        }
     }
-  }
 }
 
-void YDlidarDriver::parseNodeFromeBuffer(node_info *node) {
-    int32_t  AngleCorrectForDistance    = 0;
+void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
+{
+    int32_t AngleCorrectForDistance = 0;
     (*node).sync_quality = Node_Default_Quality;
     (*node).delay_time = 0;
-    (*node).stamp = 0;
+    (*node).stamp = getTime();
+    (*node).scan_frequence = scan_frequence;
 
-    if (CheckSumResult) {
+    if (CheckSumResult)
+    {
         if (m_intensities)
         {
             if (isTriangleLidar(m_LidarType))
@@ -1245,21 +1253,27 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node) {
             }
         }
 
-        if ((*node).distance_q2 != 0) {
-            if (isOctaveLidar(model)) {
-                AngleCorrectForDistance = (int32_t)(((atan(((21.8 * (155.3 - ((
-                                                                                  *node).distance_q2 / 2.0))) / 155.3) / ((
-                                                                                                                              *node).distance_q2 / 2.0))) * 180.0 / 3.1415) * 64.0);
-            } else  {
-                if (isTriangleLidar(m_LidarType)) {
-                    AngleCorrectForDistance = (int32_t)(((atan(((21.8 * (155.3 - ((
-                                                                                      *node).distance_q2 / 4.0))) / 155.3) / ((
-                                                                                                                                  *node).distance_q2 / 4.0))) * 180.0 / 3.1415) * 64.0);
-                }
+        if ((*node).distance_q2 != 0)
+        {
+            if (isOctaveLidar(model))
+            {
+                AngleCorrectForDistance = (int32_t)(((atan(((21.8 * (155.3 - ((*node).distance_q2 / 2.0))) / 155.3) / ((*node).distance_q2 / 2.0))) * 180.0 / 3.1415) * 64.0);
+            }
+            else if (isTriangleLidar(m_LidarType) &&
+                     !isTminiLidar(model)) //去掉Tmini雷达的角度二级解析
+            {
+//                printf("has angle 2nd parse\n");
+                AngleCorrectForDistance = (int32_t)(((atan(((21.8 * (155.3 - ((*node).distance_q2 / 4.0))) / 155.3) / ((*node).distance_q2 / 4.0))) * 180.0 / 3.1415) * 64.0);
+            }
+            else
+            {
+//                printf("no angle 2nd parse\n");
             }
 
             m_InvalidNodeCount++;
-        } else {
+        }
+        else
+        {
             AngleCorrectForDistance = 0;
         }
 
@@ -1297,61 +1311,67 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node) {
     }
 }
 
-result_t YDlidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
-                                     uint32_t timeout) {
-  if (!m_isConnected) {
-    count = 0;
-    return RESULT_FAIL;
-  }
-
-  size_t     recvNodeCount    =  0;
-  uint32_t   startTs          = getms();
-  uint32_t   waitTime         = 0;
-  result_t   ans              = RESULT_FAIL;
-
-  while ((waitTime = getms() - startTs) <= timeout && recvNodeCount < count) {
-    node_info node;
-    ans = waitPackage(&node, timeout - waitTime);
-
-    if (!IS_OK(ans)) {
-      count = recvNodeCount;
-      return ans;
+result_t YDlidarDriver::waitScanData(
+        node_info *nodebuffer,
+        size_t &count,
+        uint32_t timeout)
+{
+    if (!m_isConnected) {
+        count = 0;
+        return RESULT_FAIL;
     }
 
-    nodebuffer[recvNodeCount++] = node;
+    size_t     recvNodeCount    =  0;
+    uint32_t   startTs          = getms();
+    uint32_t   waitTime         = 0;
+    result_t   ans              = RESULT_FAIL;
 
-    if (node.sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT) {
-      size_t size = _serial->available();
-      uint64_t delayTime = 0;
+    while ((waitTime = getms() - startTs) <= timeout &&
+           recvNodeCount < count)
+    {
+        node_info node;
+        ans = waitPackage(&node, timeout - waitTime);
 
-      if (size > PackagePaidBytes) {
-        size_t packageNum = 0;
-        size_t Number = 0;
-        size_t PackageSize = TrianglePackageDataSize;
-        packageNum = size / PackageSize;
-        Number = size % PackageSize;
-        delayTime = packageNum * (PackageSize - PackagePaidBytes) * m_PointTime / 2;
-
-        if (Number > PackagePaidBytes) {
-          delayTime += m_PointTime * ((Number - PackagePaidBytes) / 2);
+        if (!IS_OK(ans)) {
+            count = recvNodeCount;
+            return ans;
         }
-      }
 
-      nodebuffer[recvNodeCount - 1].delay_time = size * trans_delay + delayTime;
-      nodebuffer[recvNodeCount - 1].scan_frequence = node.scan_frequence;
-      nodebuffer[recvNodeCount - 1].stamp = getTime();
-      count = recvNodeCount;
-      CheckLaserStatus();
-      return RESULT_OK;
+        nodebuffer[recvNodeCount++] = node;
+
+        if (node.sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT)
+        {
+            //计算延时时间
+            size_t size = _serial->available();
+            uint64_t delayTime = 0;
+            if (size > PackagePaidBytes) {
+                size_t packageNum = 0;
+                size_t Number = 0;
+                size_t PackageSize = TrianglePackageDataSize;
+                packageNum = size / PackageSize;
+                Number = size % PackageSize;
+                delayTime = packageNum * (PackageSize - PackagePaidBytes) * m_PointTime / 2;
+
+                if (Number > PackagePaidBytes) {
+                    delayTime += m_PointTime * ((Number - PackagePaidBytes) / 2);
+                }
+            }
+            nodebuffer[recvNodeCount - 1].delay_time = size * trans_delay + delayTime;
+
+//            nodebuffer[recvNodeCount - 1].scan_frequence = node.scan_frequence;
+//            nodebuffer[recvNodeCount - 1].stamp = getTime();
+            count = recvNodeCount;
+            CheckLaserStatus();
+            return RESULT_OK;
+        }
+
+        if (recvNodeCount == count) {
+            return RESULT_OK;
+        }
     }
 
-    if (recvNodeCount == count) {
-      return RESULT_OK;
-    }
-  }
-
-  count = recvNodeCount;
-  return RESULT_FAIL;
+    count = recvNodeCount;
+    return RESULT_FAIL;
 }
 
 

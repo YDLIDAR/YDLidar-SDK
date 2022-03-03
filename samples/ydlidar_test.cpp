@@ -116,7 +116,8 @@ int main(int argc, char *argv[]) {
   baudrateList[1] = 128000;
   baudrateList[2] = 153600;
   baudrateList[3] = 230400;
-  baudrateList[4] = 512000;
+  baudrateList[4] = 460800;
+  baudrateList[5] = 512000;
 
   printf("Baudrate:\n");
 
@@ -210,7 +211,7 @@ int main(int argc, char *argv[]) {
   optval = 4;
   laser.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
   /// Intenstiy bit count
-  optval = 10;
+  optval = 8;
   laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
 
   //////////////////////bool property/////////////////
@@ -262,13 +263,21 @@ int main(int argc, char *argv[]) {
 
   while (ret && ydlidar::os_isOk())
   {
-      if (laser.doProcessSimple(scan)) {
-          fprintf(stdout, "Scan received[%llu]: %u ranges is [%f]Hz\n",
-                  scan.stamp/1000000,
-                  (unsigned int)scan.points.size(), 1.0 / scan.config.scan_time);
+      if (laser.doProcessSimple(scan))
+      {
+          printf("Scan received at [%llu] %u points is [%f]Hz\n",
+                 scan.stamp / 1000000,
+                 (unsigned int)scan.points.size(),
+                 1.0 / scan.config.scan_time);
+//          for (size_t i=0; i<scan.points.size(); ++i)
+//          {
+//              const LaserPoint& p = scan.points.at(i);
+//              printf("%d d %f i %f\n", i, p.range, p.intensity);
+//          }
           fflush(stdout);
-      } 
-	else {
+      }
+      else
+      {
           fprintf(stderr, "Failed to get Lidar Data\n");
           fflush(stderr);
       }

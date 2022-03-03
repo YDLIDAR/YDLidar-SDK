@@ -130,7 +130,7 @@ typedef struct {
   float angle_increment;
   /// Scan resoltuion [s]
   float time_increment;
-  /// Time between scans
+  /// Time between scans 扫描时长，单位秒
   float scan_time;
   /// Minimum range [m]
   float min_range;

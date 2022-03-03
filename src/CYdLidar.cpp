@@ -480,210 +480,225 @@ bool  CYdLidar::turnOn() {
 /*-------------------------------------------------------------
 						doProcessSimple
 -------------------------------------------------------------*/
-bool  CYdLidar::doProcessSimple(LaserScan &outscan) {
-  // Boud?
-  if (!checkHardware()) {
-    delay(200 / m_ScanFrequency);
-    m_AllNode = 0;
-    m_FristNodeTime = getTime();
+bool CYdLidar::doProcessSimple(LaserScan &outscan)
+{
+    // Boud?
+    if (!checkHardware()) {
+        delay(200 / m_ScanFrequency);
+        m_AllNode = 0;
+        m_FristNodeTime = getTime();
+        return false;
+    }
+
+    size_t count = ydlidar::YDlidarDriver::MAX_SCAN_NODES;
+
+    //wait Scan data:
+    uint64_t tim_scan_start = getTime();
+    uint64_t startTs = tim_scan_start;
+    //从缓存中获取已采集的一圈扫描数据
+    result_t op_result = lidarPtr->grabScanData(global_nodes, count);
+    uint64_t tim_scan_end = getTime();
+    uint64_t endTs = tim_scan_end;
+    uint64_t sys_scan_time = tim_scan_end - tim_scan_start; //获取一圈数据所花费的时间
+    outscan.points.clear();
+
+    // Fill in scan data:
+    if (IS_OK(op_result))
+    {
+        int offsetSize = 0;
+
+        if (isNetTOFLidar(m_LidarType)) {
+            double echo_angle = static_cast<double>(m_field_of_view * 1.0 / count);
+
+            if (echo_angle != 0.0) {
+                offsetSize = static_cast<int>((360 - m_field_of_view) / echo_angle);
+            }
+        }
+
+        //根据采样频率计算的采样间隔时间计算出来总的扫描时间
+        uint64_t scan_time = m_PointTime * (count - 1 + offsetSize);
+        int timeDiff = static_cast<int>(sys_scan_time - scan_time);
+
+        bool HighPayLoad = false;
+
+        if (global_nodes[0].stamp > 0 &&
+            global_nodes[0].stamp < tim_scan_start) {
+            tim_scan_end = global_nodes[0].stamp;
+            HighPayLoad = true;
+        }
+
+        tim_scan_end -= m_PointTime;
+        tim_scan_end -= global_nodes[0].delay_time;
+        tim_scan_start = tim_scan_end - scan_time;
+
+        if (!HighPayLoad && tim_scan_start < startTs) {
+            tim_scan_start = startTs;
+            tim_scan_end = tim_scan_start + scan_time;
+        }
+
+        if ((last_node_time + m_PointTime) >= tim_scan_start &&
+                (last_node_time + m_PointTime) < endTs - scan_time) {
+            tim_scan_start = last_node_time + m_PointTime;
+            tim_scan_end = tim_scan_start + scan_time;
+        }
+
+        if (m_AllNode == 0 && abs(timeDiff) < 10 * 1e6) {
+            m_FristNodeTime = tim_scan_start;
+            m_AllNode += (count + offsetSize);
+        } else if (m_AllNode != 0) {
+            m_AllNode += (count + offsetSize);
+        }
+
+        last_node_time = tim_scan_end;
+
+        if (m_MaxAngle < m_MinAngle) {
+            float temp = m_MinAngle;
+            m_MinAngle = m_MaxAngle;
+            m_MaxAngle = temp;
+        }
+
+        int all_node_count = count;
+        LaserDebug debug;
+
+        memset(&debug, 0, sizeof(debug));
+        outscan.config.min_angle = math::from_degrees(m_MinAngle);
+        outscan.config.max_angle =  math::from_degrees(m_MaxAngle);
+        //将首末点采集时间差作为采集时长
+//        printf("stamp [%llu]-[%llu]\n", global_nodes[0].stamp, global_nodes[count - 1].stamp);
+        outscan.config.scan_time = static_cast<float>((global_nodes[count - 1].stamp - global_nodes[0].stamp)) / 1e9;
+//        outscan.config.scan_time = static_cast<float>(scan_time * 1.0 / 1e9);
+        outscan.config.time_increment = outscan.config.scan_time / (double)(count - 1);
+        outscan.config.min_range = m_MinRange;
+        outscan.config.max_range = m_MaxRange;
+        //将一圈中第一个点采集时间作为该圈数据采集时间
+        if (global_nodes[0].stamp > 0)
+            outscan.stamp = global_nodes[0].stamp;
+        else
+            outscan.stamp = 0;
+//            outscan.stamp = tim_scan_start;
+
+        float scanfrequency = 0.0;
+
+        if (m_FixedResolution) {
+            all_node_count = m_FixedSize;
+        }
+
+        outscan.config.angle_increment = math::from_degrees(m_field_of_view) /
+                (all_node_count - 1);
+
+        float range = 0.0;
+        float intensity = 0.0;
+        float angle = 0.0;
+        debug.MaxDebugIndex = 0;
+
+        for (int i = 0; i < count; i++)
+        {
+            if (isNetTOFLidar(m_LidarType)) {
+                angle = static_cast<float>(global_nodes[i].angle_q6_checkbit / 100.0f) +
+                        m_AngleOffset;
+            } else {
+                angle = static_cast<float>((global_nodes[i].angle_q6_checkbit >>
+                                            LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f) + m_AngleOffset;
+            }
+
+            if (isOctaveLidar(lidar_model) ||
+                    isOldVersionTOFLidar(lidar_model, Major, Minjor)) {
+                range = static_cast<float>(global_nodes[i].distance_q2 / 2000.f);
+            } else {
+                if (isTOFLidar(m_LidarType) || isNetTOFLidar(m_LidarType)) {
+                    range = static_cast<float>(global_nodes[i].distance_q2 / 1000.f);
+                } else {
+                    range = static_cast<float>(global_nodes[i].distance_q2 / 4000.f);
+                }
+
+            }
+
+            intensity = static_cast<float>(global_nodes[i].sync_quality);
+
+            //      printf("intensity: %f\n",  intensity);
+
+            angle = math::from_degrees(angle);
+
+            if (global_nodes[i].scan_frequence != 0) {
+                scanfrequency = global_nodes[i].scan_frequence / 10.0;
+
+                if (isTOFLidar(m_LidarType)) {
+                    if (!isOldVersionTOFLidar(lidar_model, Major, Minjor)) {
+                        scanfrequency = global_nodes[i].scan_frequence / 10.0 + 3.0;
+                    }
+                }
+            }
+
+            //Rotate 180 degrees or not
+            if (m_Reversion || isNetTOFLidar(m_LidarType)) {
+                angle = angle + M_PI;
+            }
+
+            //Is it counter clockwise
+            if (m_Inverted) {
+                angle = 2 * M_PI - angle;
+            }
+
+            angle = math::normalize_angle(angle);
+
+            //ignore angle
+            if (isRangeIgnore(angle)) {
+                range = 0.0;
+            }
+
+            //valid range
+            if (!isRangeValid(range)) {
+                range = 0.0;
+            }
+
+            if (angle >= outscan.config.min_angle &&
+                    angle <= outscan.config.max_angle) {
+                LaserPoint point;
+                point.angle = angle;
+                point.range = range;
+                point.intensity = intensity;
+
+//                if (outscan.points.empty()) {
+//                    outscan.stamp = tim_scan_start + i * m_PointTime;
+//                }
+
+                outscan.points.push_back(point);
+            }
+
+            parsePackageNode(global_nodes[i], debug);
+
+            if (global_nodes[i].error_package) {
+                debug.MaxDebugIndex = 255;
+            }
+        }
+
+        if (m_FixedResolution) {
+            outscan.points.resize(all_node_count);
+        }
+
+        //parsing version
+        handleVersionInfoByPackage(debug);
+        //resample sample rate
+        resample(scanfrequency, count, tim_scan_end, tim_scan_start);
+        return true;
+    }
+    else
+    {
+        if (IS_FAIL(op_result)) {
+            // Error? Retry connection
+        }
+
+        if (lidarPtr->getDriverError() != NoError) {
+            fprintf(stderr, "[YDLIDAR ERROR]: %s\n",
+                    DriverInterface::DescribeDriverError(lidarPtr->getDriverError()));
+            fflush(stderr);
+        }
+
+        m_AllNode = 0;
+        m_FristNodeTime = tim_scan_start;
+    }
+
     return false;
-  }
-
-  size_t   count = ydlidar::YDlidarDriver::MAX_SCAN_NODES;
-
-  //wait Scan data:
-  uint64_t tim_scan_start = getTime();
-  uint64_t startTs = tim_scan_start;
-  result_t op_result =  lidarPtr->grabScanData(global_nodes, count);
-  uint64_t tim_scan_end = getTime();
-  uint64_t endTs = tim_scan_end;
-  uint64_t sys_scan_time = tim_scan_end - tim_scan_start;
-  outscan.points.clear();
-
-  // Fill in scan data:
-  if (IS_OK(op_result)) {
-    int offsetSize = 0;
-
-    if (isNetTOFLidar(m_LidarType)) {
-      double echo_angle = static_cast<double>(m_field_of_view * 1.0 / count);
-
-      if (echo_angle != 0.0) {
-        offsetSize = static_cast<int>((360 - m_field_of_view) / echo_angle);
-      }
-    }
-
-    uint64_t scan_time = m_PointTime * (count - 1 + offsetSize);
-    int timeDiff = static_cast<int>(sys_scan_time - scan_time);
-
-    bool HighPayLoad = false;
-
-    if (global_nodes[0].stamp > 0 && global_nodes[0].stamp < tim_scan_start) {
-      tim_scan_end = global_nodes[0].stamp;
-      HighPayLoad = true;
-    }
-
-    tim_scan_end -= m_PointTime;
-    tim_scan_end -= global_nodes[0].delay_time;
-    tim_scan_start = tim_scan_end -  scan_time ;
-
-    if (!HighPayLoad && tim_scan_start < startTs) {
-      tim_scan_start = startTs;
-      tim_scan_end = tim_scan_start + scan_time;
-    }
-
-    if ((last_node_time + m_PointTime) >= tim_scan_start &&
-        (last_node_time + m_PointTime) < endTs - scan_time) {
-      tim_scan_start = last_node_time + m_PointTime;
-      tim_scan_end = tim_scan_start + scan_time;
-    }
-
-    if (m_AllNode == 0 && abs(timeDiff) < 10 * 1e6) {
-      m_FristNodeTime = tim_scan_start;
-      m_AllNode += (count + offsetSize);
-    } else if (m_AllNode != 0) {
-      m_AllNode += (count + offsetSize);
-    }
-
-    last_node_time = tim_scan_end;
-
-    if (m_MaxAngle < m_MinAngle) {
-      float temp = m_MinAngle;
-      m_MinAngle = m_MaxAngle;
-      m_MaxAngle = temp;
-    }
-
-    int all_node_count = count;
-    LaserDebug debug;
-
-    memset(&debug, 0, sizeof(debug));
-    outscan.config.min_angle = math::from_degrees(m_MinAngle);
-    outscan.config.max_angle =  math::from_degrees(m_MaxAngle);
-    outscan.config.scan_time =  static_cast<float>(scan_time * 1.0 / 1e9);
-    outscan.config.time_increment = outscan.config.scan_time / (double)(
-                                      count - 1);
-    outscan.config.min_range = m_MinRange;
-    outscan.config.max_range = m_MaxRange;
-    outscan.stamp = tim_scan_start;
-    float scanfrequency = 0.0;
-
-    if (m_FixedResolution) {
-      all_node_count = m_FixedSize;
-    }
-
-    outscan.config.angle_increment = math::from_degrees(m_field_of_view) /
-                                     (all_node_count - 1);
-
-    float range = 0.0;
-    float intensity = 0.0;
-    float angle = 0.0;
-    debug.MaxDebugIndex = 0;
-
-    for (int i = 0; i < count; i++) {
-      if (isNetTOFLidar(m_LidarType)) {
-        angle = static_cast<float>(global_nodes[i].angle_q6_checkbit / 100.0f) +
-                m_AngleOffset;
-      } else {
-        angle = static_cast<float>((global_nodes[i].angle_q6_checkbit >>
-                                    LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f) + m_AngleOffset;
-      }
-
-      if (isOctaveLidar(lidar_model) ||
-          isOldVersionTOFLidar(lidar_model, Major, Minjor)) {
-        range = static_cast<float>(global_nodes[i].distance_q2 / 2000.f);
-      } else {
-        if (isTOFLidar(m_LidarType) || isNetTOFLidar(m_LidarType)) {
-          range = static_cast<float>(global_nodes[i].distance_q2 / 1000.f);
-        } else {
-          range = static_cast<float>(global_nodes[i].distance_q2 / 4000.f);
-        }
-
-      }
-
-      intensity = static_cast<float>(global_nodes[i].sync_quality);
-
-//      printf("intensity: %f\n",  intensity);
-
-      angle = math::from_degrees(angle);
-
-      if (global_nodes[i].scan_frequence != 0) {
-        scanfrequency = global_nodes[i].scan_frequence / 10.0;
-
-        if (isTOFLidar(m_LidarType)) {
-          if (!isOldVersionTOFLidar(lidar_model, Major, Minjor)) {
-            scanfrequency = global_nodes[i].scan_frequence / 10.0 + 3.0;
-          }
-        }
-      }
-
-      //Rotate 180 degrees or not
-      if (m_Reversion || isNetTOFLidar(m_LidarType)) {
-        angle = angle + M_PI;
-      }
-
-      //Is it counter clockwise
-      if (m_Inverted) {
-        angle = 2 * M_PI - angle;
-      }
-
-      angle = math::normalize_angle(angle);
-
-      //ignore angle
-      if (isRangeIgnore(angle)) {
-        range = 0.0;
-      }
-
-      //valid range
-      if (!isRangeValid(range)) {
-        range = 0.0;
-      }
-
-      if (angle >= outscan.config.min_angle &&
-          angle <= outscan.config.max_angle) {
-        LaserPoint point;
-        point.angle = angle;
-        point.range = range;
-        point.intensity = intensity;
-
-        if (outscan.points.empty()) {
-          outscan.stamp = tim_scan_start + i * m_PointTime;
-        }
-
-        outscan.points.push_back(point);
-      }
-
-      parsePackageNode(global_nodes[i], debug);
-
-      if (global_nodes[i].error_package) {
-        debug.MaxDebugIndex = 255;
-      }
-    }
-
-    if (m_FixedResolution) {
-      outscan.points.resize(all_node_count);
-    }
-
-    //parsing version
-    handleVersionInfoByPackage(debug);
-    //resample sample rate
-    resample(scanfrequency, count, tim_scan_end, tim_scan_start);
-    return true;
-  } else {
-    if (IS_FAIL(op_result)) {
-      // Error? Retry connection
-    }
-
-    if (lidarPtr->getDriverError() != NoError) {
-      fprintf(stderr, "[YDLIDAR ERROR]: %s\n",
-              DriverInterface::DescribeDriverError(lidarPtr->getDriverError()));
-      fflush(stderr);
-    }
-
-    m_AllNode = 0;
-    m_FristNodeTime = tim_scan_start;
-  }
-
-  return false;
-
 }
 
 /*-------------------------------------------------------------

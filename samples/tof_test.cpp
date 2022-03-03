@@ -31,11 +31,13 @@
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
-#include "CYdLidar.h"
 #include <iostream>
 #include <string>
 #include <algorithm>
 #include <cctype>
+#include "CYdLidar.h"
+#include "filters/NoiseFilter.h"
+
 using namespace std;
 using namespace ydlidar;
 
@@ -112,7 +114,8 @@ int main(int argc, char *argv[]) {
   std::map<int, int> baudrateList;
   baudrateList[0] = 115200;
   baudrateList[1] = 230400;
-  baudrateList[2] = 512000;
+  baudrateList[2] = 460800;
+  baudrateList[3] = 512000;
 
   printf("Baudrate:\n");
 
@@ -205,6 +208,8 @@ int main(int argc, char *argv[]) {
   /// abnormal count
   optval = 4;
   laser.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
+//  optval = 16;
+//  laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
@@ -252,18 +257,33 @@ int main(int argc, char *argv[]) {
   }
 
   LaserScan scan;
+  LaserScan outScan;
+  NoiseFilter filter;
+  filter.setStrategy(NoiseFilter::FS_TailWeek);
 
-  while (ret && ydlidar::os_isOk()) {/// Turn On success and loop
+  while (ret && ydlidar::os_isOk())
+  {
+      /// Turn On success and loop
+      if (laser.doProcessSimple(scan))
+      {
+          fprintf(stdout, "Scan received at [%llu] %u points is [%f]s\n",
+                  scan.stamp / 100000,
+                  (unsigned int)scan.points.size(),
+                  scan.config.scan_time);
 
-    if (laser.doProcessSimple(scan)) {
-      fprintf(stdout, "Scan received[%llu]: %u ranges is [%f]Hz\n",
-              scan.stamp/1000000,
-              (unsigned int)scan.points.size(), 1.0 / scan.config.scan_time);
-      fflush(stdout);
-    } else {
-      fprintf(stderr, "Failed to get Lidar Data\n");
-      fflush(stderr);
-    }
+          //使用拖尾滤波器
+          filter.filter(scan, 0, 0, outScan);
+
+//          for (size_t i=0; i<scan.points.size(); ++i)
+//          {
+//              const LaserPoint& p = scan.points.at(i);
+//              printf("%d a %f d %f i %f\n", i, p.angle * 180 / M_PI, p.range, p.intensity);
+//          }
+          fflush(stdout);
+      } else {
+          fprintf(stderr, "Failed to get Lidar Data\n");
+          fflush(stderr);
+      }
   }
 
   /// Stop the device scanning thread and disable motor.

@@ -162,26 +162,29 @@ inline std::string lidarModelToString(int model) {
 
     case DriverInterface::YDLIDAR_G5:
       name = "G5";
-
       break;
 
     case DriverInterface::YDLIDAR_G7:
       name = "G7";
-
       break;
 
     case DriverInterface::YDLIDAR_TG15:
       name = "TG15";
-
       break;
 
     case DriverInterface::YDLIDAR_TG30:
       name = "TG30";
-
       break;
 
     case DriverInterface::YDLIDAR_TG50:
       name = "TG50";
+      break;
+
+    case DriverInterface::YDLIDAR_TSA:
+      name = "TSA";
+      break;
+    case DriverInterface::YDLIDAR_Tmini:
+      name = "Tmini";
       break;
 
     case DriverInterface::YDLIDAR_T15:
@@ -322,6 +325,12 @@ inline bool isOctaveLidar(int model) {
   return ret;
 }
 
+//根据雷达码判断是否是Tmini雷达
+inline bool isTminiLidar(int model)
+{
+    return model == DriverInterface::YDLIDAR_Tmini;
+}
+
 /*!
  * @brief Supports multiple sampling rate
  * @param model   lidar model
@@ -390,19 +399,18 @@ inline bool hasScanFrequencyCtrl(int model) {
  * @param model   lidar model
  * @return true if supported, otherwise false.
  */
-inline bool isSupportLidar(int model) {
-  bool ret = true;
+inline bool isSupportLidar(int model)
+{
+    if (model < DriverInterface::YDLIDAR_F4 ||
+            (model > DriverInterface::YDLIDAR_G7 &&
+             model < DriverInterface::YDLIDAR_TG15) ||
+            (model > DriverInterface::YDLIDAR_Tmini &&
+             model < DriverInterface::YDLIDAR_T15))
+    {
+        return false;
+    }
 
-  if (model < DriverInterface::YDLIDAR_F4 ||
-      (model > DriverInterface::YDLIDAR_G7 &&
-       model < DriverInterface::YDLIDAR_TG15) ||
-      (model > DriverInterface::YDLIDAR_TG50 &&
-       model < DriverInterface::YDLIDAR_T15)) {
-    ret = false;
-
-  }
-
-  return ret;
+    return true;
 }
 
 /*!
