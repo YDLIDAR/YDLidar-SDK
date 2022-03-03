@@ -384,15 +384,19 @@ bool CYdLidar::getlidaropt(int optname, void *optval, int optlen) {
 /*-------------------------------------------------------------
                         initialize
 -------------------------------------------------------------*/
-bool CYdLidar::initialize() {
-  if (!checkCOMMs()) {
+bool CYdLidar::initialize()
+{
+  uint32_t t = getms();
+  if (!checkCOMMs())
+  {
     fprintf(stderr,
             "[CYdLidar::initialize] Error initializing YDLIDAR check Comms.\n");
     fflush(stderr);
     return false;
   }
 
-  if (!checkStatus()) {
+  if (!checkStatus())
+  {
     fprintf(stderr,
             "[CYdLidar::initialize] Error initializing YDLIDAR check status under [%s] and [%d].\n",
             m_SerialPort.c_str(), m_SerialBaudrate);
@@ -400,8 +404,9 @@ bool CYdLidar::initialize() {
     return false;
   }
 
-  printf("LiDAR init success!\n");
+  printf("LiDAR init success, Elapsed time %u ms\n", getms() - t);
   fflush(stdout);
+
   return true;
 }
 
@@ -420,6 +425,7 @@ bool  CYdLidar::turnOn() {
     return true;
   }
 
+  uint32_t t = getms();
   // start scan...
   result_t op_result = lidarPtr->startScan();
 
@@ -433,6 +439,9 @@ bool  CYdLidar::turnOn() {
       return false;
     }
   }
+
+  printf("[CYdLidar] Successed to start scan mode, Elapsed time %u ms\n", getms() - t);
+  fflush(stdout);
 
   m_PointTime = lidarPtr->getPointTime();
 
@@ -1211,7 +1220,7 @@ bool CYdLidar::getDeviceInfo() {
     }
   }
 
-  frequencyOffset     = 0.4;
+  frequencyOffset = 0.4;
   lidar_model = devinfo.model;
   bool intensity = hasIntensity(devinfo.model);
   defalutSampleRate = lidarModelDefaultSampleRate(devinfo.model);
@@ -1242,12 +1251,16 @@ bool CYdLidar::getDeviceInfo() {
                               devinfo.firmware_version >> 8, devinfo.firmware_version & 0x00ff);
   }
 
+  // uint32_t t = getms();
+
   if (hasSampleRate(devinfo.model)) {
     checkSampleRate();
   } else {
     m_PointTime = 1e9 / (defalutSampleRate * 1000);
     lidarPtr->setPointTime(m_PointTime);
   }
+
+  // printf("LiDAR get device info finished, Elapsed time %u ms\n", getms() - t);
 
   if (hasScanFrequencyCtrl(devinfo.model) || ((isTOFLidar(m_LidarType)) &&
       !m_SingleChannel) || isNetTOFLidar(m_LidarType)) {
@@ -1317,15 +1330,22 @@ void CYdLidar::checkSampleRate() {
 
   m_SampleRatebyD1 = _rate.rate;
 
-  if (IS_OK(ans)) {
+  if (IS_OK(ans)) 
+  {
     _samp_rate = ConvertUserToLidarSmaple(lidar_model, m_SampleRate, _rate.rate);
 
-    while (_samp_rate != _rate.rate) {
-      ans = lidarPtr->setSamplingRate(_rate);
-      try_count++;
+    if (!isTOFLidarByModel(lidar_model))
+    {
+      //非TOF雷达通过设备信息获取
+      while (_samp_rate != _rate.rate)
+      {
+        ans = lidarPtr->setSamplingRate(_rate);
+        try_count++;
 
-      if (try_count > 3) {
-        break;
+        if (try_count > 3)
+        {
+          break;
+        }
       }
     }
 
@@ -1544,17 +1564,18 @@ bool  CYdLidar::checkCOMMs() {
 /*-------------------------------------------------------------
                         checkStatus
 -------------------------------------------------------------*/
-bool CYdLidar::checkStatus() {
-
-  if (!checkCOMMs()) {
+bool CYdLidar::checkStatus()
+{
+  if (!checkCOMMs())
+  {
     return false;
   }
 
   getDeviceHealth();
 
-  if (!getDeviceInfo()) {
+  if (!getDeviceInfo())
+  {
     return false;
-
   }
 
   return true;
