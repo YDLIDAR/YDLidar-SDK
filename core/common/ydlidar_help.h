@@ -204,109 +204,81 @@ inline std::string lidarModelToString(int model) {
  * @param model lidar model.
  * @return lidar sampling rate.
  */
-inline int lidarModelDefaultSampleRate(int model) {
-  int sample_rate = 4;
+inline std::vector<int> getDefaultSampleRate(int model) 
+{
+  std::vector<int> srs;
 
-  switch (model) {
+  switch (model) 
+  {
     case DriverInterface::YDLIDAR_F4:
-      break;
-
     case DriverInterface::YDLIDAR_T1:
-      break;
-
     case DriverInterface::YDLIDAR_F2:
-      break;
-
     case DriverInterface::YDLIDAR_S4:
+      srs.push_back(4);
       break;
-
     case DriverInterface::YDLIDAR_G4:
-      sample_rate = 9;
+      srs.push_back(9);
       break;
-
     case DriverInterface::YDLIDAR_X4:
-      sample_rate = 5;
+      srs.push_back(5);
       break;
-
     case DriverInterface::YDLIDAR_G4PRO:
-      sample_rate = 9;
+      srs.push_back(9);
       break;
-
     case DriverInterface::YDLIDAR_F4PRO:
-      sample_rate = 4;
+      srs.push_back(4);
       break;
-
     case DriverInterface::YDLIDAR_R2:
-      sample_rate = 5;
+      srs.push_back(5);
       break;
-
     case DriverInterface::YDLIDAR_G10:
-      sample_rate = 10;
+      srs.push_back(10);
       break;
-
     case DriverInterface::YDLIDAR_S4B:
-      sample_rate = 4;
+      srs.push_back(4);
       break;
-
     case DriverInterface::YDLIDAR_S2:
-      sample_rate = 3;
+      srs.push_back(3);
       break;
-
     case DriverInterface::YDLIDAR_G6:
-      sample_rate = 18;
+      srs.push_back(18);
       break;
-
     case DriverInterface::YDLIDAR_G2A:
-      sample_rate = 5;
-      break;
-
     case DriverInterface::YDLIDAR_G2B:
-      sample_rate = 5;
+      srs.push_back(5);
       break;
-
     case DriverInterface::YDLIDAR_G2C:
-      sample_rate = 4;
-      break;
-
     case DriverInterface::YDLIDAR_G4B:
-      break;
-
     case DriverInterface::YDLIDAR_G4C:
+      srs.push_back(4);
       break;
-
     case DriverInterface::YDLIDAR_G1:
-      sample_rate = 9;
-      break;
-
     case DriverInterface::YDLIDAR_G5:
-      sample_rate = 9;
+      srs.push_back(9);
       break;
-
     case DriverInterface::YDLIDAR_G7:
-      sample_rate = 18;
+      srs.push_back(18);
       break;
-
     case DriverInterface::YDLIDAR_TG15:
-      sample_rate = 20;
+      srs.push_back(20);
       break;
-
     case DriverInterface::YDLIDAR_TG30:
-      sample_rate = 20;
+      srs.push_back(10);
+      srs.push_back(20);
       break;
-
     case DriverInterface::YDLIDAR_TG50:
-      sample_rate = 20;
+      srs.push_back(20);
       break;
-
     case DriverInterface::YDLIDAR_T15:
-      sample_rate = 20;
+      srs.push_back(20);
       break;
 
     default:
+      srs.push_back(4);
       break;
   }
 
-  return sample_rate ;
+  return srs;
 }
 
 /*!
@@ -708,58 +680,56 @@ inline int ConvertUserToLidarSmaple(int model, int m_SampleRate,
  * @param rate      LiDAR sampling rate code
  * @return user sampling code
  */
-inline int ConvertLidarToUserSmaple(int model, int rate) {
+inline int ConvertLidarToUserSmaple(int model, int rate) 
+{
   int _samp_rate = 9;
 
-  switch (rate) {
+  if (!isOctaveLidar(model) && 
+      !isTOFLidarByModel(model))
+  {
+    switch (rate)
+    {
+    case DriverInterface::YDLIDAR_RATE_4K:
+      _samp_rate = 4;
+      break;
+    case DriverInterface::YDLIDAR_RATE_8K:
+      _samp_rate = 8;
+      if (model == DriverInterface::YDLIDAR_F4PRO)
+        _samp_rate = 6;
+      break;
+    case DriverInterface::YDLIDAR_RATE_9K:
+      _samp_rate = 9;
+      break;
+    case DriverInterface::YDLIDAR_RATE_10K:
+      _samp_rate = 10;
+      break;
+    default:
+      //修改默认为当前获取到采样率值
+      _samp_rate = rate;
+      break;
+    }
+  }
+  else
+  {
+    switch (rate)
+    {
     case DriverInterface::YDLIDAR_RATE_4K:
       _samp_rate = 10;
-
-      if (!isOctaveLidar(model)) {
-        _samp_rate = 4;
-      }
-
       break;
-
     case DriverInterface::YDLIDAR_RATE_8K:
       _samp_rate = 16;
-
-      if (!isOctaveLidar(model)) {
-        _samp_rate = 8;
-
-        if (model == DriverInterface::YDLIDAR_F4PRO) {
-          _samp_rate = 6;
-        }
-      }
-
       break;
-
     case DriverInterface::YDLIDAR_RATE_9K:
       _samp_rate = 18;
-
-      if (!isOctaveLidar(model)) {
-        _samp_rate = 9;
-      }
-
       break;
-
     case DriverInterface::YDLIDAR_RATE_10K:
       _samp_rate = 20;
-
-      if (!isOctaveLidar(model)) {
-        _samp_rate = 10;
-      }
-
       break;
-
     default:
-      _samp_rate = 9;
-
-      if (isOctaveLidar(model)) {
-        _samp_rate = 18;
-      }
-
+      //修改默认为当前获取到采样率值
+      _samp_rate = rate;
       break;
+    }
   }
 
   return _samp_rate;

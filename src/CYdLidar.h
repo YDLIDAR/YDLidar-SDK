@@ -1056,7 +1056,8 @@ class YDLIDAR_API CYdLidar {
   uint64_t m_AllNode;               ///< Sum of sampling points
   std::map<int, int> SampleRateMap; ///< Sample Rate Map
   std::string m_SerialNumber;       ///< LiDAR serial number
-  int defalutSampleRate;            ///< LiDAR Default Sampling Rate
+  // int defalutSampleRate;            ///< LiDAR Default Sampling Rate
+  std::vector<int> defalutSampleRate; //默认采样率可能是多个值
   bool m_parsingCompleted;          ///< LiDAR Version Information is successfully parsed
   float m_field_of_view;            ///< LiDAR Field of View Angle.
   LidarVersion m_LidarVersion;      ///< LiDAR Version information

@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
   b_optvalue = isSingleChannel;
   laser.setlidaropt(LidarPropSingleChannel, &b_optvalue, sizeof(bool));
   /// intensity
-  b_optvalue = true;
+  b_optvalue = false;
   laser.setlidaropt(LidarPropIntenstiy, &b_optvalue, sizeof(bool));
   /// Motor DTR
   laser.setlidaropt(LidarPropSupportMotorDtrCtrl, &b_optvalue, sizeof(bool));
@@ -272,8 +272,7 @@ int main(int argc, char *argv[]) {
                   scan.config.scan_time);
 
           //使用拖尾滤波器
-          filter.filter(scan, 0, 0, outScan);
-
+          // filter.filter(scan, 0, 0, outScan);
 //          for (size_t i=0; i<scan.points.size(); ++i)
 //          {
 //              const LaserPoint& p = scan.points.at(i);

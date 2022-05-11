@@ -1578,7 +1578,7 @@ result_t YDlidarDriver::getDeviceInfo(device_info &info, uint32_t timeout) {
       info = this->info_;
       return RESULT_OK;
     }
-
+    //未获取到设备信息时，返回一个无效的设备信息
     info.model = YDLIDAR_S2;
     info.firmware_version = 0;
     info.hardware_version = 0;
@@ -1663,7 +1663,7 @@ void YDlidarDriver::setAutoReconnect(const bool &enable) {
 void YDlidarDriver::checkTransDelay() {
   //calc stamp
   trans_delay = _serial->getByteTime();
-  sample_rate = lidarModelDefaultSampleRate(model) * 1000;
+  sample_rate = getDefaultSampleRate(model).front() * 1000;
 
   switch (model) {
     case YDLIDAR_G4://g4
