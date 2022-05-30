@@ -86,6 +86,7 @@ endif()
 # PARSE libraries
 include(common/ydlidar_parse)
 include_directories(${SDK_INCS})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 ########################################################
 ## Create configure file for inclusion in library
