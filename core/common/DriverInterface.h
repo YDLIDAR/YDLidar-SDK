@@ -435,7 +435,7 @@ class DriverInterface {
   }
 
  public:
-  enum {
+  enum YDLIDAR_MODLES {
     YDLIDAR_F4      = 1,/**< F4 LiDAR Model. */
     YDLIDAR_T1      = 2,/**< T1 LiDAR Model. */
     YDLIDAR_F2      = 3,/**< F2 LiDAR Model. */
@@ -458,6 +458,8 @@ class DriverInterface {
     YDLIDAR_G5      = 20,/**< G5 LiDAR Model. */
     YDLIDAR_G7      = 21,/**< G7 LiDAR Model. */
 
+    YDLIDAR_GS2     = 51, //GS2雷达
+
     YDLIDAR_TG15    = 100,/**< TG15 LiDAR Model. */
     YDLIDAR_TG30    = 101,/**< T30 LiDAR Model. */
     YDLIDAR_TG50    = 102,/**< TG50 LiDAR Model. */
@@ -470,7 +472,7 @@ class DriverInterface {
     YDLIDAR_Tail,
   };
 
-  enum {
+  enum YDLIDAR_RATE {
     YDLIDAR_RATE_4K = 0,/**< 4K sample rate code */
     YDLIDAR_RATE_8K = 1,/**< 8K sample rate code */
     YDLIDAR_RATE_9K = 2,/**< 9K sample rate code */
@@ -488,9 +490,9 @@ class DriverInterface {
  protected:
   /* Variable for LIDAR compatibility */
   /// LiDAR Scanning state
-  bool            m_isScanning;
+  bool            m_isScanning = false;
   /// LiDAR connected state
-  bool            m_isConnected;
+  bool            m_isConnected = false;
   /// Scan Data Event
   Event           _dataEvent;
   /// Data Locker

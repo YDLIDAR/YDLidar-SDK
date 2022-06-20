@@ -121,10 +121,31 @@
 
 #define LIDAR_CMD_SET_HEART_BEAT            0xD9
 
+//gs2
+#define GS_LIDAR_CMD_GET_ADDRESS               0x60
+#define GS_LIDAR_CMD_GET_PARAMETER             0x61
+#define GS_LIDAR_CMD_GET_VERSION               0x62
+#define GS_LIDAR_CMD_SCAN                      0x63
+#define GS_LIDAR_ANS_SCAN                      0x63
+#define GS_LIDAR_CMD_STOP                      0x64
+#define GS_LIDAR_CMD_RESET                     0x67
+#define GS_LIDAR_CMD_SET_BIAS                  0xD9
+#define GS_LIDAR_CMD_SET_DEBUG_MODE            0xF0
+
 /** @} LIDAR CMD Protocol */
+
+//GS2
+#define Angle_Px   1.22
+#define Angle_Py   5.315
+#define Angle_PAngle   22.5
+#define PackageMaxModuleNums  0x03
+#define PackageSampleMaxLngth_GS 0xA0  //160*2
+#define PackagePaidBytes_GS 8
+#define NORMAL_PACKAGE_SIZE 331
 
 /// Maximuum number of samples in a packet
 #define PackageSampleMaxLngth 0x100
+#define MaximumNumberOfPackages 765
 
 /// CT Package Type
 typedef enum {
@@ -158,19 +179,19 @@ typedef enum {
 #pragma pack(1)
 #endif
 
-/// LiDAR Node info
+//雷达节点信息
 struct node_info {
-  uint8_t    sync_flag;  ///< sync flag
-  uint16_t   sync_quality;///< intensity
-  uint16_t   angle_q6_checkbit; ///< angle
-  uint16_t   distance_q2; ///< range
-  uint64_t   stamp; ///< time stamp
-  uint32_t   delay_time; ///< delay time
-  uint8_t    scan_frequence;///< scan frequency. invalid: 0
-  uint8_t    debugInfo;///< debug information
-  uint8_t    index;///< package index
-  uint8_t    error_package;///< error package state
-} __attribute__((packed)) ;
+  uint8_t sync_flag; //首包标记
+  uint16_t sync_quality; //信号强度
+  uint16_t angle_q6_checkbit; //角度值（°）
+  uint16_t distance_q2; //距离值
+  uint64_t stamp; //时间戳
+  uint32_t delay_time; ///< delay time
+  uint8_t scan_frequence; //扫描频率
+  uint8_t debugInfo; ///< debug information
+  uint8_t index; //包序号
+  uint8_t error_package; ///< error package state
+} __attribute__((packed));
 
 /// package node info
 struct PackageNode {
@@ -283,6 +304,65 @@ struct lidar_ans_header {
   uint32_t size: 30;
   uint32_t subType: 2;
   uint8_t  type;
+} __attribute__((packed));
+
+//GS2
+struct GS2_Multi_Package {
+    int frameNum;
+    int moduleNum;
+    bool left = false;
+    bool right = false;
+    node_info  all_points[160];
+} __attribute__((packed)) ;
+
+struct GS2PackageNode {
+  uint16_t PakageSampleDistance:9;
+  uint16_t PakageSampleQuality:7;
+} __attribute__((packed));
+
+struct gs2_node_package {
+  uint32_t  package_Head;
+  uint8_t   address;
+  uint8_t   package_CT;
+  uint16_t  size;
+  uint16_t  BackgroudLight;
+  GS2PackageNode  packageSample[PackageSampleMaxLngth_GS];
+  uint8_t  checkSum;
+} __attribute__((packed)) ;
+
+struct gs_lidar_ans_header {
+    uint8_t  syncByte0;
+    uint8_t  syncByte1;
+    uint8_t  syncByte2;
+    uint8_t  syncByte3;
+    uint8_t  address;
+    uint8_t  type;
+    uint16_t size;
+} __attribute__((packed));
+
+struct gs_device_para {
+    uint16_t u_compensateK0;
+    uint16_t u_compensateB0;
+    uint16_t u_compensateK1;
+    uint16_t u_compensateB1;
+    int8_t  bias;
+    uint8_t  crc;
+} __attribute__((packed));
+
+struct cmd_packet_gs {
+    uint8_t syncByte0;
+    uint8_t syncByte1;
+    uint8_t syncByte2;
+    uint8_t syncByte3;
+    uint8_t address;
+    uint8_t cmd_flag;
+    uint16_t size;
+} __attribute__((packed));
+//GS系列设备信息
+struct gs_device_info {
+    uint8_t hardware_version; //硬件版本号
+    uint16_t firmware_version; //固件版本号
+    uint8_t serialnum[16]; //序列号
 } __attribute__((packed));
 
 #if defined(_WIN32)

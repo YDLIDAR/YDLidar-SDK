@@ -265,7 +265,7 @@ int main(int argc, char *argv[]) {
   {
       if (laser.doProcessSimple(scan))
       {
-          printf("Scan received at [%llu] %u points is [%f]Hz\n",
+          printf("Scan received at [%lu] %u points is [%f]Hz\n",
                  scan.stamp / 1000000,
                  (unsigned int)scan.points.size(),
                  1.0 / scan.config.scan_time);

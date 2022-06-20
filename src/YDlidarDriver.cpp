@@ -23,7 +23,7 @@
 //
 #include <core/serial/serial.h>
 #include <core/network/ActiveSocket.h>
-#include "ydlidar_driver.h"
+#include "YDlidarDriver.h"
 #include <core/serial/common.h>
 #include <math.h>
 #include <ydlidar_config.h>

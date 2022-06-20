@@ -168,6 +168,10 @@ inline std::string lidarModelToString(int model) {
       name = "G7";
       break;
 
+    case DriverInterface::YDLIDAR_GS2:
+      name = "GS2";
+      break;
+
     case DriverInterface::YDLIDAR_TG15:
       name = "TG15";
       break;
@@ -359,7 +363,8 @@ inline bool hasScanFrequencyCtrl(int model) {
   if (model == DriverInterface::YDLIDAR_S4 ||
       model == DriverInterface::YDLIDAR_S4B ||
       model == DriverInterface::YDLIDAR_S2 ||
-      model == DriverInterface::YDLIDAR_X4) {
+      model == DriverInterface::YDLIDAR_X4 ||
+      model == DriverInterface::YDLIDAR_GS2) {
     ret = false;
   }
 
@@ -373,16 +378,16 @@ inline bool hasScanFrequencyCtrl(int model) {
  */
 inline bool isSupportLidar(int model)
 {
-    if (model < DriverInterface::YDLIDAR_F4 ||
-            (model > DriverInterface::YDLIDAR_G7 &&
-             model < DriverInterface::YDLIDAR_TG15) ||
-            (model > DriverInterface::YDLIDAR_Tmini &&
-             model < DriverInterface::YDLIDAR_T15))
-    {
-        return false;
-    }
+  if (model < DriverInterface::YDLIDAR_F4 ||
+      (model > DriverInterface::YDLIDAR_G7 &&
+       model < DriverInterface::YDLIDAR_GS2) ||
+      (model > DriverInterface::YDLIDAR_Tmini &&
+       model < DriverInterface::YDLIDAR_T15))
+  {
+    return false;
+  }
 
-    return true;
+  return true;
 }
 
 /*!
@@ -395,7 +400,8 @@ inline bool hasIntensity(int model) {
 
   if (model == DriverInterface::YDLIDAR_G2B ||
       model == DriverInterface::YDLIDAR_G4B ||
-      model == DriverInterface::YDLIDAR_S4B) {
+      model == DriverInterface::YDLIDAR_S4B ||
+      model == DriverInterface::YDLIDAR_GS2) {
     ret = true;
   }
 
@@ -519,6 +525,21 @@ inline bool isTriangleLidar(int type) {
   bool ret = false;
 
   if (type == TYPE_TRIANGLE) {
+    ret = true;
+  }
+
+  return ret;
+}
+
+/**
+ * @brief Whether it is a GS type LiDAR
+ * @param type  LiDAR type
+ * @return true if it is a Triangle type, otherwise false.
+ */
+inline bool isGSLidar(int type) {
+  bool ret = false;
+
+  if (type == TYPE_GS) {
     ret = true;
   }
 
@@ -974,6 +995,16 @@ inline bool isV1Protocol(uint8_t protocol) {
   }
 
   return false;
+}
+
+//以16进制打印数据
+inline void printHex(const uint8_t *data, int size)
+{
+    if (!data)
+        return;
+    for (int i=0; i<size; ++i)
+        printf("%02X", data[i]);
+    printf("\n");
 }
 
 }//common

@@ -110,4 +110,5 @@ typedef struct {
   std::vector<LaserPoint> points;
   /// Configuration of scan
   LaserConfig config;
+  int moduleNum;
 } LaserScan;

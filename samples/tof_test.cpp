@@ -266,7 +266,7 @@ int main(int argc, char *argv[]) {
       /// Turn On success and loop
       if (laser.doProcessSimple(scan))
       {
-          fprintf(stdout, "Scan received at [%llu] %u points is [%f]s\n",
+          fprintf(stdout, "Scan received at [%lu] %u points is [%f]s\n",
                   scan.stamp / 100000,
                   (unsigned int)scan.points.size(),
                   scan.config.scan_time);

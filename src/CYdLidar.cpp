@@ -21,18 +21,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-#include "CYdLidar.h"
-#include <core/serial/common.h>
 #include <map>
-#include <core/math/angles.h>
 #include <numeric>
 #include <algorithm>
-#include "ydlidar_driver.h"
 #include <math.h>
 #include <functional>
-#include <core/common/DriverInterface.h>
-#include <core/common/ydlidar_help.h>
+#include "CYdLidar.h"
+#include "core/math/angles.h"
+#include "core/serial/common.h"
+#include "core/common/DriverInterface.h"
+#include "core/common/ydlidar_help.h"
+#include "YDlidarDriver.h"
 #include "ETLidarDriver.h"
+#include "GS2LidarDriver.h"
 
 using namespace std;
 using namespace impl;
@@ -624,6 +625,8 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     outscan.config.time_increment = outscan.config.scan_time / (double)(count - 1);
     outscan.config.min_range = m_MinRange;
     outscan.config.max_range = m_MaxRange;
+    //模组编号
+    outscan.moduleNum = global_nodes[0].index;
     //将一圈中第一个点采集时间作为该圈数据采集时间
     if (global_nodes[0].stamp > 0)
       outscan.stamp = global_nodes[0].stamp;
@@ -668,7 +671,9 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       }
       else
       {
-        if (isTOFLidar(m_LidarType) || isNetTOFLidar(m_LidarType))
+        if (isTOFLidar(m_LidarType) || 
+          isNetTOFLidar(m_LidarType) ||
+          isGSLidar(m_LidarType))
         {
           range = static_cast<float>(global_nodes[i].distance_q2 / 1000.f);
         }
@@ -678,9 +683,9 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
         }
       }
 
-      intensity = static_cast<float>(global_nodes[i].sync_quality);
+      // printf("%d %.03f\n", i, range);
 
-      //      printf("intensity: %f\n",  intensity);
+      intensity = static_cast<float>(global_nodes[i].sync_quality);
 
       angle = math::from_degrees(angle);
 
@@ -731,20 +736,15 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
         point.range = range;
         point.intensity = intensity;
 
-        //                if (outscan.points.empty()) {
-        //                    outscan.stamp = tim_scan_start + i * m_PointTime;
-        //                }
-
         outscan.points.push_back(point);
       }
 
       parsePackageNode(global_nodes[i], debug);
-
       if (global_nodes[i].error_package)
       {
         debug.MaxDebugIndex = 255;
       }
-    }
+    } //end for (int i = 0; i < count; i++)
 
     if (m_FixedResolution)
     {
@@ -1346,8 +1346,10 @@ bool CYdLidar::getDeviceHealth()
   }
 
   lidarPtr->stop();
+
   result_t op_result;
   device_health healthinfo;
+  memset(&healthinfo, 0, sizeof(device_health));
   op_result = lidarPtr->getHealth(healthinfo,
                                   DriverInterface::DEFAULT_TIMEOUT / 2);
 
@@ -1402,28 +1404,27 @@ bool CYdLidar::getDeviceInfo()
     return false;
   }
 
+  // check Lidar Type Config
+  if (isTOFLidarByModel(devinfo.model))
   {
-    // check Lidar Type Config
-    if (isTOFLidarByModel(devinfo.model))
+    if (!isTOFLidar(m_LidarType))
     {
-      if (!isTOFLidar(m_LidarType))
-      {
-        fprintf(stderr, "Incorrect Lidar Type setting...\n");
-        m_LidarType = TYPE_TOF;
-        lidarPtr->setLidarType(m_LidarType);
-      }
+      fprintf(stderr, "Incorrect Lidar Type setting...\n");
+      m_LidarType = TYPE_TOF;
+      lidarPtr->setLidarType(m_LidarType);
     }
-    else
-    {
-      if (!isTriangleLidar(m_LidarType) && !isNetTOFLidarByModel(devinfo.model) &&
-          !m_SingleChannel)
-      {
-        fprintf(stderr, "Incorrect Lidar Type setting, Reset Type to %d...\n",
-                TYPE_TRIANGLE);
-        m_LidarType = TYPE_TRIANGLE;
-        lidarPtr->setLidarType(m_LidarType);
-      }
-    }
+  }
+  else
+  {
+    // if (!isTriangleLidar(m_LidarType) &&
+    //     !isNetTOFLidarByModel(devinfo.model) &&
+    //     !m_SingleChannel)
+    // {
+    //   fprintf(stderr, "Incorrect Lidar Type setting, Reset Type to %d...\n",
+    //           TYPE_TRIANGLE);
+    //   m_LidarType = TYPE_TRIANGLE;
+    //   lidarPtr->setLidarType(m_LidarType);
+    // }
   }
 
   frequencyOffset = 0.4;
@@ -1474,7 +1475,9 @@ bool CYdLidar::getDeviceInfo()
 
   // printf("LiDAR get device info finished, Elapsed time %u ms\n", getms() - t);
 
-  if (hasScanFrequencyCtrl(devinfo.model) || ((isTOFLidar(m_LidarType)) && !m_SingleChannel) || isNetTOFLidar(m_LidarType))
+  if (hasScanFrequencyCtrl(devinfo.model) || 
+    ((isTOFLidar(m_LidarType)) && !m_SingleChannel) || 
+      isNetTOFLidar(m_LidarType))
   {
     checkScanFrequency();
   }
@@ -1749,8 +1752,14 @@ bool CYdLidar::checkCOMMs()
     {
       lidarPtr = new ydlidar::ETLidarDriver(); // T15
     }
+    else if (isGSLidar(m_LidarType))
+    {
+      //GS2
+      lidarPtr = new ydlidar::GS2LidarDriver();
+    }
     else
-    { // TG30 G4
+    { 
+      //通用雷达
       lidarPtr = new ydlidar::YDlidarDriver(m_DeviceType);
     }
 
@@ -1819,11 +1828,6 @@ bool CYdLidar::checkCOMMs()
 -------------------------------------------------------------*/
 bool CYdLidar::checkStatus()
 {
-  if (!checkCOMMs())
-  {
-    return false;
-  }
-
   getDeviceHealth();
 
   if (!getDeviceInfo())

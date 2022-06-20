@@ -45,6 +45,7 @@ typedef enum {
   TYPE_TOF = 0,/**< TG TX LiDAR.*/
   TYPE_TRIANGLE  = 1,/**< G4. G6. G2 LiDAR.*/
   TYPE_TOF_NET = 2,/**< T15 LiDAR.*/
+  TYPE_GS = 3, //GS2
   TYPE_Tail,
 } LidarTypeID;
 
@@ -191,7 +192,7 @@ typedef struct {
   /// System time when first range was measured in nanoseconds
   uint64_t stamp;///< ns
   /// Array of lidar points
-  uint32_t    npoints;
+  uint32_t npoints;
   LaserPoint *points;
   /// Configuration of scan
   LaserConfig config;
