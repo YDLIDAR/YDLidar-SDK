@@ -476,6 +476,14 @@ class GS2LidarDriver : public DriverInterface {
    */
   virtual result_t getDeviceInfo(device_info &info, uint32_t timeout = DEFAULT_TIMEOUT);
 
+    /**
+   * @brief 设置雷达工作模式（目前只针对GS2雷达）
+   * @param[in] mode 雷达工作模式，0为避障模式；1为延边模式
+   * @param[in] addr 雷达地址，第1个雷达地址为0x01；第2个雷达地址为0x02；第3个雷达地址为0x04；
+   * @return 成功返回RESULT_OK，否则返回非RESULT_OK
+   */
+  virtual result_t setWorkMode(int mode=0, uint8_t addr=0x00);
+
   //未实现的虚函数
   virtual result_t getScanFrequency(scan_frequency &frequency, uint32_t timeout = DEFAULT_TIMEOUT) { return RESULT_OK; }
   virtual result_t setScanFrequencyDis(scan_frequency &frequency,

@@ -917,6 +917,14 @@ class YDLIDAR_API CYdLidar {
    */
   DriverError getDriverError() const;
 
+  /**
+   * @brief 设置雷达工作模式（目前只针对GS2雷达）
+   * @param[in] mode 雷达工作模式
+   * @param[in] addr 雷达地址
+   * @return 成功返回true，否则返回false
+   */
+  bool setWorkMode(int mode, uint8_t addr=0x00);
+
  private:
   /**
    * @brief check LiDAR instance and connect to LiDAR,

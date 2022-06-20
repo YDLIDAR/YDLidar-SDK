@@ -859,6 +859,14 @@ DriverError CYdLidar::getDriverError() const
   return er;
 }
 
+bool CYdLidar::setWorkMode(int mode, uint8_t addr)
+{
+  if (lidarPtr)
+    return (lidarPtr->setWorkMode(mode, addr) == RESULT_OK);
+  else
+    return false;
+}
+
 /*-------------------------------------------------------------
                     isRangeValid
 -------------------------------------------------------------*/

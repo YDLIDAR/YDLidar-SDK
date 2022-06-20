@@ -129,6 +129,7 @@
 #define GS_LIDAR_ANS_SCAN                      0x63
 #define GS_LIDAR_CMD_STOP                      0x64
 #define GS_LIDAR_CMD_RESET                     0x67
+#define GS_LIDAR_CMD_SET_MODE                  0x69
 #define GS_LIDAR_CMD_SET_BIAS                  0xD9
 #define GS_LIDAR_CMD_SET_DEBUG_MODE            0xF0
 

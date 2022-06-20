@@ -434,6 +434,14 @@ class DriverInterface {
     return m_driverErrno;
   }
 
+  /**
+   * @brief 设置雷达工作模式（目前只针对GS2雷达）
+   * @param[in] mode 雷达工作模式
+   * @param[in] addr 雷达地址
+   * @return 成功返回RESULT_OK，否则返回非RESULT_OK
+   */
+  virtual result_t setWorkMode(int mode=0, uint8_t addr=0x00) {return RESULT_FAIL;}
+
  public:
   enum YDLIDAR_MODLES {
     YDLIDAR_F4      = 1,/**< F4 LiDAR Model. */

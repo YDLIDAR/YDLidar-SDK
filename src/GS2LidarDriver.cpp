@@ -1642,4 +1642,41 @@ result_t GS2LidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
     return RESULT_OK;
 }
 
+result_t GS2LidarDriver::setWorkMode(int mode, uint8_t addr)
+{
+    result_t ans;
+    uint32_t timeout = 300;
+    string buf;
+
+    if (!isconnected()) {
+        return RESULT_FAIL;
+    }
+
+    //如果已经开启扫描，则先停止扫描
+    if (isscanning())
+    {
+        disableDataGrabbing();
+        delay(10);
+        stopScan();
+        flushSerial();
+    }
+
+    {
+        ScopedLocker l(_lock);
+        uint8_t m = uint8_t(mode);
+        if ((ans = sendCommand(addr, GS_LIDAR_CMD_SET_MODE, &m, 1)) != RESULT_OK) {
+            return ans;
+        }
+        gs_lidar_ans_header response_header;
+        if ((ans = waitResponseHeaderEx(&response_header, GS_LIDAR_CMD_SET_MODE, timeout)) != RESULT_OK) {
+            return ans;
+        }
+        if (response_header.type != GS_LIDAR_CMD_SET_MODE) {
+            return RESULT_FAIL;
+        }
+    }
+
+    return RESULT_OK;
+}
+
 }

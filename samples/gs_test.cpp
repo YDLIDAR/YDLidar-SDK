@@ -204,13 +204,31 @@ int main(int argc, char *argv[])
   /// unit: Hz
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
+  //雷达初始化
   bool ret = laser.initialize();
-
-  if (ret) {
-    ret = laser.turnOn();
-  } else {
-    fprintf(stderr, "%s\n", laser.DescribeError());
+  if (!ret)
+  {
+    fprintf(stderr, "Fail to initialize %s\n", laser.DescribeError());
     fflush(stderr);
+    return -1;
+  }
+  //设置雷达工作模式
+  // ret &= laser.setWorkMode(0, 0x01);
+  // ret &= laser.setWorkMode(0, 0x02);
+  // ret &= laser.setWorkMode(1, 0x04);
+  // if (!ret)
+  // {
+  //   fprintf(stderr, "Fail to set work mode %s\n", laser.DescribeError());
+  //   fflush(stderr);
+  //   return -1;
+  // }
+  //启动扫描
+  ret = laser.turnOn();
+  if (!ret)
+  {
+    fprintf(stderr, "Fail to turn on %s\n", laser.DescribeError());
+    fflush(stderr);
+    return -1;
   }
 
   LaserScan scan;
@@ -223,12 +241,12 @@ int main(int argc, char *argv[])
              scan.points.size(),
              scan.moduleNum);
 
-      for (size_t i = 0; i < scan.points.size(); ++i)
-      {
-        const LaserPoint &p = scan.points.at(i);
-        printf("%lu a %.01f r %.01f\n", i, p.angle * 180.0f / M_PI, p.range * 1000.0f);
-      }
-      fflush(stdout);
+      // for (size_t i = 0; i < scan.points.size(); ++i)
+      // {
+      //   const LaserPoint &p = scan.points.at(i);
+      //   printf("%lu a %.01f r %.01f\n", i, p.angle * 180.0f / M_PI, p.range * 1000.0f);
+      // }
+      // fflush(stdout);
     }
     else
     {
