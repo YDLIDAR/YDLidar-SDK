@@ -288,6 +288,7 @@ result_t GS2LidarDriver::sendCommand(uint8_t addr,
     header->cmd_flag = cmd;
     header->size = 0xffff&payloadsize;
     sendData(pkt_header, 8) ;
+    checksum += addr;
     checksum += cmd;
     checksum += 0xff&header->size;
     checksum += 0xff&(header->size>>8);
@@ -344,12 +345,12 @@ result_t GS2LidarDriver::getData(uint8_t *data, size_t size) {
     while (size) {
         r = _serial->readData(data, size);
 
-        if (r < 1) {
+        if (!r) {
             return RESULT_FAIL;
         }
 
-//        printf("recv: ");
-//        printHex(data, r);
+    //    printf("recv: ");
+    //    printHex(data, r);
 
         size -= r;
         data += r;
@@ -646,8 +647,8 @@ int GS2LidarDriver::cacheScanData() {
             retryCount = 0;
         }
 
-        printf("sync:%d,index:%d,moduleNum:%d\n",package_type,frameNum,moduleNum);
-        fflush(stdout);
+        // printf("sync:%d,index:%d,moduleNum:%d\n",package_type,frameNum,moduleNum);
+        // fflush(stdout);
 
         if(!isPrepareToSend){
             continue;
@@ -666,8 +667,8 @@ int GS2LidarDriver::cacheScanData() {
         scan_node_buf[0].scan_frequence = local_buf[count - 1].scan_frequence;
         scan_node_buf[0].index = moduleNum >> 1;//gs2:  1, 2, 4
         scan_node_count = 160; //一个包固定160个数据
-        printf("send frameNum: %d,moduleNum: %d\n",frameNum,moduleNum);
-        fflush(stdout);
+        // printf("send frameNum: %d,moduleNum: %d\n",frameNum,moduleNum);
+        // fflush(stdout);
         _dataEvent.set();
         _lock.unlock();
         scan_count = 0;
@@ -799,7 +800,7 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
                 }
                 package_Sample_Num = sample_lens + 1; //环境2Bytes + 点云320Bytes + CRC
                 package_recvPos = recvPos;
-                printf("sample num %d\n", (package_Sample_Num - 3) / 2);
+                // printf("sample num %d\n", (package_Sample_Num - 3) / 2);
                 break;
             }
             else
@@ -1658,8 +1659,8 @@ result_t GS2LidarDriver::setWorkMode(int mode, uint8_t addr)
         disableDataGrabbing();
         delay(10);
         stopScan();
-        flushSerial();
     }
+    flushSerial();
 
     {
         ScopedLocker l(_lock);

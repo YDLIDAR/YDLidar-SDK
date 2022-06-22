@@ -99,7 +99,7 @@ int main(int argc, const char *argv[]) {
     LaserFanInit(&scan);
     while (ret && os_isOk()) {
         if(doProcessSimple(laser, &scan)) {
-            fprintf(stdout, "Scan received[%llu]: %u ranges is [%f]Hz\n",
+            fprintf(stdout, "Scan received[%lu]: %u ranges is [%f]Hz\n",
                     scan.stamp,
                     (unsigned int)scan.npoints, 1.0 / scan.config.scan_time);
             fflush(stdout);
