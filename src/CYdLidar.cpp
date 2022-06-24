@@ -755,7 +755,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       outscan.points.resize(all_node_count);
     }
 
-    // parsing version
+    //解析V2协议雷达扫描数据中ct信息中的设备信息
     handleVersionInfoByPackage(debug);
     // resample sample rate
     resample(scanfrequency, count, tim_scan_end, tim_scan_start);
@@ -925,6 +925,7 @@ void CYdLidar::handleVersionInfoByPackage(const LaserDebug &debug)
   }
 
   device_info info;
+  memset(&info, 0, sizeof(device_info));
 
   if (ParseLaserDebugInfo(debug, info))
   {
@@ -1410,19 +1411,20 @@ bool CYdLidar::getDeviceInfo()
 
   bool ret = false;
   device_info devinfo;
-  result_t op_result = lidarPtr->getDeviceInfo(devinfo,
-                                               DriverInterface::DEFAULT_TIMEOUT / 2);
+  memset(&devinfo, 0, sizeof(device_info));
 
+  result_t op_result = lidarPtr->getDeviceInfo(devinfo,
+    DriverInterface::DEFAULT_TIMEOUT / 2);
   if (!IS_OK(op_result))
   {
-    fprintf(stderr, "get Device Information Error\n");
+    fprintf(stderr, "[YDLIDAR INFO] Fail to get device information\n");
     return false;
   }
 
   if (!isSupportLidar(devinfo.model))
   {
     printf("[YDLIDAR INFO] Current SDK does not support current lidar models[%s]\n",
-           lidarModelToString(devinfo.model).c_str());
+      lidarModelToString(devinfo.model).c_str());
     return false;
   }
 
@@ -1533,8 +1535,9 @@ void CYdLidar::handleSingleChannelDevice()
   }
 
   device_info devinfo;
-  result_t op_result = lidarPtr->getDeviceInfo(devinfo);
+  memset(&devinfo, 0, sizeof(device_info));
 
+  result_t op_result = lidarPtr->getDeviceInfo(devinfo);
   if (!IS_OK(op_result))
   {
     return;
@@ -1852,10 +1855,7 @@ bool CYdLidar::checkStatus()
 {
   getDeviceHealth();
 
-  if (!getDeviceInfo())
-  {
-    return false;
-  }
+  getDeviceInfo();
 
   return true;
 }

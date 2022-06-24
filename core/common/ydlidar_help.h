@@ -813,7 +813,6 @@ inline bool isSerialNumbValid(const LaserDebug &info) {
 inline void parsePackageNode(const node_info &node, LaserDebug &info) {
   switch (node.index) {
     case 0://scan frequency
-
       break;
 
     case 1://W3F3CusHardVer_W4F0CusSoftVer;
@@ -825,48 +824,42 @@ inline void parsePackageNode(const node_info &node, LaserDebug &info) {
       break;
 
     case 3://W3F4HardwareVer_W4F0FirewareMajor
-      info.W3F4HardwareVer_W4F0FirewareMajor = node.debugInfo;
-
+      //健康信息
+      info.W7F0Health = node.debugInfo;
       break;
 
     case 4://W7F0FirewareMinor
-      info.W7F0FirewareMinor = node.debugInfo;
-
+      info.W3F4HardwareVer_W4F0FirewareMajor = node.debugInfo;
       break;
-
     case 5://W3F4BoradHardVer_W4F0Moth
-      info.W3F4BoradHardVer_W4F0Moth = node.debugInfo;
-
+      info.W7F0FirewareMinor = node.debugInfo;
       break;
 
     case 6://W2F5Output2K4K5K_W5F0Date
-      info.W2F5Output2K4K5K_W5F0Date = node.debugInfo;
       break;
-
     case 7://W1F6GNoise_W1F5SNoise_W1F4MotorCtl_W4F0SnYear
-      info.W1F6GNoise_W1F5SNoise_W1F4MotorCtl_W4F0SnYear =
-        node.debugInfo;
       break;
-
     case 8://W7F0SnNumH
-      info.W7F0SnNumH = node.debugInfo;
       break;
 
     case 9://W7F0SnNumL
-      info.W7F0SnNumL = node.debugInfo;
-
+      info.W1F6GNoise_W1F5SNoise_W1F4MotorCtl_W4F0SnYear =
+        node.debugInfo;
       break;
-
     case 10://W7F0Health
-      info.W7F0Health = node.debugInfo;
-
+      info.W3F4BoradHardVer_W4F0Moth = node.debugInfo;
       break;
-
     case 11://W3F4CusHardVer_W4F0CusSoftVer
-      info.W3F4CusHardVer_W4F0CusSoftVer = node.debugInfo;
+      info.W2F5Output2K4K5K_W5F0Date = node.debugInfo;
+      // info.W3F4CusHardVer_W4F0CusSoftVer = node.debugInfo;
+      break;
 
     case 12://W7F0LaserCurrent
-      info.W7F0LaserCurrent = node.debugInfo;
+      // info.W7F0LaserCurrent = node.debugInfo;
+      info.W7F0SnNumH = node.debugInfo;
+      break;
+    case 13:
+      info.W7F0SnNumL = node.debugInfo;
       break;
 
     default:
@@ -891,18 +884,19 @@ inline void parsePackageNode(const node_info &node, LaserDebug &info) {
 inline bool ParseLaserDebugInfo(const LaserDebug &info, device_info &value) {
   bool ret = false;
   uint8_t CustomVerMajor = (static_cast<uint8_t>
-                            (info.W3F4CusMajor_W4F0CusMinor) >> 4);
+                            (info.W3F4HardwareVer_W4F0FirewareMajor & 0x0F));
   uint8_t CustomVerMinor = static_cast<uint8_t>
-                           (info.W3F4CusMajor_W4F0CusMinor) & 0x0F;
+                           (info.W7F0FirewareMinor);
   uint8_t lidarmodel = (static_cast<uint8_t>(info.W4F3Model_W3F0DebugInfTranVer)
                         >> 3);
   uint8_t hardwareVer = static_cast<uint8_t>
                         (info.W3F4HardwareVer_W4F0FirewareMajor) >> 4;
-  uint8_t Moth = static_cast<uint8_t>(info.W3F4BoradHardVer_W4F0Moth) & 0x0F;
 
-  uint8_t Date = static_cast<uint8_t>(info.W2F5Output2K4K5K_W5F0Date) & 0x1F;
   uint8_t Year = static_cast<uint8_t>
-                 (info.W1F6GNoise_W1F5SNoise_W1F4MotorCtl_W4F0SnYear) & 0x0F;
+                 (info.W1F6GNoise_W1F5SNoise_W1F4MotorCtl_W4F0SnYear >> 2);
+  uint8_t Moth = static_cast<uint8_t>(info.W3F4BoradHardVer_W4F0Moth >> 3);
+  uint8_t Date = static_cast<uint8_t>(info.W2F5Output2K4K5K_W5F0Date >> 2);
+
   uint16_t Number = ((static_cast<uint8_t>(info.W7F0SnNumH) << 7) |
                      static_cast<uint8_t>(info.W7F0SnNumL));
 
@@ -912,7 +906,7 @@ inline bool ParseLaserDebugInfo(const LaserDebug &info, device_info &value) {
       value.firmware_version = (CustomVerMajor << 8 | CustomVerMinor);
       value.hardware_version = hardwareVer;
       value.model = lidarmodel;
-      uint32_t year = Year + 2015;
+      uint32_t year = Year + 2020;
       sprintf(reinterpret_cast<char *>(value.serialnum), "%04d", year);
       sprintf(reinterpret_cast<char *>(value.serialnum + 4), "%02d", Moth);
       sprintf(reinterpret_cast<char *>(value.serialnum + 6), "%02d", Date);
@@ -936,8 +930,10 @@ inline bool ParseLaserDebugInfo(const LaserDebug &info, device_info &value) {
  * @param baudrate  LiDAR serial baudrate or network port
  * @return true if Device information is valid, otherwise false
  */
-inline bool printfVersionInfo(const device_info &info, const std::string &port,
-                              int baudrate) {
+inline bool printfVersionInfo(const device_info &info,
+                              const std::string &port,
+                              int baudrate)
+{
   if (info.firmware_version == 0 &&
       info.hardware_version == 0) {
     return false;

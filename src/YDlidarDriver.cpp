@@ -1571,16 +1571,19 @@ result_t YDlidarDriver::getDeviceInfo(device_info &info, uint32_t timeout) {
     return RESULT_FAIL;
   }
 
-  if (m_SingleChannel) {
-    if (get_device_info_success) {
+  if (m_SingleChannel) 
+  {
+    if (get_device_info_success)
+    {
       info = this->info_;
       return RESULT_OK;
     }
-    //未获取到设备信息时，返回一个无效的设备信息
-    info.model = YDLIDAR_S2;
-    info.firmware_version = 0;
-    info.hardware_version = 0;
-    return RESULT_OK;
+    else
+    {
+      //未获取到设备信息时，返回一个无效的设备信息
+      info.model = YDLIDAR_S2;
+      return RESULT_OK;
+    }
   }
 
 //  disableDataGrabbing();
