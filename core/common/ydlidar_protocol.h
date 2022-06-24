@@ -55,7 +55,7 @@
  * @name sun noise flag constant
  * @{
  */
-#define SUNNOISEINTENSITY 0xff
+#define SUNNOISEINTENSITY 0x03
 /** @}
 */
 
@@ -63,7 +63,7 @@
  * @name glass noise flag constant
  * @{
  */
-#define GLASSNOISEINTENSITY 0xfe
+#define GLASSNOISEINTENSITY 0x02
 /** @}
 */
 
@@ -183,6 +183,7 @@ typedef enum {
 //雷达节点信息
 struct node_info {
   uint8_t sync_flag; //首包标记
+  uint8_t is; //抗干扰标志
   uint16_t sync_quality; //信号强度
   uint16_t angle_q6_checkbit; //角度值（°）
   uint16_t distance_q2; //距离值

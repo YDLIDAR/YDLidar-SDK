@@ -924,6 +924,20 @@ class YDLIDAR_API CYdLidar {
    * @return 成功返回true，否则返回false
    */
   bool setWorkMode(int mode, uint8_t addr=0x00);
+  
+  /**
+   * @brief 是否开启阳光噪点过滤功能
+   * @param[in] e true开启，false关闭
+   * @return 无
+   */
+  void enableSunNoise(bool e=true);
+
+  /**
+   * @brief 是否开启玻璃噪点过滤功能
+   * @param[in] e true开启，false关闭
+   * @return 无
+   */
+  void enableGlassNoise(bool e=true);
 
  private:
   /**
@@ -1099,7 +1113,8 @@ class YDLIDAR_API CYdLidar {
   float m_MinRange;                 ///< LiDAR minimum range
   float m_ScanFrequency;            ///< LiDAR scanning frequency
 
-
+  bool m_SunNoise = true; //阳光噪点过滤标识
+  bool m_GlassNoise = true; //玻璃噪点过滤标识
 };	// End of class
 #endif // CYDLIDAR_H
 

@@ -649,8 +649,12 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     float angle = 0.0;
     debug.MaxDebugIndex = 0;
 
+
+    //遍历一圈点
     for (int i = 0; i < count; i++)
     {
+      const node_info& node = global_nodes[i];
+
       if (isNetTOFLidar(m_LidarType))
       {
         angle = static_cast<float>(global_nodes[i].angle_q6_checkbit / 100.0f) +
@@ -682,8 +686,6 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
           range = static_cast<float>(global_nodes[i].distance_q2 / 4000.f);
         }
       }
-
-      // printf("%d %.03f\n", i, range);
 
       intensity = static_cast<float>(global_nodes[i].sync_quality);
 
@@ -722,10 +724,12 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
         range = 0.0;
       }
 
-      // valid range
-      if (!isRangeValid(range))
+      //过滤点
+      if (!isRangeValid(range) ||
+        (m_SunNoise && node.is == SUNNOISEINTENSITY) ||
+        (m_GlassNoise && node.is == GLASSNOISEINTENSITY))
       {
-        range = 0.0;
+        range = .0;
       }
 
       if (angle >= outscan.config.min_angle &&
@@ -865,6 +869,16 @@ bool CYdLidar::setWorkMode(int mode, uint8_t addr)
     return (lidarPtr->setWorkMode(mode, addr) == RESULT_OK);
   else
     return false;
+}
+
+void CYdLidar::enableSunNoise(bool e)
+{
+  m_SunNoise = e;
+}
+
+void CYdLidar::enableGlassNoise(bool e)
+{
+  m_GlassNoise = e;
 }
 
 /*-------------------------------------------------------------

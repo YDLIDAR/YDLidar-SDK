@@ -1208,10 +1208,11 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
     (*node).delay_time = 0;
     (*node).stamp = getTime();
     (*node).scan_frequence = scan_frequence;
+    (*node).is = 0;
 
     if (CheckSumResult)
     {
-        if (m_intensities)
+        if (m_intensities) //如果带强度信息
         {
             if (isTriangleLidar(m_LidarType))
             {
@@ -1222,17 +1223,13 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
                 else
                 {
                     (*node).sync_quality = ((uint16_t)((package.packageSample[package_Sample_Index].PakageSampleDistance & 0x03) <<
-                                                       LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT) |
-                                            (package.packageSample[package_Sample_Index].PakageSampleQuality));
+                        LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT) |
+                        (package.packageSample[package_Sample_Index].PakageSampleQuality));
                 }
-//                printf("intensity(%d): %u 0x%x 0x%x\n",
-//                       m_intensityBit,
-//                       (*node).sync_quality,
-//                       uint8_t(package.packageSample[package_Sample_Index].PakageSampleDistance & 0x03),
-//                       uint8_t(package.packageSample[package_Sample_Index].PakageSampleQuality));
 
                 (*node).distance_q2 =
                         package.packageSample[package_Sample_Index].PakageSampleDistance & 0xfffc;
+                (*node).is = package.packageSample[package_Sample_Index].PakageSampleDistance & 0x0003;
             }
             else
             {
@@ -1242,14 +1239,15 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
                         tof_package.packageSample[package_Sample_Index].PakageSampleDistance;
             }
         }
-        else
+        else //如果不带强度信息
         {
             (*node).distance_q2 = packages.packageSampleDistance[package_Sample_Index];
 
-            if (isTriangleLidar(m_LidarType)) {
+            if (isTriangleLidar(m_LidarType)) 
+            {
                 (*node).sync_quality = ((uint16_t)(0xfc |
-                                                   packages.packageSampleDistance[package_Sample_Index] &
-                                                   0x0003)) << LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT;
+                    packages.packageSampleDistance[package_Sample_Index] &
+                    0x0003)) << LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT;
             }
         }
 
@@ -1296,14 +1294,14 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
             }
         }
     } else {
-        (*node).sync_flag       = Node_NotSync;
-        (*node).sync_quality    = Node_Default_Quality;
+        (*node).sync_flag = Node_NotSync;
+        (*node).sync_quality = Node_Default_Quality;
         (*node).angle_q6_checkbit = LIDAR_RESP_MEASUREMENT_CHECKBIT;
-        (*node).distance_q2      = 0;
-        (*node).scan_frequence  = 0;
+        (*node).distance_q2 = 0;
+        (*node).scan_frequence = 0;
     }
 
-    package_Sample_Index++;
+    package_Sample_Index ++;
 
     if (package_Sample_Index >= nowPackageNum) {
         package_Sample_Index = 0;
