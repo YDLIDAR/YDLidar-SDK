@@ -307,7 +307,8 @@ inline bool isOctaveLidar(int model) {
 //根据雷达码判断是否是Tmini雷达
 inline bool isTminiLidar(int model)
 {
-    return model == DriverInterface::YDLIDAR_Tmini;
+    return (model == DriverInterface::YDLIDAR_Tmini ||
+      model == DriverInterface::YDLIDAR_TminiPRO);
 }
 
 /*!
