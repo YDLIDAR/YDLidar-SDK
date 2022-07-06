@@ -474,6 +474,7 @@ class DriverInterface {
 
     YDLIDAR_TSA     = 130,/**< TSA LiDAR Model. */
     YDLIDAR_Tmini   = 140,/**< Tmini LiDAR Model. */
+    YDLIDAR_TminiPRO = 150,/**< Tmini PRO LiDAR Model. */
 
     YDLIDAR_T15     = 200,/**< T15 LiDAR Model. */
 

@@ -188,7 +188,10 @@ inline std::string lidarModelToString(int model) {
       name = "TSA";
       break;
     case DriverInterface::YDLIDAR_Tmini:
-      name = "Tmini";
+      name = "T-mini";
+      break;
+    case DriverInterface::YDLIDAR_TminiPRO:
+      name = "T-mini Pro";
       break;
 
     case DriverInterface::YDLIDAR_T15:
@@ -381,7 +384,7 @@ inline bool isSupportLidar(int model)
   if (model < DriverInterface::YDLIDAR_F4 ||
       (model > DriverInterface::YDLIDAR_G7 &&
        model < DriverInterface::YDLIDAR_GS2) ||
-      (model > DriverInterface::YDLIDAR_Tmini &&
+      (model > DriverInterface::YDLIDAR_TminiPRO &&
        model < DriverInterface::YDLIDAR_T15))
   {
     return false;

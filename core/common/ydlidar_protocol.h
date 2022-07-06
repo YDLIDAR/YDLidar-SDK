@@ -121,7 +121,7 @@
 
 #define LIDAR_CMD_SET_HEART_BEAT            0xD9
 
-//gs2
+//GS2命令
 #define GS_LIDAR_CMD_GET_ADDRESS               0x60
 #define GS_LIDAR_CMD_GET_PARAMETER             0x61
 #define GS_LIDAR_CMD_GET_VERSION               0x62

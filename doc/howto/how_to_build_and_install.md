@@ -96,12 +96,12 @@ Three samples are provided in samples, which demonstrate how to configure YDLida
 ![](images/sequence.png)
 
 ### Ubuntu 18.04/16.04 /14.04 LTS
-For Ubuntun 18.04/16.04/14.04 LTS, run the *ydlidar_test* if connect with the Triangle LiDAR unit(s) or TOF LiDAR unit(s):
+For Ubuntun 18.04/16.04/14.04 LTS, run the *tri_test* if connect with the Triangle LiDAR unit(s) or TOF LiDAR unit(s):
 ```
-./ydlidar_test
+./tri_test
 ```
 ### Windows 7/10
-After compiling the YDLidar SDK as shown in section 4.1.2, you can find `ydlidar_test.exe` in the {YDLidar-SDK}\build\Debug or {YDLidar-SDK}\build\Release folder, respectively, which can be run directly.
+After compiling the YDLidar SDK as shown in section 4.1.2, you can find `tri_test.exe` in the {YDLidar-SDK}\build\Debug or {YDLidar-SDK}\build\Release folder, respectively, which can be run directly.
 
 Then you can see SDK initializing the information as below:
 

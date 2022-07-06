@@ -1187,7 +1187,7 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time)
     }
   }
 
-  printf("[YDLIDAR] Calc Sample Rate: %dK\n", sr);
+  // printf("[YDLIDAR] Calc Sample Rate: %dK\n", sr);
 
   size_t size = defalutSampleRate.size();
   if (size)
