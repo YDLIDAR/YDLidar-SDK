@@ -639,7 +639,7 @@ int GS2LidarDriver::cacheScanData() {
             } else {
                 timeout_count++;
                 local_scan[0].sync_flag = Node_NotSync;
-                fprintf(stderr, "timout count: %d\n", timeout_count);
+                fprintf(stderr, "timeout count: %d\n", timeout_count);
                 fflush(stderr);
             }
         } else {

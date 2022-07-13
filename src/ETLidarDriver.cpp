@@ -1057,7 +1057,7 @@ int ETLidarDriver::cacheScanData() {
           setDriverError(TimeoutError);
         }
 
-        fprintf(stderr, "timout count: %d\n", timeout_count);
+        fprintf(stderr, "timeout count: %d\n", timeout_count);
         fflush(stderr);
       }
     } else {

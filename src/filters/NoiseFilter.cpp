@@ -588,11 +588,11 @@ void NoiseFilter::setStrategy(int value)
         maxIncludeAngle /= 3.0f;
         maxInclineAngle /= 3.0f;
     }
-//    else if (m_strategy == FS_TailWeek)
-//    {
-//        maxIncludeAngle /= 4.0f;
-//        maxInclineAngle /= 4.0f;
-//    }
+    else if (m_strategy == FS_TailStrong2)
+    {
+        maxIncludeAngle *= 1.5f;
+        maxInclineAngle *= 1.5f;
+    }
 }
 
 std::string NoiseFilter::version() const
