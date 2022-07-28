@@ -1113,8 +1113,8 @@ class YDLIDAR_API CYdLidar {
   float m_MinRange;                 ///< LiDAR minimum range
   float m_ScanFrequency;            ///< LiDAR scanning frequency
 
-  bool m_SunNoise = true; //阳光噪点过滤标识
-  bool m_GlassNoise = true; //玻璃噪点过滤标识
+  bool m_SunNoise = false; //阳光噪点过滤标识
+  bool m_GlassNoise = false; //玻璃噪点过滤标识
 };	// End of class
 #endif // CYDLIDAR_H
 

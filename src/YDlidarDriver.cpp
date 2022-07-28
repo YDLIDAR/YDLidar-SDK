@@ -607,6 +607,9 @@ int YDlidarDriver::cacheScanData()
         count = 128;
         ans = waitScanData(local_buf, count, DEFAULT_TIMEOUT / 2);
 
+        // printf("count %llu\n", count);
+        // fflush(stdout);
+
         if (!IS_OK(ans)) {
             if (IS_FAIL(ans) || timeout_count > DEFAULT_TIMEOUT_COUNT) {
                 if (!isAutoReconnect) {
@@ -1230,6 +1233,9 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
                 (*node).distance_q2 =
                         package.packageSample[package_Sample_Index].PakageSampleDistance & 0xfffc;
                 (*node).is = package.packageSample[package_Sample_Index].PakageSampleDistance & 0x0003;
+
+                // printf("%d r %u\n", package_Sample_Index, (*node).distance_q2 / 4);
+                // fflush(stdout);
             }
             else
             {
@@ -1258,7 +1264,7 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
                 AngleCorrectForDistance = (int32_t)(((atan(((21.8 * (155.3 - ((*node).distance_q2 / 2.0))) / 155.3) / ((*node).distance_q2 / 2.0))) * 180.0 / 3.1415) * 64.0);
             }
             else if (isTriangleLidar(m_LidarType) &&
-                     !isTminiLidar(model)) //去掉Tmini雷达的角度二级解析
+                !isTminiLidar(model)) //去掉Tmini雷达的角度二级解析
             {
 //                printf("has angle 2nd parse\n");
                 AngleCorrectForDistance = (int32_t)(((atan(((21.8 * (155.3 - ((*node).distance_q2 / 4.0))) / 155.3) / ((*node).distance_q2 / 4.0))) * 180.0 / 3.1415) * 64.0);
@@ -1335,6 +1341,8 @@ result_t YDlidarDriver::waitScanData(
             return ans;
         }
 
+        // printf("%d r %u\n", recvNodeCount, node.distance_q2 / 4);
+        // fflush(stdout);
         nodebuffer[recvNodeCount++] = node;
 
         if (node.sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT)
