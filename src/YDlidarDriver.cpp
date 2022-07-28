@@ -1234,7 +1234,7 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
                         package.packageSample[package_Sample_Index].PakageSampleDistance & 0xfffc;
                 (*node).is = package.packageSample[package_Sample_Index].PakageSampleDistance & 0x0003;
 
-                // printf("%d r %u\n", package_Sample_Index, (*node).distance_q2 / 4);
+                // printf("%d i %u\n", package_Sample_Index, (*node).sync_quality);
                 // fflush(stdout);
             }
             else

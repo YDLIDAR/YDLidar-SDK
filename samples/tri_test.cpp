@@ -247,6 +247,10 @@ int main(int argc, char *argv[]) {
   /// unit: Hz
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
+  //禁用阳光玻璃过滤
+  laser.enableGlassNoise(false);
+  laser.enableSunNoise(false);
+
   bool ret = laser.initialize();
   if (!ret) {
     fprintf(stderr, "Fail to initialize %s\n", laser.DescribeError());
