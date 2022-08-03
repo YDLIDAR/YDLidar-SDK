@@ -111,4 +111,5 @@ typedef struct {
   /// Configuration of scan
   LaserConfig config;
   int moduleNum;
+  uint16_t envFlag; //环境标记（目前只针对GS2）
 } LaserScan;

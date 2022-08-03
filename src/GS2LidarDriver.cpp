@@ -869,6 +869,9 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
         else
         {
             CheckSumResult = true;
+
+            // printf("env: 0x%04X\n", package.BackgroudLight);
+            // fflush(stdout);
         }
     }
 
@@ -950,6 +953,12 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
             }
         }
 
+        //处理环境数据（2个字节分别存储在两个点的is属性中）
+        if (0 == package_Sample_Index)
+            (*node).is = package.BackgroudLight & 0xFF;
+        else if (1 == package_Sample_Index)
+            (*node).is = package.BackgroudLight >> 8;
+
         // printf("%u %u %u\n", package_Sample_Index, node->angle_q6_checkbit, node->distance_q2);
     }
     else
@@ -961,9 +970,9 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
         (*node).scan_frequence = 0;
     }
 
-    uint8_t nowPackageNum = 160;
+    const uint8_t& nowPackageNum = 160;
 
-    package_Sample_Index++;
+    package_Sample_Index ++;
     (*node).sync_flag = Node_NotSync;
 
     if (package_Sample_Index >= nowPackageNum)
@@ -1060,17 +1069,21 @@ void  GS2LidarDriver::addPointsToVec(node_info *nodebuffer, size_t &count){
     //   fflush(stdout);
 }
 
-result_t GS2LidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
-                                     uint32_t timeout) {
-    if (!m_isConnected) {
+result_t GS2LidarDriver::waitScanData(
+    node_info *nodebuffer,
+    size_t &count,
+    uint32_t timeout)
+{
+    if (!m_isConnected)
+    {
         count = 0;
         return RESULT_FAIL;
     }
 
-    size_t     recvNodeCount    =  0;
-    uint32_t   startTs          = getms();
-    uint32_t   waitTime         = 0;
-    result_t   ans              = RESULT_FAIL;
+    size_t recvNodeCount = 0;
+    uint32_t startTs = getms();
+    uint32_t waitTime = 0;
+    result_t ans = RESULT_FAIL;
 
     while ((waitTime = getms() - startTs) <= timeout && recvNodeCount < count)
     {
@@ -1078,37 +1091,41 @@ result_t GS2LidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
         memset(&node, 0, sizeof(node_info));
         ans = waitPackage(&node, timeout - waitTime);
 
-        if (!IS_OK(ans)) {
+        if (!IS_OK(ans))
+        {
             count = recvNodeCount;
             return ans;
         }
         nodebuffer[recvNodeCount++] = node;
-//        printf("%d ", node.distance_q2);
+        //        printf("%d ", node.distance_q2);
 
         if (!package_Sample_Index)
         {
-//            printf("\n");
+            //            printf("\n");
 
             size_t size = _serial->available();
             uint64_t delayTime = 0;
             size_t PackageSize = NORMAL_PACKAGE_SIZE;
 
-            if (size > PackagePaidBytes_GS) {
+            if (size > PackagePaidBytes_GS)
+            {
                 size_t packageNum = size / PackageSize;
                 size_t Number = size % PackageSize;
                 delayTime = packageNum * m_PointTime * PackageSize / 2;
 
-                if (Number > PackagePaidBytes_GS) {
+                if (Number > PackagePaidBytes_GS)
+                {
                     delayTime += m_PointTime * ((Number - PackagePaidBytes_GS) / 2);
                 }
 
                 size = Number;
 
-                if (packageNum > 0 && Number == 0) {
+                if (packageNum > 0 && Number == 0)
+                {
                     size = PackageSize;
                 }
             }
-            addPointsToVec(nodebuffer,recvNodeCount);
+            addPointsToVec(nodebuffer, recvNodeCount);
 
             nodebuffer[recvNodeCount - 1].stamp = size * trans_delay + delayTime;
             nodebuffer[recvNodeCount - 1].scan_frequence = node.scan_frequence;
@@ -1116,7 +1133,8 @@ result_t GS2LidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
             return RESULT_OK;
         }
 
-        if (recvNodeCount == count) {
+        if (recvNodeCount == count)
+        {
             return RESULT_OK;
         }
     }
@@ -1124,7 +1142,6 @@ result_t GS2LidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
     count = recvNodeCount;
     return RESULT_FAIL;
 }
-
 
 result_t GS2LidarDriver::grabScanData(node_info *nodebuffer, size_t &count,
                                      uint32_t timeout) {

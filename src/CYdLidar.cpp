@@ -627,6 +627,8 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     outscan.config.max_range = m_MaxRange;
     //模组编号
     outscan.moduleNum = global_nodes[0].index;
+    //环境标记
+    outscan.envFlag = global_nodes[0].is + (uint16_t(global_nodes[1].is) << 8);
     //将一圈中第一个点采集时间作为该圈数据采集时间
     if (global_nodes[0].stamp > 0)
       outscan.stamp = global_nodes[0].stamp;
