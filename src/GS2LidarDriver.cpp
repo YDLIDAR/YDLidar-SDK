@@ -665,7 +665,7 @@ int GS2LidarDriver::cacheScanData() {
         _lock.lock();//timeout lock, wait resource copys
         scan_node_buf[0].stamp = local_buf[count - 1].stamp;
         scan_node_buf[0].scan_frequence = local_buf[count - 1].scan_frequence;
-        scan_node_buf[0].index = moduleNum >> 1;//gs2:  1, 2, 4
+        scan_node_buf[0].index = 0x03 & (moduleNum >> 1);//gs2:  1, 2, 4
         scan_node_count = 160; //一个包固定160个数据
         // printf("send frameNum: %d,moduleNum: %d\n",frameNum,moduleNum);
         // fflush(stdout);
@@ -758,7 +758,7 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
 
                 case 4:
                     moduleNum = currentByte;
-                    CheckSumCal += currentByte;
+                    CheckSumCal = currentByte;
                     break;
 
                 case 5:
@@ -795,7 +795,9 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
             {
                 if (!sample_lens)
                 {
+                    moduleNum = 0;
                     recvPos = 0;
+                    has_device_header = false;
                     continue;
                 }
                 package_Sample_Num = sample_lens + 1; //环境2Bytes + 点云320Bytes + CRC
