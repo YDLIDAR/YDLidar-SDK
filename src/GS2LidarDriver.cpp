@@ -692,9 +692,6 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
     has_device_header = false;
     uint16_t package_Sample_Num = 0;
 
-    (*node).index = 255;
-    (*node).scan_frequence = 0;
-
     if (package_Sample_Index == 0)
     {
         recvPos = 0;
@@ -808,7 +805,7 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
             else
             {
                 recvPos = 0;
-                printf("invalid data\n");
+                printf("invalid gs2 data\n");
                 continue;
             }
         }
@@ -866,44 +863,22 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
         if (CheckSumCal != CheckSum)
         {
             CheckSumResult = false;
-            has_package_error = true;
+            // has_package_error = true;
         }
         else
         {
             CheckSumResult = true;
-
-            // printf("env: 0x%04X\n", package.BackgroudLight);
-            // fflush(stdout);
         }
     }
 
-    if (!has_package_error)
-    {
-        if (package_Sample_Index == 0)
-        {
-            package_index++;
-            (*node).index = package_index;
-        }
-    }
-    else
-    {
-        (*node).index = 255;
-        package_index = 0xff;
-    }
-
-    if (CheckSumResult)
-    {
-        (*node).index = package_index;
-        (*node).scan_frequence = scan_frequence;
-    }
-
-    (*node).sync_quality = Node_Default_Quality;
     (*node).stamp = 0;
-    (*node).scan_frequence = 0;
 
-    double sampleAngle = 0;
     if (CheckSumResult)
     {
+        (*node).index = 0x03 & (moduleNum >> 1);
+        (*node).scan_frequence = scan_frequence;
+        (*node).sync_quality = 0;
+
         (*node).distance_q2 =
             package.packageSample[package_Sample_Index].PakageSampleDistance;
 
@@ -912,6 +887,7 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
             (*node).sync_quality = (uint16_t)package.packageSample[package_Sample_Index].PakageSampleQuality;
         }
 
+        double sampleAngle = 0;
         if (node->distance_q2 > 0)
         {
             angTransform((*node).distance_q2, package_Sample_Index, &sampleAngle, &(*node).distance_q2);
@@ -966,10 +942,11 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
     else
     {
         (*node).sync_flag = Node_NotSync;
-        (*node).sync_quality = Node_Default_Quality;
+        (*node).sync_quality = 0;
         (*node).angle_q6_checkbit = LIDAR_RESP_MEASUREMENT_CHECKBIT;
         (*node).distance_q2 = 0;
         (*node).scan_frequence = 0;
+        return RESULT_FAIL;
     }
 
     const uint8_t& nowPackageNum = 160;
@@ -1092,19 +1069,16 @@ result_t GS2LidarDriver::waitScanData(
         node_info node;
         memset(&node, 0, sizeof(node_info));
         ans = waitPackage(&node, timeout - waitTime);
-
         if (!IS_OK(ans))
         {
             count = recvNodeCount;
             return ans;
         }
+
         nodebuffer[recvNodeCount++] = node;
-        //        printf("%d ", node.distance_q2);
 
         if (!package_Sample_Index)
         {
-            //            printf("\n");
-
             size_t size = _serial->available();
             uint64_t delayTime = 0;
             size_t PackageSize = NORMAL_PACKAGE_SIZE;
