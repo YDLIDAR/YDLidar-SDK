@@ -584,6 +584,14 @@ class YDlidarDriver : public DriverInterface {
    */
   void parseNodeFromeBuffer(node_info *node);
 
+  //解析点云数据包头
+  result_t parseHeader(
+    uint8_t &zero, 
+    uint32_t &headPos, 
+    uint32_t timeout = DEFAULT_TIMEOUT / 2);
+  //解析点云数据并判断带不带强度信息
+  virtual result_t getIntensityFlag();
+
  private:
   /// package sample bytes
   int PackageSampleBytes;
@@ -648,6 +656,7 @@ class YDlidarDriver : public DriverInterface {
   uint32_t m_heartbeat_ts;
   uint8_t m_BlockRevSize;
 
+  uint32_t m_dataPos = 0; //记录当前解析到的数据的位置（解析是否带强度信息专用）
 };
 
 }// namespace ydlidar

@@ -474,6 +474,10 @@ bool CYdLidar::turnOn()
 
   m_PointTime = lidarPtr->getPointTime();
 
+  // //获取强度标识
+  // lidarPtr->getIntensityFlag();
+
+  //计算采样率
   if (checkLidarAbnormal())
   {
     lidarPtr->stop();
@@ -881,6 +885,26 @@ void CYdLidar::enableSunNoise(bool e)
 void CYdLidar::enableGlassNoise(bool e)
 {
   m_GlassNoise = e;
+}
+
+bool CYdLidar::getUserVersion(std::string &version)
+{
+    if (!checkHardware())
+    {
+        printf("[YDLIDAR] Device is not open!\n");
+        return false;
+    }
+
+    size_t count = ydlidar::YDlidarDriver::MAX_SCAN_NODES;
+    result_t op_result = lidarPtr->grabScanData(global_nodes, count);
+    if (IS_OK(op_result) && count > 2)
+    {
+        uint8_t userVerion = global_nodes[USERVERSIONNDEX].debugInfo;
+        version = std::to_string(userVerion & 0xc0) + "." + std::to_string(userVerion & 0x3f);
+        return true;
+    }
+
+    return false;
 }
 
 /*-------------------------------------------------------------

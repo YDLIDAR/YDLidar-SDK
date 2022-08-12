@@ -165,10 +165,16 @@ typedef enum {
 #define PackagePaidBytes 10
 /// Package Header
 #define PH 0x55AA
+#define PH1 0xAA
+#define PH2 0x55
 /// Normal Package size
 #define TrianglePackageDataSize 40
 /// TOF Normal package size
 #define TOFPackageDataSize 80
+
+#define FREINDEX 0
+#define USERVERSIONNDEX 1
+#define HEALTHINDEX 3
 
 /// ET LiDAR Protocol Type
 typedef enum {
