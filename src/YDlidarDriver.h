@@ -657,6 +657,7 @@ class YDlidarDriver : public DriverInterface {
   uint8_t m_BlockRevSize;
 
   uint32_t m_dataPos = 0; //记录当前解析到的数据的位置（解析是否带强度信息专用）
+  uint64_t stamp = 0; //时间戳
 };
 
 }// namespace ydlidar

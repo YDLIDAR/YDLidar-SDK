@@ -887,7 +887,6 @@ result_t YDlidarDriver::waitDevicePackage(uint32_t timeout) {
 
   flushSerial();
   return ans;
-
 }
 
 void YDlidarDriver::checkBlockStatus(uint8_t currentByte) {
@@ -937,18 +936,19 @@ result_t YDlidarDriver::parseResponseHeader(
       recvSize = remainSize;
 
     getData(globalRecvBuffer, recvSize);
+    // printf("recv: ");
+    // printHex(globalRecvBuffer, recvSize);
 
     for (size_t pos = 0; pos < recvSize; ++pos)
     {
       uint8_t currentByte = globalRecvBuffer[pos];
 
+      // printf("c:%02X p:%d\n", currentByte, recvPos);
+
       switch (recvPos)
       {
       case 0:
-        if (currentByte == (PH & 0xFF))
-        {
-        }
-        else
+        if (currentByte != PH1)
         {
           checkBlockStatus(currentByte);
           continue;
@@ -956,14 +956,63 @@ result_t YDlidarDriver::parseResponseHeader(
         break;
 
       case 1:
+      {
         CheckSumCal = PH;
-
-        if (currentByte == (PH >> 8))
+        if (currentByte == PH2)
         {
           if (m_driverErrno == BlockError)
           {
             setDriverError(NoError);
           }
+        }
+        else if (currentByte == PH3)
+        {
+          recvPos = 0;
+          size_t lastPos = pos - 1;
+          //解析时间戳（共8个字节）
+          int remainSize = SIZE_STAMPPACKAGE - (recvSize - pos + 1); //计算剩余应读字节数
+          if (remainSize > 0)
+          {
+            // printf("remainSize: %u\n", remainSize);
+            size_t lastSize = recvSize;
+            ans = waitForData(remainSize, timeout - waitTime, &recvSize);
+            if (!IS_OK(ans))
+              return ans;
+            if (recvSize > remainSize)
+              recvSize = remainSize;
+            getData(&globalRecvBuffer[lastSize], recvSize);
+            recvSize += lastSize;
+            pos = PackagePaidBytes;
+          }
+          else
+          {
+            pos += 6;
+          }
+
+          //校验和检测
+          uint8_t csc = 0; //计算校验和
+          uint8_t csr = 0; //实际校验和
+          for (int i=0; i<SIZE_STAMPPACKAGE; ++i)
+          {
+            if (i == 2)
+              csr = globalRecvBuffer[lastPos + i];
+            else
+              csc ^= globalRecvBuffer[lastPos + i];
+          }
+          if (csc != csr)
+          {
+            printf("Stamp checksum error c[0x%02X] != r[0x%02X]\n", csc, csr);
+          }
+          else
+          {
+            stamp_package sp;
+            memcpy(&sp, &globalRecvBuffer[lastPos], SIZE_STAMPPACKAGE);
+            stamp = uint64_t(sp.stamp) * 1000000; //毫秒转纳秒需要×1000000
+            // printf("stamp: 0x%"PRIx64" -> 0x%"PRIx64"\n", sp.stamp, stamp);
+            fflush(stdout);
+          }
+
+          continue;
         }
         else
         {
@@ -972,7 +1021,7 @@ result_t YDlidarDriver::parseResponseHeader(
           continue;
         }
         break;
-
+      }
       case 2:
         SampleNumlAndCTCal = currentByte;
         package_type = currentByte & 0x01; //是否是零位包标识
@@ -1009,7 +1058,6 @@ result_t YDlidarDriver::parseResponseHeader(
           recvPos = 0;
           continue;
         }
-
         break;
 
       case 5:
@@ -1262,7 +1310,7 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
     int32_t AngleCorrectForDistance = 0;
     (*node).sync_quality = Node_Default_Quality;
     (*node).delay_time = 0;
-    (*node).stamp = getTime();
+    (*node).stamp = stamp ? stamp : getTime();
     (*node).scan_frequence = scan_frequence;
     (*node).is = 0;
 
@@ -2601,5 +2649,6 @@ result_t YDlidarDriver::getIntensityFlag()
 
   return RESULT_OK;
 }
+
 
 }

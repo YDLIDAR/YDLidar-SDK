@@ -280,9 +280,9 @@ int main(int argc, char *argv[]) {
   {
       if (laser.doProcessSimple(scan))
       {
-          printf("Scan received %u points is [%f]Hz\n",
+          printf("Scan received [%u] points stamp [0x%016lX]\n",
                  (unsigned int)scan.points.size(),
-                 1.0 / scan.config.scan_time);
+                 scan.stamp);
 //          for (size_t i=0; i<scan.points.size(); ++i)
 //          {
 //              const LaserPoint& p = scan.points.at(i);

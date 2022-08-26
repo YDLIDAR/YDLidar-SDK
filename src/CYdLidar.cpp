@@ -638,7 +638,6 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       outscan.stamp = global_nodes[0].stamp;
     else
       outscan.stamp = 0;
-    //            outscan.stamp = tim_scan_start;
 
     float scanfrequency = 0.0;
 

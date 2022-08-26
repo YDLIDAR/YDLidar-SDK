@@ -166,7 +166,9 @@ typedef enum {
 /// Package Header
 #define PH 0x55AA
 #define PH1 0xAA
-#define PH2 0x55
+#define PH2 0x55 //AA55是点云数据
+#define PH3 0x66 //AA66是时间戳数据
+
 /// Normal Package size
 #define TrianglePackageDataSize 40
 /// TOF Normal package size
@@ -245,6 +247,16 @@ struct node_packages {
   uint16_t  checkSum;///< checksum
   uint16_t  packageSampleDistance[PackageSampleMaxLngth];
 } __attribute__((packed)) ;
+
+//时间戳结构体
+struct stamp_package {
+  uint8_t flag1; //包头标记1
+  uint8_t flag2; //包头标记2
+  uint8_t cs; //校验和
+  uint32_t stamp; //时间戳
+  uint8_t reserved; //保留字段
+} __attribute__((packed));
+#define SIZE_STAMPPACKAGE sizeof(stamp_package)
 
 /// LiDAR Device Information
 struct device_info {
