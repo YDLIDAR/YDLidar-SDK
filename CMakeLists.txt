@@ -20,8 +20,14 @@ ENDIF()
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ##########################################################
-# add -fPIC
-add_compile_options(-fPIC)
+IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    MESSAGE(STATUS "Current platform: Linux")
+	#Linux add -fPIC
+	add_compile_options(-fPIC)
+ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
+    MESSAGE(STATUS "Current platform: Windows")
+	add_compile_options("/utf-8")
+ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
 #or
 #set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
