@@ -237,8 +237,9 @@ int main(int argc, char *argv[])
   {
     if (laser.doProcessSimple(scan))
     {
-      printf("[%lu] points module num [%d] env flag [0x%04X]\n",
+      printf("[%lu] points in [0x%016lX] module num [%d] env flag [0x%04X]\n",
              scan.points.size(),
+             scan.stamp,
              scan.moduleNum,
              scan.envFlag);
 

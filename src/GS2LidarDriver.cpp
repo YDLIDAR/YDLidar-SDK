@@ -650,24 +650,25 @@ int GS2LidarDriver::cacheScanData() {
         // printf("sync:%d,index:%d,moduleNum:%d\n",package_type,frameNum,moduleNum);
         // fflush(stdout);
 
-        if(!isPrepareToSend){
+        if (!isPrepareToSend) {
             continue;
         }
 
         size_t size = multi_package.size();
-        for(size_t i = 0;i < size; i++){
-            if(multi_package[i].frameNum == frameNum && multi_package[i].moduleNum == moduleNum){
-                memcpy(scan_node_buf,multi_package[i].all_points,sizeof (node_info) * 160);
+        for (size_t i = 0;i < size; i++) {
+            if (multi_package[i].frameNum == frameNum && 
+                multi_package[i].moduleNum == moduleNum) {
+                memcpy(scan_node_buf, multi_package[i].all_points, sizeof(node_info) * 160);
                 break;
             }
         }
 
-        _lock.lock();//timeout lock, wait resource copys
-        scan_node_buf[0].stamp = local_buf[count - 1].stamp;
-        scan_node_buf[0].scan_frequence = local_buf[count - 1].scan_frequence;
-        scan_node_buf[0].index = 0x03 & (moduleNum >> 1);//gs2:  1, 2, 4
+        _lock.lock(); //timeout lock, wait resource copys
+        scan_node_buf[0].stamp = local_buf[0].stamp;
+        scan_node_buf[0].scan_frequence = local_buf[0].scan_frequence;
+        scan_node_buf[0].index = 0x03 & (moduleNum >> 1); //gs2:  1, 2, 4
         scan_node_count = 160; //一个包固定160个数据
-        // printf("send frameNum: %d,moduleNum: %d\n",frameNum,moduleNum);
+        // printf("count [%d] stamp [0x%016lX]\n", count, local_buf[count - 1].stamp);
         // fflush(stdout);
         _dataEvent.set();
         _lock.unlock();
@@ -754,6 +755,11 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
                     break;
 
                 case 4:
+                    if (currentByte == LIDAR_ANS_SYNC_BYTE1) //如果出现超过4个包头标识的情况
+                    {
+                        recvPos = 4;
+                        continue;
+                    }
                     moduleNum = currentByte;
                     CheckSumCal = currentByte;
                     break;
@@ -871,7 +877,7 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
         }
     }
 
-    (*node).stamp = 0;
+    (*node).stamp = getTime();
 
     if (CheckSumResult)
     {
@@ -1103,8 +1109,8 @@ result_t GS2LidarDriver::waitScanData(
             }
             addPointsToVec(nodebuffer, recvNodeCount);
 
-            nodebuffer[recvNodeCount - 1].stamp = size * trans_delay + delayTime;
-            nodebuffer[recvNodeCount - 1].scan_frequence = node.scan_frequence;
+            // nodebuffer[recvNodeCount - 1].stamp = size * trans_delay + delayTime;
+            // nodebuffer[recvNodeCount - 1].scan_frequence = node.scan_frequence;
             count = recvNodeCount;
             return RESULT_OK;
         }

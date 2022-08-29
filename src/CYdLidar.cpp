@@ -647,7 +647,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     }
 
     outscan.config.angle_increment = math::from_degrees(m_field_of_view) /
-                                     (all_node_count - 1);
+      (all_node_count - 1);
 
     float range = 0.0;
     float intensity = 0.0;
