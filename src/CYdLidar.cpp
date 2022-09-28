@@ -33,6 +33,7 @@
 #include "core/common/ydlidar_help.h"
 #include "YDlidarDriver.h"
 #include "ETLidarDriver.h"
+#include "GS1LidarDriver.h"
 #include "GS2LidarDriver.h"
 
 using namespace std;
@@ -654,11 +655,15 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     float angle = 0.0;
     debug.MaxDebugIndex = 0;
 
+    // printf("AngleOffset %f\n", m_AngleOffset);
 
     //遍历一圈点
     for (int i = 0; i < count; i++)
     {
       const node_info& node = global_nodes[i];
+
+      // printf("%lu a %.01f r %u\n", 
+      //   i, float(node.angle_q6_checkbit) / 64.0f, node.distance_q2);
 
       if (isNetTOFLidar(m_LidarType))
       {
@@ -736,6 +741,9 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       {
         range = .0;
       }
+
+      // printf("i %d d %.03f a %.02f flag %u\n",
+      //   i, range, angle*180.0/M_PI, node.sync_flag);
 
       if (angle >= outscan.config.min_angle &&
           angle <= outscan.config.max_angle)
@@ -1802,7 +1810,12 @@ bool CYdLidar::checkCOMMs()
     {
       lidarPtr = new ydlidar::ETLidarDriver(); // T15
     }
-    else if (isGSLidar(m_LidarType))
+    else if (isGS1Lidar(m_LidarType))
+    {
+      //GS1
+      lidarPtr = new ydlidar::GS1LidarDriver();
+    }
+    else if (isGS2Lidar(m_LidarType))
     {
       //GS2
       lidarPtr = new ydlidar::GS2LidarDriver();

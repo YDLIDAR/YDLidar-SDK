@@ -1296,6 +1296,10 @@ void YDlidarDriver::parseNodeDebugFromBuffer(node_info *node)
         (*node).sync_flag = Node_Sync;
         package_index = 0;
 
+        // printf("start angle %f end angle %f\n", 
+        // float(FirstSampleAngle) / 64.0,
+        // float(LastSampleAngle) / 64.0);
+
         if (CheckSumResult) {
             has_package_error = false;
             (*node).index = package_index;

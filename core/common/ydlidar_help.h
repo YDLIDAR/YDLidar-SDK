@@ -168,6 +168,9 @@ inline std::string lidarModelToString(int model) {
       name = "G7";
       break;
 
+    case DriverInterface::YDLIDAR_GS1:
+      name = "GS1";
+      break;
     case DriverInterface::YDLIDAR_GS2:
       name = "GS2";
       break;
@@ -368,6 +371,7 @@ inline bool hasScanFrequencyCtrl(int model) {
       model == DriverInterface::YDLIDAR_S4B ||
       model == DriverInterface::YDLIDAR_S2 ||
       model == DriverInterface::YDLIDAR_X4 ||
+      model == DriverInterface::YDLIDAR_GS1 ||
       model == DriverInterface::YDLIDAR_GS2) {
     ret = false;
   }
@@ -405,6 +409,7 @@ inline bool hasIntensity(int model) {
   if (model == DriverInterface::YDLIDAR_G2B ||
       model == DriverInterface::YDLIDAR_G4B ||
       model == DriverInterface::YDLIDAR_S4B ||
+      model == DriverInterface::YDLIDAR_GS1 ||
       model == DriverInterface::YDLIDAR_GS2) {
     ret = true;
   }
@@ -540,14 +545,30 @@ inline bool isTriangleLidar(int type) {
  * @param type  LiDAR type
  * @return true if it is a Triangle type, otherwise false.
  */
-inline bool isGSLidar(int type) {
-  bool ret = false;
+inline bool isGSLidar(int type) 
+{
+  return (type == TYPE_GS1 ||
+    type == TYPE_GS);
+}
 
-  if (type == TYPE_GS) {
-    ret = true;
-  }
+/**
+ * @brief Whether it is a GS1 type LiDAR
+ * @param type  LiDAR type
+ * @return true if it is a Triangle type, otherwise false.
+ */
+inline bool isGS1Lidar(int type) 
+{
+  return (type == TYPE_GS1);
+}
 
-  return ret;
+/**
+ * @brief Whether it is a GS2 type LiDAR
+ * @param type  LiDAR type
+ * @return true if it is a Triangle type, otherwise false.
+ */
+inline bool isGS2Lidar(int type) 
+{
+  return (type == TYPE_GS);
 }
 
 /**

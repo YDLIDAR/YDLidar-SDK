@@ -140,13 +140,14 @@
 #define Angle_Py   5.315
 #define Angle_PAngle   22.5
 #define PackageMaxModuleNums  0x03
-#define PackageSampleMaxLngth_GS 0xA0  //160*2
+#define MaxPointsPerPackge_GS2 160  //GS2固定160个点
+#define MaxPointsPerPackge_GS1 216  //GS1固定216个点
 #define PackagePaidBytes_GS 8
 #define NORMAL_PACKAGE_SIZE 331
 
 /// Maximuum number of samples in a packet
 #define PackageSampleMaxLngth 0x100
-#define MaximumNumberOfPackages 765
+#define MaximumNumberOfPackages 765 //= 255 * 3
 
 /// CT Package Type
 typedef enum {
@@ -326,18 +327,36 @@ struct lidar_ans_header {
   uint8_t  type;
 } __attribute__((packed));
 
+//GS1
+struct GS1_Multi_Package {
+    int frameNum;
+    int moduleNum;
+    bool left = false;
+    bool right = false;
+    node_info all_points[MaxPointsPerPackge_GS1];
+} __attribute__((packed));
 //GS2
 struct GS2_Multi_Package {
     int frameNum;
     int moduleNum;
     bool left = false;
     bool right = false;
-    node_info  all_points[160];
-} __attribute__((packed)) ;
+    node_info all_points[MaxPointsPerPackge_GS2];
+} __attribute__((packed));
 
 struct GS2PackageNode {
-  uint16_t PakageSampleDistance:9;
-  uint16_t PakageSampleQuality:7;
+  uint16_t PakageSampleDistance : 9;
+  uint16_t PakageSampleQuality : 7;
+} __attribute__((packed));
+
+struct gs1_node_package {
+  uint32_t  package_Head;
+  uint8_t   address;
+  uint8_t   package_CT;
+  uint16_t  size;
+  uint16_t  BackgroudLight;
+  GS2PackageNode  packageSample[MaxPointsPerPackge_GS1];
+  uint8_t  checkSum;
 } __attribute__((packed));
 
 struct gs2_node_package {
@@ -346,9 +365,9 @@ struct gs2_node_package {
   uint8_t   package_CT;
   uint16_t  size;
   uint16_t  BackgroudLight;
-  GS2PackageNode  packageSample[PackageSampleMaxLngth_GS];
+  GS2PackageNode  packageSample[MaxPointsPerPackge_GS2];
   uint8_t  checkSum;
-} __attribute__((packed)) ;
+} __attribute__((packed));
 
 struct gs_lidar_ans_header {
     uint8_t  syncByte0;

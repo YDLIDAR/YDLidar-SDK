@@ -473,6 +473,7 @@ class DriverInterface {
     YDLIDAR_G7      = 21,/**< G7 LiDAR Model. */
 
     YDLIDAR_GS2     = 51, //GS2雷达
+    YDLIDAR_GS1     = 52, //GS1雷达
 
     YDLIDAR_TG15    = 100,/**< TG15 LiDAR Model. */
     YDLIDAR_TG30    = 101,/**< T30 LiDAR Model. */

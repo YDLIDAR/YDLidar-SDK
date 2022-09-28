@@ -284,7 +284,8 @@ usb_sysfs_hw_string(const string &sysfs_path) {
 }
 
 vector<PortInfo>
-serial::list_ports() {
+serial::list_ports() 
+{
   vector<PortInfo> results;
 
   vector<string> search_globs;
@@ -312,8 +313,8 @@ serial::list_ports() {
     std::size_t found = hardware_id.find("10c4:ea60");
     std::size_t found1 = hardware_id.find("0483:5740");
 
-
-    if (found != std::string::npos || found1 != std::string::npos) {
+    // if (found != std::string::npos || found1 != std::string::npos) 
+    {
       PortInfo device_entry;
       device_entry.port = device;
       device_entry.description = friendly_name;
@@ -321,8 +322,6 @@ serial::list_ports() {
       device_entry.device_id = device_id;
       results.push_back(device_entry);
     }
-
-
 
   }
 
