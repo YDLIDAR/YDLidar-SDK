@@ -301,7 +301,7 @@ Buffer[12] = 0x00;
 
 uint16_t check_code = 0x55AA;
 uint8_t CT = Buffer[2] & 0x01;
-uin8_t LSN = Buffer[3];
+uint8_t LSN = Buffer[3];
 uint16_t FSA = uint16_t(Buffer[5] << 8 | Buffer[4]);
 check_code ^= FSA;
 uint16_t LSA = uint16_t(Buffer[7] << 8 | Buffer[6]);
