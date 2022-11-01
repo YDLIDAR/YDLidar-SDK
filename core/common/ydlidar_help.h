@@ -81,9 +81,9 @@ inline std::string lidarModelToString(int model) {
 
       break;
 
-    case DriverInterface::YDLIDAR_S4:
-      name = "S4";
-
+    // case DriverInterface::YDLIDAR_S4:
+    case DriverInterface::YDLIDAR_S2PRO:
+      name = "S2PRO";
       break;
 
     case DriverInterface::YDLIDAR_G4:
@@ -223,7 +223,11 @@ inline std::vector<int> getDefaultSampleRate(int model)
     case DriverInterface::YDLIDAR_F4:
     case DriverInterface::YDLIDAR_T1:
     case DriverInterface::YDLIDAR_F2:
-    case DriverInterface::YDLIDAR_S4:
+      srs.push_back(4);
+      break;
+    // case DriverInterface::YDLIDAR_S4:
+    case DriverInterface::YDLIDAR_S2PRO:
+      srs.push_back(3);
       srs.push_back(4);
       break;
     case DriverInterface::YDLIDAR_G4:

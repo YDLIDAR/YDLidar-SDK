@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
 
   std::string input_frequency;
 
-  float frequency = 8.0;
+  float frequency = 5.0;
 
   while (ydlidar::os_isOk() && !isSingleChannel)
   {
@@ -229,12 +229,12 @@ int main(int argc, char *argv[])
   optval = 4;
   laser.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
   /// Intenstiy bit count
-  optval = 8;
+  optval = 10;
   laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
-  bool b_optvalue = false;
+  bool b_optvalue = true;
   laser.setlidaropt(LidarPropFixedResolution, &b_optvalue, sizeof(bool));
   /// rotate 180
   laser.setlidaropt(LidarPropReversion, &b_optvalue, sizeof(bool));
@@ -245,10 +245,10 @@ int main(int argc, char *argv[])
   /// one-way communication
   laser.setlidaropt(LidarPropSingleChannel, &isSingleChannel, sizeof(bool));
   /// intensity
-  b_optvalue = false;
+  b_optvalue = true;
   laser.setlidaropt(LidarPropIntenstiy, &b_optvalue, sizeof(bool));
   /// Motor DTR
-  b_optvalue = true;
+  b_optvalue = false;
   laser.setlidaropt(LidarPropSupportMotorDtrCtrl, &b_optvalue, sizeof(bool));
   /// HeartBeat
   b_optvalue = false;
@@ -303,9 +303,9 @@ int main(int argc, char *argv[])
   {
     if (laser.doProcessSimple(scan))
     {
-      printf("Scan received [%u] points stamp [0x%016lX]\n",
+      printf("Scan received [%u] points inc [%f]\n",
              (unsigned int)scan.points.size(),
-             scan.stamp);
+             scan.config.angle_increment);
       // for (size_t i = 0; i < scan.points.size(); ++i)
       // {
       //   const LaserPoint &p = scan.points.at(i);

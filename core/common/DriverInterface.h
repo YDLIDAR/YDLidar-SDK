@@ -454,6 +454,7 @@ class DriverInterface {
     YDLIDAR_T1      = 2,/**< T1 LiDAR Model. */
     YDLIDAR_F2      = 3,/**< F2 LiDAR Model. */
     YDLIDAR_S4      = 4,/**< S4 LiDAR Model. */
+    YDLIDAR_S2PRO   = YDLIDAR_S4,/**< S2PRO LiDAR Model. */
     YDLIDAR_G4      = 5,/**< G4 LiDAR Model. */
     YDLIDAR_X4      = 6,/**< X4 LiDAR Model. */
     YDLIDAR_G4PRO   = 7,/**< G4PRO LiDAR Model. */
