@@ -99,19 +99,16 @@ GS2LidarDriver::GS2LidarDriver():
 GS2LidarDriver::~GS2LidarDriver() 
 {
     m_isScanning = false;
-
     isAutoReconnect = false;
     _thread.join();
 
-    ScopedLocker lk(_serial_lock);
-
+    ScopedLocker l(_cmd_lock);
     if (_serial) {
         if (_serial->isOpen()) {
             _serial->flush();
             _serial->closePort();
         }
     }
-
     if (_serial) {
         delete _serial;
         _serial = NULL;
@@ -121,7 +118,6 @@ GS2LidarDriver::~GS2LidarDriver()
         delete[] globalRecvBuffer;
         globalRecvBuffer = NULL;
     }
-
     if (scan_node_buf) {
         delete[] scan_node_buf;
         scan_node_buf = NULL;
@@ -130,19 +126,17 @@ GS2LidarDriver::~GS2LidarDriver()
 
 result_t GS2LidarDriver::connect(const char *port_path, uint32_t baudrate) 
 {
-    ScopedLocker lk(_serial_lock);
     m_baudrate = baudrate;
     serial_port = string(port_path);
-
-    if (!_serial) {
-        _serial = new serial::Serial(port_path, m_baudrate,
-                                     serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT));
-    }
-
     {
-        ScopedLocker l(_lock);
-
-        if (!_serial->open()) {
+        ScopedLocker l(_cmd_lock);
+        if (!_serial)
+        {
+            _serial = new serial::Serial(port_path, m_baudrate,
+                                         serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT));
+        }
+        if (!_serial->open())
+        {
             return RESULT_FAIL;
         }
 
@@ -200,7 +194,7 @@ void GS2LidarDriver::disconnect() {
 
     stop();
     delay(10);
-    ScopedLocker l(_serial_lock);
+    ScopedLocker l(_cmd_lock);
 
     if (_serial) {
         if (_serial->isOpen()) {
@@ -212,12 +206,11 @@ void GS2LidarDriver::disconnect() {
 }
 
 
-void GS2LidarDriver::disableDataGrabbing() {
-    {
-        if (m_isScanning) {
-            m_isScanning = false;
-            _dataEvent.set();
-        }
+void GS2LidarDriver::disableDataGrabbing() 
+{
+    if (m_isScanning) {
+        m_isScanning = false;
+        _dataEvent.set();
     }
     _thread.join();
 }
@@ -539,7 +532,7 @@ result_t GS2LidarDriver::checkAutoConnecting() {
 
     while (isAutoReconnect && isAutoconnting) {
         {
-            ScopedLocker l(_serial_lock);
+            ScopedLocker l(_cmd_lock);
 
             if (_serial) {
                 if (_serial->isOpen() || m_isConnected) {
@@ -578,7 +571,7 @@ result_t GS2LidarDriver::checkAutoConnecting() {
         if (isconnected()) {
             delay(100);
             {
-                ScopedLocker l(_serial_lock);
+                ScopedLocker l(_cmd_lock);
                 ans = startAutoScan();
 
                 if (!IS_OK(ans)) {
@@ -597,19 +590,17 @@ result_t GS2LidarDriver::checkAutoConnecting() {
 
 }
 
-int GS2LidarDriver::cacheScanData() {
+int GS2LidarDriver::cacheScanData()
+{
     node_info      local_buf[200];
     size_t         count = 200;
-    node_info      local_scan[MAX_SCAN_NODES];
     size_t         scan_count = 0;
     result_t       ans = RESULT_FAIL;
-    memset(local_scan, 0, sizeof(local_scan));
 
-    flushSerial();
-    waitScanData(local_buf, count);
-
-    int timeout_count   = 0;
+    int timeout_count = 0;
     retryCount = 0;
+
+    m_isScanning = true;
 
     while (m_isScanning)
     {
@@ -630,7 +621,6 @@ int GS2LidarDriver::cacheScanData() {
 
                     if (IS_OK(ans)) {
                         timeout_count = 0;
-                        local_scan[0].sync_flag = Node_NotSync;
                     } else {
                         m_isScanning = false;
                         return RESULT_FAIL;
@@ -638,7 +628,6 @@ int GS2LidarDriver::cacheScanData() {
                 }
             } else {
                 timeout_count++;
-                local_scan[0].sync_flag = Node_NotSync;
                 fprintf(stderr, "timeout count: %d\n", timeout_count);
                 fflush(stderr);
             }
@@ -646,9 +635,6 @@ int GS2LidarDriver::cacheScanData() {
             timeout_count = 0;
             retryCount = 0;
         }
-
-        // printf("sync:%d,index:%d,moduleNum:%d\n",package_type,frameNum,moduleNum);
-        // fflush(stdout);
 
         if (!isPrepareToSend) {
             continue;
@@ -663,17 +649,17 @@ int GS2LidarDriver::cacheScanData() {
             }
         }
 
-        _lock.lock(); //timeout lock, wait resource copys
-        scan_node_buf[0].stamp = local_buf[0].stamp;
-        scan_node_buf[0].scan_frequence = local_buf[0].scan_frequence;
-        scan_node_buf[0].index = 0x03 & (moduleNum >> 1); //gs2:  1, 2, 4
-        scan_node_count = 160; //一个包固定160个数据
-        // printf("count [%d] stamp [0x%016lX]\n", count, local_buf[count - 1].stamp);
-        // fflush(stdout);
-        _dataEvent.set();
-        _lock.unlock();
-        scan_count = 0;
-        isPrepareToSend = false;
+        {
+            // printf("[YDLIDAR] GS2 points Stored in buffer %lu\n", count);
+            ScopedLocker l(_lock);
+            scan_node_buf[0].stamp = local_buf[0].stamp;
+            scan_node_buf[0].scan_frequence = local_buf[0].scan_frequence;
+            scan_node_buf[0].index = 0x03 & (moduleNum >> 1); // gs2:  1, 2, 4
+            scan_node_count = 160;                            // 一个包固定160个数据
+            _dataEvent.set();
+            scan_count = 0;
+            isPrepareToSend = false;
+        }
     }
 
     m_isScanning = false;
@@ -811,7 +797,7 @@ result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
             else
             {
                 recvPos = 0;
-                printf("invalid gs2 data\n");
+                // printf("invalid gs2 data\n");
                 continue;
             }
         }
@@ -1132,25 +1118,20 @@ result_t GS2LidarDriver::grabScanData(node_info *nodebuffer, size_t &count,
         count = 0;
         return RESULT_TIMEOUT;
 
-    case Event::EVENT_OK: {
-        if (scan_node_count == 0) {
-            return RESULT_FAIL;
-        }
-
+    case Event::EVENT_OK: 
+    {
         ScopedLocker l(_lock);
         size_t size_to_copy = min(count, scan_node_count);
         memcpy(nodebuffer, scan_node_buf, size_to_copy * sizeof(node_info));
         count = size_to_copy;
         scan_node_count = 0;
     }
-
         return RESULT_OK;
 
     default:
         count = 0;
         return RESULT_FAIL;
     }
-
 }
 
 
@@ -1275,13 +1256,12 @@ result_t GS2LidarDriver::getDevicePara(gs_device_para &info, uint32_t timeout) {
   disableDataGrabbing();
   flushSerial();
   {
-    ScopedLocker l(_lock);
-
+    ScopedLocker l(_cmd_lock);
     if ((ans = sendCommand(GS_LIDAR_CMD_GET_PARAMETER)) != RESULT_OK) {
       return ans;
     }
     gs_lidar_ans_header response_header;
-    for(int i = 0; i < PackageMaxModuleNums; i++)
+    for (int i = 0; i < PackageMaxModuleNums && i < moduleCount; i++)
     {
         if ((ans = waitResponseHeader(&response_header, timeout)) != RESULT_OK) {
           return ans;
@@ -1344,7 +1324,7 @@ result_t GS2LidarDriver::setDeviceAddress(uint32_t timeout)
     disableDataGrabbing();
     flushSerial();
     {
-        ScopedLocker l(_lock);
+        ScopedLocker l(_cmd_lock);
 
         if ((ans = sendCommand(GS_LIDAR_CMD_GET_ADDRESS)) != RESULT_OK) {
             return ans;
@@ -1354,12 +1334,12 @@ result_t GS2LidarDriver::setDeviceAddress(uint32_t timeout)
         if ((ans = waitResponseHeader(&response_header, timeout)) != RESULT_OK) {
             return ans;
         }
-
         if (response_header.type != GS_LIDAR_CMD_GET_ADDRESS) {
             return RESULT_FAIL;
         }
 
-        printf("[YDLIDAR] Lidar module count %d", (response_header.address << 1) + 1);
+        moduleCount = (response_header.address >> 1) + 1;
+        printf("[YDLIDAR] GS Lidar count %u\n", moduleCount);
     }
 
     return RESULT_OK;
@@ -1427,13 +1407,12 @@ result_t GS2LidarDriver::startScan(bool force, uint32_t timeout) {
 
     //获取GS2参数
     gs_device_para gs2_info;
-//    delay(30);
-    getDevicePara(gs2_info, 300);  
-//    delay(30);
+    ans = getDevicePara(gs2_info, 300);
+    if (IS_OK(ans))
     {
         flushSerial();
 
-        ScopedLocker l(_lock);
+        ScopedLocker l(_cmd_lock);
         if ((ans = sendCommand(force ? LIDAR_CMD_FORCE_SCAN : GS_LIDAR_CMD_SCAN)) !=
                 RESULT_OK) {
             return ans;
@@ -1446,7 +1425,6 @@ result_t GS2LidarDriver::startScan(bool force, uint32_t timeout) {
             if ((ans = waitResponseHeader(&response_header, timeout)) != RESULT_OK) {
                 return ans;
             }
-
             if (response_header.type != GS_LIDAR_ANS_SCAN) {
                 printf("[CYdLidar] Response to start scan type error!\n");
                 return RESULT_FAIL;
@@ -1468,7 +1446,7 @@ result_t GS2LidarDriver::stopScan(uint32_t timeout) {
         return RESULT_FAIL;
     }
 
-    ScopedLocker l(_lock);
+    ScopedLocker l(_cmd_lock);
     
     if ((ans = sendCommand(GS_LIDAR_CMD_STOP)) != RESULT_OK) {
       return ans;
@@ -1485,18 +1463,25 @@ result_t GS2LidarDriver::stopScan(uint32_t timeout) {
     return RESULT_OK;
 }
 
-result_t GS2LidarDriver::createThread() {
+result_t GS2LidarDriver::createThread()
+{
+    // 如果线程已启动，则先退出线程
+    if (_thread.getHandle())
+    {
+        m_isScanning = false;
+        _thread.join();
+    }
     _thread = CLASS_THREAD(GS2LidarDriver, cacheScanData);
 
-    if (_thread.getHandle() == 0) {
-        m_isScanning = false;
+    if (!_thread.getHandle()) {
         return RESULT_FAIL;
     }
 
-    m_isScanning = true;
+    printf("[GS2Lidar] Create GS2 thread 0x%X\n", _thread.getHandle());
+    fflush(stdout);
+
     return RESULT_OK;
 }
-
 
 result_t GS2LidarDriver::startAutoScan(bool force, uint32_t timeout) {
     result_t ans;
@@ -1509,7 +1494,7 @@ result_t GS2LidarDriver::startAutoScan(bool force, uint32_t timeout) {
     delay(10);
     {
 
-        ScopedLocker l(_lock);
+        ScopedLocker l(_cmd_lock);
 
         if ((ans = sendCommand(force ? LIDAR_CMD_FORCE_SCAN : GS_LIDAR_CMD_SCAN)) !=
                 RESULT_OK) {
@@ -1536,10 +1521,10 @@ result_t GS2LidarDriver::startAutoScan(bool force, uint32_t timeout) {
 /************************************************************************/
 /*   stop scan                                                   */
 /************************************************************************/
-result_t GS2LidarDriver::stop() {
+result_t GS2LidarDriver::stop() 
+{
     if (isAutoconnting) {
         isAutoReconnect = false;
-        m_isScanning = false;
     }
 
     disableDataGrabbing();
@@ -1559,7 +1544,7 @@ result_t GS2LidarDriver::reset(uint8_t addr, uint32_t timeout) {
         return RESULT_FAIL;
     }
 
-    ScopedLocker l(_lock);
+    ScopedLocker l(_cmd_lock);
 
     if ((ans = sendCommand(addr, GS_LIDAR_CMD_RESET)) != RESULT_OK) {
         return ans;
@@ -1608,7 +1593,7 @@ result_t GS2LidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
     disableDataGrabbing();
 //    flushSerial();
     {
-        ScopedLocker l(_lock);
+        ScopedLocker l(_cmd_lock);
 
         if ((ret = sendCommand(GS_LIDAR_CMD_GET_VERSION)) != RESULT_OK) {
             return ret;
@@ -1662,7 +1647,7 @@ result_t GS2LidarDriver::setWorkMode(int mode, uint8_t addr)
     flushSerial();
 
     {
-        ScopedLocker l(_lock);
+        ScopedLocker l(_cmd_lock);
         uint8_t m = uint8_t(mode);
         if ((ans = sendCommand(addr, GS_LIDAR_CMD_SET_MODE, &m, 1)) != RESULT_OK) {
             return ans;

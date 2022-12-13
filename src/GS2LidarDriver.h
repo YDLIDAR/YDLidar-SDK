@@ -511,18 +511,18 @@ public:
     DEFAULT_TIMEOUT_COUNT = 1,
   };
 
-  node_info      *scan_node_buf;    ///< 激光点信息
-  size_t         scan_node_count;   ///< 激光点数
-  Event          _dataEvent;        ///< 数据同步事件
-  Locker         _lock;				///< 线程锁
-  Locker         _serial_lock;		///< 串口锁
-  Thread 	     _thread;		   ///< 线程id
+  // node_info      *scan_node_buf;    ///< 激光点信息
+  // size_t         scan_node_count;   ///< 激光点数
+  // Event          _dataEvent;        ///< 数据同步事件
+  // Locker         _lock;				///< 线程锁
+  // Locker         _cmd_lock;		///< 串口锁
+  // Thread 	     _thread;		   ///< 线程id
 
  private:
   int PackageSampleBytes;            ///< 一个包包含的激光点数
   serial::Serial *_serial;			///< 串口
-  bool m_intensities;				///< 信号质量状体
-  uint32_t m_baudrate;				///< 波特率
+  // bool m_intensities;				///< 信号质量状体
+  // uint32_t m_baudrate;				///< 波特率
   bool isSupportMotorDtrCtrl;	    ///< 是否支持电机控制
   uint32_t trans_delay;				///< 串口传输一个byte时间
   int m_sampling_rate;              ///< 采样频率
@@ -531,7 +531,7 @@ public:
 
   gs2_node_package package;             ///< 带信号质量协议包
 
-  uint16_t package_Sample_Index;    ///< 包采样点索引
+  // uint16_t package_Sample_Index;    ///< 包采样点索引
   float IntervalSampleAngle;
   float IntervalSampleAngle_LastPackage;
   uint8_t CheckSum;                ///< 校验和
@@ -543,9 +543,9 @@ public:
   bool CheckSumResult;
   uint16_t Valu8Tou16;
 
-  std::string serial_port;///< 雷达端口
+  // std::string serial_port;///< 雷达端口
   uint8_t *globalRecvBuffer;
-  int retryCount;
+  // int retryCount;
   bool has_device_header;
   uint8_t last_device_byte;
   int         asyncRecvPos;
@@ -577,10 +577,10 @@ public:
   bool isValidPoint;
   uint8_t  package_Sample_Num;
 
-  uint8_t   frameNum;  //帧序号
-  uint8_t   moduleNum;  //模块编号
-  bool      isPrepareToSend; //是否准备好发送
-
+  uint8_t frameNum = 0;  //帧序号
+  uint8_t moduleNum = 0;  //模块编号
+  bool isPrepareToSend = false; //是否准备好发送
+  uint8_t moduleCount = 1; //当前模组数量
   std::vector<GS2_Multi_Package>  multi_package;
 };
 

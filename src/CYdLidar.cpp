@@ -1088,6 +1088,7 @@ bool CYdLidar::checkLidarAbnormal()
       }
     }
 
+    //单通雷达，计算采样率、固定分辨率时的一圈点数
     if (IS_OK(op_result) && lidarPtr->getSingleChannel())
     {
       data.push_back(count);
@@ -1115,7 +1116,7 @@ bool CYdLidar::checkLidarAbnormal()
           scan_time = 1.0 * static_cast<int64_t>(end_time - start_time) / 1e9;
           bool ret = CalculateSampleRate(count, scan_time);
 
-          if (scan_time > 0.05 && scan_time < 0.5 && lidarPtr->getSingleChannel())
+          if (scan_time > 0.05 && scan_time < 0.5)
           {
             if (!ret)
             {
@@ -1717,7 +1718,8 @@ bool CYdLidar::checkScanFrequency()
 
   m_ScanFrequency -= frequencyOffset;
   m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
-  printf("[YDLIDAR INFO] Current Scan Frequency: %fHz\n", m_ScanFrequency);
+  printf("[YDLIDAR] Current Scan Frequency: %fHz\n", m_ScanFrequency);
+  printf("[YDLIDAR] Fixed size: %d\n", m_FixedSize);
   return true;
 }
 

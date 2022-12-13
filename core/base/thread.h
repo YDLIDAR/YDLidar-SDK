@@ -107,19 +107,17 @@ class Thread {
     void *res;
     int s = -1;
     s = pthread_cancel((pthread_t)(this->_handle));
-
     if (s != 0) {
     }
 
     s = pthread_join((pthread_t)(this->_handle), &res);
-
     if (s != 0) {
     }
 
     if (res == PTHREAD_CANCELED) {
-      printf("%lu thread has been canceled\n", this->_handle);
-      this->_handle = 0;
+      printf("0x%X thread has been canceled\n", this->_handle);
     }
+    this->_handle = 0; //强制置空线程句柄，以免再次调用该函数时出现异常
 
 #endif
     return 0;
