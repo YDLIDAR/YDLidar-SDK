@@ -39,7 +39,9 @@ if you want to use python API, you need to install python and swig:
 In the YDLidar SDK directory, run the following commands to compile the project:
 ```
 git clone https://github.com/YDLIDAR/YDLidar-SDK.git
-cd YDLidar-SDK/build
+cd YDLidar-SDK
+mkdir build
+cd build
 cmake ..
 make
 sudo make install
