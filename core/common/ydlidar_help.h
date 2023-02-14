@@ -63,147 +63,108 @@ namespace common {
  * @param model lidar model
  * @return lidar model name
  */
-inline std::string lidarModelToString(int model) {
+inline std::string lidarModelToString(int model)
+{
   std::string name = "unkown";
 
-  switch (model) {
-    case DriverInterface::YDLIDAR_F4:
-      name = "F4";
-      break;
-
-    case DriverInterface::YDLIDAR_T1:
-      name = "T1";
-
-      break;
-
-    case DriverInterface::YDLIDAR_F2:
-      name = "F2";
-
-      break;
-
-    // case DriverInterface::YDLIDAR_S4:
-    case DriverInterface::YDLIDAR_S2PRO:
-      name = "S2PRO";
-      break;
-
-    case DriverInterface::YDLIDAR_G4:
-      name = "G4";
-
-      break;
-
-    case DriverInterface::YDLIDAR_X4:
-      name = "X4";
-
-      break;
-
-    case DriverInterface::YDLIDAR_G4PRO:
-      name = "G4PRO";
-
-      break;
-
-    case DriverInterface::YDLIDAR_F4PRO:
-      name = "F4PRO";
-
-      break;
-
-    case DriverInterface::YDLIDAR_R2:
-      name = "R2";
-
-      break;
-
-    case DriverInterface::YDLIDAR_G10:
-      name = "G10";
-
-      break;
-
-    case DriverInterface::YDLIDAR_S4B:
-      name = "S4B";
-
-      break;
-
-    case DriverInterface::YDLIDAR_S2:
-      name = "S2";
-
-      break;
-
-    case DriverInterface::YDLIDAR_G6:
-      name = "G6";
-
-      break;
-
-    case DriverInterface::YDLIDAR_G2A:
-      name = "G2A";
-
-      break;
-
-    case DriverInterface::YDLIDAR_G2B:
-      name = "G2B";
-
-      break;
-
-    case DriverInterface::YDLIDAR_G2C:
-      name = "G2C";
-
-      break;
-
-    case DriverInterface::YDLIDAR_G4B:
-      name = "G4B";
-
-      break;
-
-    case DriverInterface::YDLIDAR_G4C:
-      name = "G4C";
-      break;
-
-    case DriverInterface::YDLIDAR_G1:
-      name = "G1";
-
-      break;
-
-    case DriverInterface::YDLIDAR_G5:
-      name = "G5";
-      break;
-
-    case DriverInterface::YDLIDAR_G7:
-      name = "G7";
-      break;
-
-    case DriverInterface::YDLIDAR_GS1:
-      name = "GS1";
-      break;
-    case DriverInterface::YDLIDAR_GS2:
-      name = "GS2";
-      break;
-
-    case DriverInterface::YDLIDAR_TG15:
-      name = "TG15";
-      break;
-
-    case DriverInterface::YDLIDAR_TG30:
-      name = "TG30";
-      break;
-
-    case DriverInterface::YDLIDAR_TG50:
-      name = "TG50";
-      break;
-
-    case DriverInterface::YDLIDAR_TSA:
-      name = "TSA";
-      break;
-    case DriverInterface::YDLIDAR_Tmini:
-      name = "T-mini";
-      break;
-    case DriverInterface::YDLIDAR_TminiPRO:
-      name = "T-mini Pro";
-      break;
-
-    case DriverInterface::YDLIDAR_T15:
-      name = "T15";
-      break;
-
-    default:
-      name = "unkown(YD-" + std::to_string(model) + ")";
-      break;
+  switch (model)
+  {
+  case DriverInterface::YDLIDAR_F4:
+    name = "F4";
+    break;
+  case DriverInterface::YDLIDAR_T1:
+    name = "T1";
+    break;
+  case DriverInterface::YDLIDAR_F2:
+    name = "F2";
+    break;
+  // case DriverInterface::YDLIDAR_S4:
+  case DriverInterface::YDLIDAR_S2PRO:
+    name = "S2PRO";
+    break;
+  case DriverInterface::YDLIDAR_G4:
+    name = "G4";
+    break;
+  case DriverInterface::YDLIDAR_X4:
+    name = "X4";
+    break;
+  case DriverInterface::YDLIDAR_G4PRO:
+    name = "G4PRO";
+    break;
+  case DriverInterface::YDLIDAR_F4PRO:
+    name = "F4PRO";
+    break;
+  case DriverInterface::YDLIDAR_R2:
+    name = "R2";
+    break;
+  case DriverInterface::YDLIDAR_G10:
+    name = "G10";
+    break;
+  case DriverInterface::YDLIDAR_S4B:
+    name = "S4B";
+    break;
+  case DriverInterface::YDLIDAR_S2:
+    name = "S2";
+    break;
+  case DriverInterface::YDLIDAR_G6:
+    name = "G6";
+    break;
+  case DriverInterface::YDLIDAR_G2A:
+    name = "G2A";
+    break;
+  case DriverInterface::YDLIDAR_G2B:
+    name = "G2B";
+    break;
+  case DriverInterface::YDLIDAR_G2C:
+    name = "G2C";
+    break;
+  case DriverInterface::YDLIDAR_G4B:
+    name = "G4B";
+    break;
+  case DriverInterface::YDLIDAR_G4C:
+    name = "G4C";
+    break;
+  case DriverInterface::YDLIDAR_G1:
+    name = "G1";
+    break;
+  case DriverInterface::YDLIDAR_G5:
+    name = "G5";
+    break;
+  case DriverInterface::YDLIDAR_G7:
+    name = "G7";
+    break;
+  case DriverInterface::YDLIDAR_GS1:
+    name = "GS1";
+    break;
+  case DriverInterface::YDLIDAR_GS2:
+    name = "GS2";
+    break;
+  case DriverInterface::YDLIDAR_TG15:
+    name = "TG15";
+    break;
+  case DriverInterface::YDLIDAR_TG30:
+    name = "TG30";
+    break;
+  case DriverInterface::YDLIDAR_TG50:
+    name = "TG50";
+    break;
+  case DriverInterface::YDLIDAR_TSA:
+    name = "TSA";
+    break;
+  case DriverInterface::YDLIDAR_Tmini:
+    name = "T-mini";
+    break;
+  case DriverInterface::YDLIDAR_TminiPRO:
+    name = "T-mini Pro";
+    break;
+  case DriverInterface::YDLIDAR_T15:
+    name = "T15";
+    break;
+  case DriverInterface::YDLIDAR_SDM15:
+    return "SDM15";
+  default:
+    name = "unkown(YD-" + std::to_string(model) + ")";
+    break;
   }
 
   return name;
@@ -288,7 +249,7 @@ inline std::vector<int> getDefaultSampleRate(int model)
       break;
 
     default:
-      srs.push_back(4);
+      // srs.push_back(4);
       break;
   }
 
@@ -390,16 +351,11 @@ inline bool hasScanFrequencyCtrl(int model) {
  */
 inline bool isSupportLidar(int model)
 {
-  if (model < DriverInterface::YDLIDAR_F4 ||
-      (model > DriverInterface::YDLIDAR_G7 &&
-       model < DriverInterface::YDLIDAR_GS2) ||
-      (model > DriverInterface::YDLIDAR_TminiPRO &&
-       model < DriverInterface::YDLIDAR_T15))
-  {
-    return false;
-  }
-
-  return true;
+  if (model > DriverInterface::YDLIDAR_None &&
+      model < DriverInterface::YDLIDAR_Tail)
+    return true;
+  
+  return false;
 }
 
 /*!
@@ -407,7 +363,8 @@ inline bool isSupportLidar(int model)
  * @param model   lidar model
  * @return true if supported, otherwise false.
  */
-inline bool hasIntensity(int model) {
+inline bool hasIntensity(int model) 
+{
   bool ret = false;
 
   if (model == DriverInterface::YDLIDAR_G2B ||
@@ -446,21 +403,34 @@ inline bool isSupportMotorCtrl(int model) {
  * @param frequency scanning frequency
  * @return true if supported, otherwise false.
  */
-inline bool isSupportScanFrequency(int model, double frequency) {
+inline bool isSupportScanFrequency(int model, double frequency)
+{
   bool ret = false;
 
-  if (model >= DriverInterface::YDLIDAR_TG15) {
-    if (1 <= frequency && frequency <= 18) {
+  if (model >= DriverInterface::YDLIDAR_TG15)
+  {
+    if (1 <= frequency && frequency <= 18)
+    {
       ret = true;
     }
 
-    if (model >= DriverInterface::YDLIDAR_T15) {
-      if (1 <= frequency && frequency <= 50) {
+    if (model == DriverInterface::YDLIDAR_SDM15)
+    {
+      if (10 <= frequency && frequency <= 1800)
+        ret = true;
+    }
+    if (model >= DriverInterface::YDLIDAR_T15)
+    {
+      if (1 <= frequency && frequency <= 50)
+      {
         ret = true;
       }
     }
-  } else {
-    if (5 <= frequency && frequency <= 16) {
+  }
+  else
+  {
+    if (5 <= frequency && frequency <= 16)
+    {
       ret = true;
     }
   }
@@ -575,6 +545,11 @@ inline bool isGS2Lidar(int type)
   return (type == TYPE_GS);
 }
 
+inline bool isSDMLidar(int type)
+{
+  return (type == TYPE_SDM);
+}
+
 /**
  * @brief Whether it is Old Version protocol TOF LiDAR
  * @param model     lidar model
@@ -633,7 +608,8 @@ inline bool isSupportHeartBeat(int model) {
  * @param smap  sampling rate map
  * @return true if it is valid, otherwise false.
  */
-inline bool isValidSampleRate(std::map<int, int>  smap) {
+inline bool isValidSampleRate(std::map<int, int> smap) 
+{
   if (smap.size() < 1) {
     return false;
   }

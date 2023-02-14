@@ -5,6 +5,8 @@
 #include <map>
 #include "ydlidar_protocol.h"
 #include "ydlidar_def.h"
+#include <core/base/datatype.h>
+
 
 namespace ydlidar {
 namespace core {
@@ -93,6 +95,12 @@ class DriverInterface {
   */
   PropertyBuilderByName(bool, HeartBeat, protected);
 
+  //是否开启调试
+  PropertyBuilderByName(bool, Debug, protected);
+
+  //扫描频率
+  PropertyBuilderByName(float, ScanFreq, protected);
+
   /**
    * @par Constructor
    *
@@ -121,6 +129,8 @@ class DriverInterface {
     m_driverErrno         = NoError;
     m_InvalidNodeCount    = 0;
     m_BufferSize          = 0;
+    m_Debug = false;
+    m_ScanFreq = 0;
   }
 
   virtual ~DriverInterface() {}
@@ -234,8 +244,12 @@ class DriverInterface {
    *   true	intensity
    *   false no intensity
    */
-  virtual void setIntensities(const bool &isintensities) = 0;
-  virtual void setIntensityBit(int bit) {m_intensityBit = bit;}
+  virtual void setIntensities(const bool &isintensities) {
+    m_intensities = isintensities;
+  }
+  virtual void setIntensityBit(int bit) {
+    m_intensityBit = bit;
+  }
 
   /**
    * @brief whether to support hot plug \n
@@ -293,7 +307,6 @@ class DriverInterface {
    */
   virtual result_t stop() = 0;
 
-
   /**
    * @brief Get a circle of laser data \n
    * @param[in] nodebuffer Laser data
@@ -313,11 +326,13 @@ class DriverInterface {
    * @param[in] timeout      timeout
    * @return return status
    * @retval RESULT_OK       success
-   * @retval RESULT_FAILE    failed
+   * @retval RESULT_FAIL    failed
    * @note Non-scan state, perform currect operation.
    */
   virtual result_t getScanFrequency(scan_frequency &frequency,
-                                    uint32_t timeout = DEFAULT_TIMEOUT) = 0;
+                                    uint32_t timeout = DEFAULT_TIMEOUT) {
+    return RESULT_FAIL;
+  }
 
   /**
    * @brief Increase the scanning frequency by 1.0 HZ \n
@@ -329,7 +344,9 @@ class DriverInterface {
    * @note Non-scan state, perform currect operation.
    */
   virtual result_t setScanFrequencyAdd(scan_frequency &frequency,
-                                       uint32_t timeout = DEFAULT_TIMEOUT) = 0;
+                                       uint32_t timeout = DEFAULT_TIMEOUT) {
+    return RESULT_FAIL;
+  }
 
   /**
    * @brief Reduce the scanning frequency by 1.0 HZ \n
@@ -341,7 +358,9 @@ class DriverInterface {
    * @note Non-scan state, perform currect operation.
    */
   virtual result_t setScanFrequencyDis(scan_frequency &frequency,
-                                       uint32_t timeout = DEFAULT_TIMEOUT) = 0;
+                                       uint32_t timeout = DEFAULT_TIMEOUT) {
+    return RESULT_FAIL;
+  }
 
   /**
    * @brief Increase the scanning frequency by 0.1 HZ \n
@@ -353,7 +372,9 @@ class DriverInterface {
    * @note Non-scan state, perform currect operation.
    */
   virtual result_t setScanFrequencyAddMic(scan_frequency &frequency,
-                                          uint32_t timeout = DEFAULT_TIMEOUT) = 0;
+                                          uint32_t timeout = DEFAULT_TIMEOUT) {
+    return RESULT_FAIL;
+  }
 
   /**
    * @brief Reduce the scanning frequency by 0.1 HZ \n
@@ -365,7 +386,9 @@ class DriverInterface {
    * @note Non-scan state, perform currect operation.
    */
   virtual result_t setScanFrequencyDisMic(scan_frequency &frequency,
-                                          uint32_t timeout = DEFAULT_TIMEOUT) = 0;
+                                          uint32_t timeout = DEFAULT_TIMEOUT) {
+    return RESULT_FAIL;
+  }
 
   /**
    * @brief Get lidar sampling frequency \n
@@ -377,7 +400,9 @@ class DriverInterface {
    * @note Non-scan state, perform currect operation.
    */
   virtual result_t getSamplingRate(sampling_rate &rate,
-                                   uint32_t timeout = DEFAULT_TIMEOUT) = 0;
+                                   uint32_t timeout = DEFAULT_TIMEOUT) {
+    return RESULT_FAIL;
+  }
 
   /**
    * @brief Set the lidar sampling frequency \n
@@ -389,7 +414,9 @@ class DriverInterface {
    * @note Non-scan state, perform currect operation.
    */
   virtual result_t setSamplingRate(sampling_rate &rate,
-                                   uint32_t timeout = DEFAULT_TIMEOUT) = 0;
+                                   uint32_t timeout = DEFAULT_TIMEOUT) {
+    return RESULT_FAIL;
+  }
 
   /**
    * @brief get lidar zero offset angle \n
@@ -401,7 +428,9 @@ class DriverInterface {
    * @note Non-scan state, perform currect operation.
    */
   virtual result_t getZeroOffsetAngle(offset_angle &angle,
-                                      uint32_t timeout = DEFAULT_TIMEOUT) = 0;
+                                      uint32_t timeout = DEFAULT_TIMEOUT) {
+    return RESULT_FAIL;
+  }
 
   /**
    * @brief set lidar heart beat \n
@@ -414,7 +443,9 @@ class DriverInterface {
    */
 
   virtual result_t setScanHeartbeat(scan_heart_beat &beat,
-                                    uint32_t timeout = DEFAULT_TIMEOUT) = 0;
+                                    uint32_t timeout = DEFAULT_TIMEOUT) {
+    return RESULT_FAIL;
+  }
 
   /**
    * @brief setDriverError
@@ -449,7 +480,9 @@ class DriverInterface {
   virtual result_t getIntensityFlag() {return RESULT_OK;}
 
  public:
-  enum YDLIDAR_MODLES {
+  enum YDLIDAR_MODLES 
+  {
+    YDLIDAR_None = 0,
     YDLIDAR_F4      = 1,/**< F4 LiDAR Model. */
     YDLIDAR_T1      = 2,/**< T1 LiDAR Model. */
     YDLIDAR_F2      = 3,/**< F2 LiDAR Model. */
@@ -484,7 +517,9 @@ class DriverInterface {
     YDLIDAR_Tmini   = 140,/**< Tmini LiDAR Model. */
     YDLIDAR_TminiPRO = 150,/**< Tmini PRO LiDAR Model. */
 
-    YDLIDAR_T15     = 200,/**< T15 LiDAR Model. */
+    YDLIDAR_SDM15 = 160, //SDM15单点雷达
+
+    YDLIDAR_T15 = 200, /**< T15 LiDAR Model. */
 
     YDLIDAR_Tail,
   };
@@ -504,7 +539,7 @@ class DriverInterface {
     DEFAULT_TIMEOUT_COUNT = 1, /**< Default Timeout Count. */
   };
 
- protected:
+protected:
   /* Variable for LIDAR compatibility */
   /// LiDAR Scanning state
   bool            m_isScanning = false;
@@ -520,7 +555,6 @@ class DriverInterface {
   Locker          _cmd_lock;
   /// driver error locker
   Locker          _error_lock;
-
 
   /// LiDAR com port or IP Address
   std::string serial_port;
@@ -543,7 +577,7 @@ class DriverInterface {
   bool isAutoReconnect;
   /// auto connecting state
   bool isAutoconnting;
-  lidarConfig     m_config;
+  lidarConfig m_config;
 
   /// number of last error
   DriverError m_driverErrno;
@@ -551,7 +585,6 @@ class DriverInterface {
   ///invalid node count
   int m_InvalidNodeCount;
   size_t m_BufferSize;
-
 };
 
 }//common

@@ -35,6 +35,7 @@
 #include "ETLidarDriver.h"
 #include "GS1LidarDriver.h"
 #include "GS2LidarDriver.h"
+#include "SDMLidarDriver.h"
 
 using namespace std;
 using namespace impl;
@@ -244,8 +245,11 @@ bool CYdLidar::setlidaropt(int optname, const void *optval, int optlen)
     break;
 
   case LidarPropSampleRate:
-    m_SampleRate = *(int *)(optval);
+  {
+    int sr = *(int*)(optval);
+    m_SampleRate = sr;
     break;
+  }
 
   case LidarPropAbnormalCheckCount:
     m_AbnormalCheckCount = *(int *)(optval);
@@ -391,8 +395,11 @@ bool CYdLidar::getlidaropt(int optname, void *optval, int optlen)
     break;
 
   case LidarPropSampleRate:
-    memcpy(optval, &m_SampleRate, optlen);
+  {
+    int sr = m_SampleRate;
+    memcpy(optval, &sr, optlen);
     break;
+  }
 
   case LidarPropAbnormalCheckCount:
     memcpy(optval, &m_AbnormalCheckCount, optlen);
@@ -415,7 +422,7 @@ bool CYdLidar::initialize()
   if (!checkCOMMs())
   {
     fprintf(stderr,
-            "[CYdLidar::initialize] Error initializing YDLIDAR check Comms.\n");
+            "[YDLIDAR] Error initializing YDLIDAR check Comms.\n");
     fflush(stderr);
     return false;
   }
@@ -423,13 +430,13 @@ bool CYdLidar::initialize()
   if (!checkStatus())
   {
     fprintf(stderr,
-            "[CYdLidar::initialize] Error initializing YDLIDAR check status under [%s] and [%d].\n",
+            "[YDLIDAR] Error initializing YDLIDAR check status under [%s] and [%d].\n",
             m_SerialPort.c_str(), m_SerialBaudrate);
     fflush(stderr);
     return false;
   }
 
-  printf("LiDAR init success, Elapsed time %u ms\n", getms() - t);
+  printf("[YDLIDAR] Lidar init success, Elapsed time %u ms\n", getms() - t);
   fflush(stdout);
 
   return true;
@@ -464,13 +471,13 @@ bool CYdLidar::turnOn()
     if (!IS_OK(op_result))
     {
       lidarPtr->stop();
-      fprintf(stderr, "[CYdLidar] Failed to start scan mode: %x\n", op_result);
+      fprintf(stderr, "[YDLIDAR] Failed to start scan mode: %x\n", op_result);
       isScanning = false;
       return false;
     }
   }
 
-  printf("[CYdLidar] Successed to start scan mode, Elapsed time %u ms\n", getms() - t);
+  printf("[YDLIDAR] Successed to start scan mode, Elapsed time %u ms\n", getms() - t);
   fflush(stdout);
 
   m_PointTime = lidarPtr->getPointTime();
@@ -483,7 +490,7 @@ bool CYdLidar::turnOn()
   {
     lidarPtr->stop();
     fprintf(stderr,
-            "[CYdLidar] Failed to turn on the Lidar, because the lidar is [%s].\n",
+            "[YDLIDAR] Failed to turn on the Lidar, because the lidar is [%s].\n",
             DriverInterface::DescribeDriverError(lidarPtr->getDriverError()));
     isScanning = false;
     return false;
@@ -495,7 +502,7 @@ bool CYdLidar::turnOn()
   }
   else
   {
-    printf("[YDLIDAR INFO1] Current Sampling Rate : %dK\n", m_SampleRate);
+    printf("[YDLIDAR] Current Sampling Rate : %.02fK\n", m_SampleRate);
   }
 
   m_field_of_view = 360.f;
@@ -522,7 +529,7 @@ bool CYdLidar::turnOn()
   m_PointTime = lidarPtr->getPointTime();
   isScanning = true;
   lidarPtr->setAutoReconnect(m_AutoReconnect);
-  printf("[YDLIDAR INFO] Now YDLIDAR is scanning ......\n");
+  printf("[YDLIDAR] Now YDLIDAR is scanning ...\n");
   fflush(stdout);
   return true;
 }
@@ -687,7 +694,8 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       {
         if (isTOFLidar(m_LidarType) || 
           isNetTOFLidar(m_LidarType) ||
-          isGSLidar(m_LidarType))
+          isGSLidar(m_LidarType) ||
+          isSDMLidar(m_LidarType))
         {
           range = static_cast<float>(global_nodes[i].distance_q2 / 1000.f);
         }
@@ -1143,7 +1151,7 @@ bool CYdLidar::checkLidarAbnormal()
         int mean = total / data.size(); // mean value
         m_FixedSize = (static_cast<int>((mean + 5) / 10)) * 10;
         printf("[YDLIDAR]:Single Fixed Size: %d\n", m_FixedSize);
-        printf("[YDLIDAR]:Sample Rate: %dK\n", m_SampleRate);
+        printf("[YDLIDAR]:Sample Rate: %.02fK\n", m_SampleRate);
         return false;
       }
     }
@@ -1194,11 +1202,11 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time)
   if (count < 1)
     return false;
 
-  // 1、如果雷达支持直接获取采样率，则使用获取的采样率，此时将默认采样率值置为该值
+  // 1、如果雷达支持直接获取转速，则使用获取的转速计算采样率，此时将默认采样率值置为该值
   // 2、如果有设置默认采样率，判断当前雷达型号对应的默认采样率值的个数，个数为1，
   //直接使用该采样率，个数不为1则根据实时采样率进行匹配
   // 3、如果没有设置默认采样率，则使用实时采样率
-  int sr = 0;
+  float sr = 0;
   bool ret = false;
 
   if (global_nodes[0].scan_frequence != 0)
@@ -1211,6 +1219,9 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time)
       scanfrequency = global_nodes[0].scan_frequence / 10.0 + 3.0;
     }
     sr = static_cast<int>((count * scanfrequency + 500) / 1000);
+
+    if (isSDMLidar(m_LidarType))
+      sr = float(count * global_nodes[0].scan_frequence) / 1000;
   }
   else
   {
@@ -1221,7 +1232,7 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time)
     }
   }
 
-  // printf("[YDLIDAR] Calc Sample Rate: %dK\n", sr);
+  // printf("[YDLIDAR] Calc Sample Rate: %.2fK\n", sr);
 
   size_t size = defalutSampleRate.size();
   if (size)
@@ -1258,8 +1269,8 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time)
   }
   else
   {
-    if (sr)
-      SampleRateMap[sr] ++;
+    if (sr > 0)
+      SampleRateMap[sr * 1000] ++; //放大1000倍存入
     if (isValidSampleRate(SampleRateMap))
       ret = true;
     // printf("[YDLIDAR] Calc Sample Rate3: %dK\n", sr);
@@ -1272,124 +1283,13 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time)
     lidarPtr->setPointTime(m_PointTime);
     if (!m_SingleChannel)
       m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
-    printf("[YDLIDAR] Fixed Size: %d\n", m_FixedSize);
-    printf("[YDLIDAR] Sample Rate: %dK\n", m_SampleRate);
+    
+    if (!isSDMLidar(m_LidarType)) //非SDM雷达才打印Fixed Size
+      printf("[YDLIDAR] Fixed Size: %d\n", m_FixedSize);
+    printf("[YDLIDAR] Sample Rate: %.02fK\n", m_SampleRate);
   }
 
   return ret;
-
-  // if (global_nodes[0].scan_frequence != 0) //如果解析到转速信息
-  // {
-  //   double scanfrequency;
-  //   scanfrequency = global_nodes[0].scan_frequence / 10.0;
-
-  //   if (isTOFLidar(m_LidarType))
-  //   {
-  //     if (!isOldVersionTOFLidar(lidar_model, Major, Minjor))
-  //     {
-  //       scanfrequency = global_nodes[0].scan_frequence / 10.0 + 3.0;
-  //     }
-  //   }
-
-  //   int samplerate = static_cast<int>((count * scanfrequency + 500) / 1000);
-  //   int cnt = 0;
-
-  //   float sr = float(count * scanfrequency + 500) / 1000;
-  //   printf("[CalculateSampleRate] Sample Rate: %.03fK(%dK)\n", sr, samplerate);
-  //   // fflush(stdout);
-
-  //   if (SampleRateMap.find(samplerate) != SampleRateMap.end())
-  //   {
-  //     cnt = SampleRateMap[samplerate];
-  //   }
-
-  //   cnt++;
-  //   SampleRateMap[samplerate] = cnt;
-
-  //   if (isValidSampleRate(SampleRateMap) ||
-  //       defalutSampleRate == samplerate ||
-  //       m_SampleRate == samplerate)
-  //   {
-  //     m_SampleRate = samplerate;
-  //     m_PointTime = 1e9 / (m_SampleRate * 1000);
-  //     lidarPtr->setPointTime(m_PointTime);
-
-  //     if (!m_SingleChannel)
-  //     {
-  //       m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
-  //     }
-
-  //     printf("[YDLIDAR1]:Fixed Size: %d\n", m_FixedSize);
-  //     printf("[YDLIDAR1]:Sample Rate: %dK\n", m_SampleRate);
-  //     return true;
-  //   }
-  //   else
-  //   {
-  //     if (SampleRateMap.size() > 1)
-  //     {
-  //       SampleRateMap.clear();
-  //     }
-  //   }
-  // }
-  // else //如果没有解析到转速信息
-  // {
-  //   if (scan_time > 0.04 && scan_time < 0.4)
-  //   {
-  //     int samplerate = static_cast<int>((count / scan_time + 500) / 1000);
-
-  //     if (defalutSampleRate == samplerate ||
-  //         m_SampleRate == samplerate)
-  //     {
-  //       m_SampleRate = samplerate;
-  //       m_PointTime = 1e9 / (m_SampleRate * 1000);
-  //       lidarPtr->setPointTime(m_PointTime);
-
-  //       if (!m_SingleChannel)
-  //       {
-  //         m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
-  //       }
-
-  //       printf("[YDLIDAR3]:Fixed Size: %d\n", m_FixedSize);
-  //       printf("[YDLIDAR3]:Sample Rate: %dK\n", m_SampleRate);
-  //       return true;
-  //     }
-  //     else
-  //     {
-  //       int cnt = 0;
-
-  //       if (SampleRateMap.find(samplerate) != SampleRateMap.end())
-  //       {
-  //         cnt = SampleRateMap[samplerate];
-  //       }
-
-  //       cnt++;
-  //       SampleRateMap[samplerate] = cnt;
-
-  //       if (SampleRateMap.size() > 1)
-  //       {
-  //         SampleRateMap.clear();
-  //       }
-
-  //       if (isValidSampleRate(SampleRateMap))
-  //       {
-  //         m_SampleRate = samplerate;
-  //         m_PointTime = 1e9 / (m_SampleRate * 1000);
-  //         lidarPtr->setPointTime(m_PointTime);
-
-  //         if (!m_SingleChannel)
-  //         {
-  //           m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
-  //         }
-
-  //         printf("[YDLIDAR2]:Fixed Size: %d\n", m_FixedSize);
-  //         printf("[YDLIDAR2]:Sample Rate: %dK\n", m_SampleRate);
-  //         return true;
-  //       }
-  //     }
-  //   }
-  // }
-
-  // return false;
 }
 
 /*-------------------------------------------------------------
@@ -1444,10 +1344,10 @@ bool CYdLidar::getDeviceInfo()
   }
 
   bool ret = false;
-  device_info devinfo;
-  memset(&devinfo, 0, sizeof(device_info));
+  device_info di;
+  memset(&di, 0, sizeof(device_info));
 
-  result_t op_result = lidarPtr->getDeviceInfo(devinfo,
+  result_t op_result = lidarPtr->getDeviceInfo(di,
     DriverInterface::DEFAULT_TIMEOUT / 2);
   if (!IS_OK(op_result))
   {
@@ -1455,15 +1355,15 @@ bool CYdLidar::getDeviceInfo()
     return false;
   }
 
-  if (!isSupportLidar(devinfo.model))
+  if (!isSupportLidar(di.model))
   {
     printf("[YDLIDAR INFO] Current SDK does not support current lidar models[%s]\n",
-      lidarModelToString(devinfo.model).c_str());
+      lidarModelToString(di.model).c_str());
     return false;
   }
 
   // check Lidar Type Config
-  if (isTOFLidarByModel(devinfo.model))
+  if (isTOFLidarByModel(di.model))
   {
     if (!isTOFLidar(m_LidarType))
     {
@@ -1486,9 +1386,9 @@ bool CYdLidar::getDeviceInfo()
   }
 
   frequencyOffset = 0.4;
-  lidar_model = devinfo.model;
-  bool intensity = hasIntensity(devinfo.model);
-  defalutSampleRate = getDefaultSampleRate(devinfo.model);
+  lidar_model = di.model;
+  bool intensity = hasIntensity(di.model);
+  defalutSampleRate = getDefaultSampleRate(di.model);
   // printf("getDefaultSampleRate %d\n", defalutSampleRate.size());
 
   intensity = m_Intensity;
@@ -1498,49 +1398,52 @@ bool CYdLidar::getDeviceInfo()
   lidarPtr->setIntensityBit(m_IntensityBit);
   ret = true;
 
-  if (printfVersionInfo(devinfo, m_SerialPort, m_SerialBaudrate))
+  if (printfVersionInfo(di, m_SerialPort, m_SerialBaudrate))
   {
-    Major = (uint8_t)(devinfo.firmware_version >> 8);
-    Minjor = (uint8_t)(devinfo.firmware_version & 0xff);
-    m_LidarVersion.hardware = devinfo.hardware_version;
+    Major = (uint8_t)(di.firmware_version >> 8);
+    Minjor = (uint8_t)(di.firmware_version & 0xff);
+    m_LidarVersion.hardware = di.hardware_version;
     m_LidarVersion.soft_major = Major;
     m_LidarVersion.soft_minor = Minjor / 10;
     m_LidarVersion.soft_patch = Minjor % 10;
-    memcpy(&m_LidarVersion.sn[0], &devinfo.serialnum[0], 16);
+    memcpy(&m_LidarVersion.sn[0], &di.serialnum[0], 16);
 
     for (int i = 0; i < 16; i++)
     {
-      serial_number += std::to_string(devinfo.serialnum[i] & 0xff);
+      serial_number += std::to_string(di.serialnum[i] & 0xff);
     }
 
     m_SerialNumber = serial_number;
     m_parsingCompleted = true;
-    zero_offset_angle_scale = lidarZeroOffsetAngleScale(devinfo.model,
-                                                        devinfo.firmware_version >> 8, devinfo.firmware_version & 0x00ff);
+    zero_offset_angle_scale = lidarZeroOffsetAngleScale(di.model,
+                                                        di.firmware_version >> 8, di.firmware_version & 0x00ff);
   }
 
   // uint32_t t = getms();
 
-  if (hasSampleRate(devinfo.model))
+  if (hasSampleRate(di.model))
   {
     checkSampleRate();
   }
   else
   {
-    m_PointTime = 1e9 / (defalutSampleRate.front() * 1000);
-    lidarPtr->setPointTime(m_PointTime);
+    if (defalutSampleRate.size())
+    {
+      m_PointTime = 1e9 / (defalutSampleRate.front() * 1000);
+      lidarPtr->setPointTime(m_PointTime);
+    }
   }
 
   // printf("LiDAR get device info finished, Elapsed time %u ms\n", getms() - t);
 
-  if (hasScanFrequencyCtrl(devinfo.model) || 
+  if (hasScanFrequencyCtrl(di.model) || 
     ((isTOFLidar(m_LidarType)) && !m_SingleChannel) || 
       isNetTOFLidar(m_LidarType))
   {
     checkScanFrequency();
   }
 
-  if (isSupportHeartBeat(devinfo.model))
+  if (isSupportHeartBeat(di.model))
   {
     ret &= checkHeartBeat();
 
@@ -1550,7 +1453,7 @@ bool CYdLidar::getDeviceInfo()
     }
   }
 
-  if (hasZeroAngle(devinfo.model))
+  if (hasZeroAngle(di.model))
   {
     ret &= checkCalibrationAngle(serial_number);
   }
@@ -1590,7 +1493,7 @@ void CYdLidar::handleSingleChannelDevice()
   lidar_model = devinfo.model;
   // defalutSampleRate = getDefaultSampleRate(devinfo.model);
 
-  printf("[YDLIDAR INFO] Single Channel Current Sampling Rate: %dK\n", m_SampleRate);
+  printf("[YDLIDAR INFO] Single Channel Current Sampling Rate: %.02fK\n", m_SampleRate);
   return;
 }
 
@@ -1718,8 +1621,8 @@ bool CYdLidar::checkScanFrequency()
 
   m_ScanFrequency -= frequencyOffset;
   m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
-  printf("[YDLIDAR] Current Scan Frequency: %fHz\n", m_ScanFrequency);
-  printf("[YDLIDAR] Fixed size: %d\n", m_FixedSize);
+  printf("[YDLIDAR] Current scan frequency: %.02fHz\n", m_ScanFrequency);
+  // printf("[YDLIDAR] Fixed size: %d\n", m_FixedSize);
   return true;
 }
 
@@ -1805,37 +1708,28 @@ bool CYdLidar::checkCOMMs()
 {
   if (!lidarPtr)
   {
-    printf("YDLidar SDK initializing\n");
+    printf("[YDLIDAR] SDK initializing\n");
 
-    // create the driver instance
+    //根据雷达类型创建对应的实例
     if (isNetTOFLidar(m_LidarType))
-    {
-      lidarPtr = new ydlidar::ETLidarDriver(); // T15
-    }
-    else if (isGS1Lidar(m_LidarType))
-    {
-      //GS1
+      lidarPtr = new ydlidar::ETLidarDriver(); //T15
+    else if (isGS1Lidar(m_LidarType)) //GS1
       lidarPtr = new ydlidar::GS1LidarDriver();
-    }
-    else if (isGS2Lidar(m_LidarType))
-    {
-      //GS2
+    else if (isGS2Lidar(m_LidarType)) //GS2
       lidarPtr = new ydlidar::GS2LidarDriver();
-    }
-    else
-    { 
-      //通用雷达
+    else if (isSDMLidar(m_LidarType)) //SDM
+      lidarPtr = new ydlidar::SDMLidarDriver();
+    else //通用雷达
       lidarPtr = new ydlidar::YDlidarDriver(m_DeviceType);
-    }
 
     if (!lidarPtr)
     {
-      fprintf(stderr, "Create Driver fail\n");
+      fprintf(stderr, "[YDLIDAR] Create driver fail!\n");
       return false;
     }
 
-    printf("YDLidar SDK has been initialized\n");
-    printf("[YDLIDAR]:SDK Version: %s\n", lidarPtr->getSDKVersion().c_str());
+    printf("[YDLIDAR] SDK has been initialized\n");
+    printf("[YDLIDAR] SDK Version: %s\n", lidarPtr->getSDKVersion().c_str());
     fflush(stdout);
     lidarPtr->setSupportMotorDtrCtrl(m_SupportMotorDtrCtrl);
   }
@@ -1861,19 +1755,18 @@ bool CYdLidar::checkCOMMs()
 
   // make connection...
   result_t op_result = lidarPtr->connect(m_SerialPort.c_str(), m_SerialBaudrate);
-
   if (!IS_OK(op_result))
   {
     if (isNetTOFLidar(m_LidarType))
     {
       fprintf(stderr,
-              "[CYdLidar] Error, cannot bind to the specified IP Address[%s]\n",
+              "[YDLIDAR] Error, cannot bind to the specified IP Address[%s]\n",
               m_SerialPort.c_str());
     }
     else
     {
       fprintf(stderr,
-              "[CYdLidar] Error, cannot bind to the specified %s[%s] and %s[%d]\n",
+              "[YDLIDAR] Error, cannot bind to the specified %s[%s] and %s[%d]\n",
               m_DeviceType != YDLIDAR_TYPE_SERIAL ? "IP Adddress" : "serial port",
               m_SerialPort.c_str(), m_DeviceType != YDLIDAR_TYPE_SERIAL ? "network port" : "baudrate", m_SerialBaudrate);
     }
@@ -1881,10 +1774,11 @@ bool CYdLidar::checkCOMMs()
     return false;
   }
 
-  printf("LiDAR successfully connected\n");
   lidarPtr->setSingleChannel(m_SingleChannel);
   lidarPtr->setLidarType(m_LidarType);
+  lidarPtr->setScanFreq(m_ScanFrequency);
 
+  printf("[YDLIDAR] Lidar successfully connected\n");
   return true;
 }
 

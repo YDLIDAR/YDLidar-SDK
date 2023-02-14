@@ -149,6 +149,8 @@
 #define PackageSampleMaxLngth 0x100
 #define MaximumNumberOfPackages 765 //= 255 * 3
 
+#define SDK_SNLEN 16 //序列号长度
+
 /// CT Package Type
 typedef enum {
   CT_Normal = 0,///< Normal package
@@ -203,6 +205,7 @@ struct node_info {
   uint8_t index; //包序号
   uint8_t error_package; ///< error package state
 } __attribute__((packed));
+#define SDKNODESIZE sizeof(node_info)
 
 /// package node info
 struct PackageNode {
@@ -266,6 +269,7 @@ struct device_info {
   uint8_t   hardware_version; ///< hardare version
   uint8_t   serialnum[16];    ///< serial number
 } __attribute__((packed)) ;
+#define DEVICEINFOSIZE sizeof(device_info)
 
 /// LiDAR Health Information
 struct device_health {

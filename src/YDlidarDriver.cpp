@@ -649,7 +649,7 @@ int YDlidarDriver::cacheScanData()
         count = 128;
         ans = waitScanData(local_buf, count, DEFAULT_TIMEOUT / 2);
 
-        // printf("count %lu ret %d\n", count, ans);
+        // printf("count %llu ret %d\n", count, ans);
         // fflush(stdout);
 
         if (!IS_OK(ans)) {
