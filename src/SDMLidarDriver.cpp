@@ -262,11 +262,8 @@ result_t SDMLidarDriver::getData(uint8_t *data, size_t size)
     while (size)
     {
         r = _serial->readData(data, size);
-
         if (!r)
-        {
             return RESULT_FAIL;
-        }
 
         // printf("recv: ");
         // printHex(data, r);
@@ -915,8 +912,25 @@ result_t SDMLidarDriver::setScanFreq(float sf, uint32_t timeout)
         }
     }
     ScopedLocker l(_cmd_lock);
-    if ((ret = sendCmd(SDK_CMD_SETFILTER, &d, 1)) != RESULT_OK)
+    if ((ret = sendCmd(SDK_CMD_SETFREQ, &d, 1)) != RESULT_OK)
         return ret;
+
+    std::vector<uint8_t> data;
+    ret = waitRes(SDK_CMD_SETFREQ, data, timeout);
+    if (!IS_OK(ret))
+        return ret;
+    if (!data.size())
+        return RESULT_FAIL;
+    d = data.at(0);
+    //根据返回的扫描频率更新当前扫描频率
+    for (int i=0; i<size; ++i)
+    {
+        if (d == i)
+        {
+            m_ScanFreq = s_sfs[i];
+            break;
+        }
+    }
 
     return ret;
 }
