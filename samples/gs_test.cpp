@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
     fflush(stderr);
     return -1;
   }
-  //设置雷达工作模式
+  //设置雷达工作模式（0表示避障模式，1表示沿边模式）
   // ret &= laser.setWorkMode(0, 0x01);
   // ret &= laser.setWorkMode(0, 0x02);
   // ret &= laser.setWorkMode(1, 0x04);
