@@ -249,7 +249,7 @@ inline std::vector<int> getDefaultSampleRate(int model)
       break;
 
     default:
-      // srs.push_back(4);
+      srs.push_back(4);
       break;
   }
 

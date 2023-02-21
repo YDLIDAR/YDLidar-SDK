@@ -125,10 +125,11 @@ int main(int argc, char *argv[])
   std::map<int, int> baudrateList;
   baudrateList[0] = 115200;
   baudrateList[1] = 128000;
-  baudrateList[2] = 153600;
-  baudrateList[3] = 230400;
-  baudrateList[4] = 460800;
-  baudrateList[5] = 512000;
+  baudrateList[2] = 150000;
+  baudrateList[3] = 153600;
+  baudrateList[4] = 230400;
+  baudrateList[5] = 460800;
+  baudrateList[6] = 512000;
 
   printf("Baudrate:\n");
 
@@ -294,7 +295,7 @@ int main(int argc, char *argv[])
     std::string userVersion;
     if (laser.getUserVersion(userVersion))
     {
-      printf("[YDLIDAR]: User version %s\n", userVersion.c_str());
+      printf("User version %s\n", userVersion.c_str());
     }
   }
 

@@ -1953,7 +1953,7 @@ result_t YDlidarDriver::createThread()
     return RESULT_FAIL;
   }
 
-  printf("[YDlidar] Create thread 0x%X\n", _thread.getHandle());
+  printf("[YDLIDAR] Create thread 0x%X\n", _thread.getHandle());
   fflush(stdout);
 
   return RESULT_OK;
@@ -2635,7 +2635,7 @@ result_t YDlidarDriver::getIntensityFlag()
   if (!isTriangleLidar(m_LidarType))
     return RESULT_OK;
 
-  printf("Start to getting intensity flag\n");
+  printf("[YDLIDAR] Start to getting intensity flag\n");
   fflush(stdout);
 
   m_dataPos = 0;
@@ -2662,8 +2662,8 @@ result_t YDlidarDriver::getIntensityFlag()
         if (lastZero)
         {
           offset = headPos - lastPos;
-          printf("lastPos %u currPos %u offset %u\n", lastPos, headPos, offset);
-          fflush(stdout);
+          // printf("lastPos %u currPos %u offset %u\n", lastPos, headPos, offset);
+          // fflush(stdout);
 
           if (lastOffset && 
             lastOffset != offset)
@@ -2693,11 +2693,11 @@ result_t YDlidarDriver::getIntensityFlag()
       m_intensityBit = 8;
     }
 
-    printf("Auto set intensity %d\n", m_intensities);
+    printf("[YDLIDAR] Auto set intensity %d\n", m_intensities);
     fflush(stdout);
   }
 
-  printf("End to getting intensity flag\n");
+  printf("[YDLIDAR] End to getting intensity flag\n");
   fflush(stdout);
 
   return RESULT_OK;
