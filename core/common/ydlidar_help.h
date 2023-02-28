@@ -632,68 +632,61 @@ inline bool isValidSampleRate(std::map<int, int> smap)
  * @param defaultRate   LiDAR Defualt sampling rate code
  * @return  LiDAR sampling rate code
  */
-inline int ConvertUserToLidarSmaple(int model, int m_SampleRate,
-                                    int defaultRate) {
+inline int ConvertUserToLidarSmaple(int model,
+                                    int m_SampleRate,
+                                    int defaultRate)
+{
   int _samp_rate = 9;
-
-  switch (m_SampleRate) {
+  switch (m_SampleRate) 
+  {
     case 10:
       _samp_rate = DriverInterface::YDLIDAR_RATE_4K;
       break;
-
     case 16:
       _samp_rate = DriverInterface::YDLIDAR_RATE_8K;
       break;
-
     case 18:
       _samp_rate = DriverInterface::YDLIDAR_RATE_9K;
       break;
-
     case 20:
       _samp_rate = DriverInterface::YDLIDAR_RATE_10K;
       break;
-
     default:
       _samp_rate = defaultRate;
       break;
   }
 
-  if (!isOctaveLidar(model)) {
+  if (!isOctaveLidar(model)) 
+  {
     _samp_rate = 2;
-
-    switch (m_SampleRate) {
+    switch (m_SampleRate) 
+    {
       case 4:
         _samp_rate = DriverInterface::YDLIDAR_RATE_4K;
         break;
-
       case 8:
         _samp_rate = DriverInterface::YDLIDAR_RATE_8K;
         break;
-
       case 9:
         _samp_rate = DriverInterface::YDLIDAR_RATE_9K;
         break;
-
       default:
         break;
     }
-
-    if (model == DriverInterface::YDLIDAR_F4PRO) {
+    if (model == DriverInterface::YDLIDAR_F4PRO) 
+    {
       _samp_rate = 0;
-
-      switch (m_SampleRate) {
+      switch (m_SampleRate) 
+      {
         case 4:
           _samp_rate = DriverInterface::YDLIDAR_RATE_4K;
           break;
-
         case 6:
           _samp_rate = DriverInterface::YDLIDAR_RATE_8K;
           break;
-
         default:
           break;
       }
-
     }
   }
 
@@ -750,6 +743,9 @@ inline int ConvertLidarToUserSmaple(int model, int rate)
       break;
     case DriverInterface::YDLIDAR_RATE_10K:
       _samp_rate = 20;
+      break;
+    case 4:
+      _samp_rate = 10;
       break;
     default:
       //修改默认为当前获取到采样率值

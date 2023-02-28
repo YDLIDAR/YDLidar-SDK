@@ -1510,11 +1510,12 @@ void CYdLidar::checkSampleRate()
 
   if (IS_OK(ans))
   {
-    printf("[YDLIDAR] Get Origin Sample Rate: %uK\n", _rate.rate);
+    printf("[YDLIDAR] Get origin sample rate code: %u\n", _rate.rate);
     if (!isTOFLidarByModel(lidar_model))
     {
       //非TG系列雷达获取采样率码转成采样率值
       sr = ConvertUserToLidarSmaple(lidar_model, m_SampleRate, _rate.rate);
+      // printf("[YDLIDAR] Get sample rate code: %dK\n", sr);
 
       //非TG系列雷达通过设备信息获取
       while (sr != _rate.rate)
@@ -1529,6 +1530,7 @@ void CYdLidar::checkSampleRate()
       }
 
       sr = ConvertLidarToUserSmaple(lidar_model, _rate.rate);
+      // printf("[YDLIDAR] Get sample rate: %dK\n", sr);
     }
     else
     {
@@ -1539,7 +1541,7 @@ void CYdLidar::checkSampleRate()
     m_SampleRate = sr;
     defalutSampleRate.clear();
     defalutSampleRate.push_back(m_SampleRate);
-    printf("[YDLIDAR] Get Sample Rate: %dK\n", m_SampleRate);
+    printf("[YDLIDAR] Get sample rate: %.02fK\n", m_SampleRate);
   }
 }
 
