@@ -1003,6 +1003,11 @@ result_t YDlidarDriver::parseResponseHeader(
             setDriverError(NoError);
           }
         }
+        else if (currentByte == PH1) //防止出现连续0xAA
+        {
+          recvPos = 1;
+          continue;
+        }
         else if (currentByte == PH3)
         {
           recvPos = 0;
@@ -2569,6 +2574,11 @@ result_t YDlidarDriver::parseHeader(
         if (c != PH2)
         {
           recvPos = 0;
+          continue;
+        }
+        else if (c == PH1)
+        {
+          recvPos = 1;
           continue;
         }
         break;

@@ -461,13 +461,11 @@ bool CYdLidar::turnOn()
   }
 
   uint32_t t = getms();
-  // start scan...
+  //启动扫描
   result_t op_result = lidarPtr->startScan();
-
   if (!IS_OK(op_result))
   {
     op_result = lidarPtr->startScan();
-
     if (!IS_OK(op_result))
     {
       lidarPtr->stop();
@@ -476,15 +474,12 @@ bool CYdLidar::turnOn()
       return false;
     }
   }
-
   printf("[YDLIDAR] Successed to start scan mode, Elapsed time %u ms\n", getms() - t);
   fflush(stdout);
 
   m_PointTime = lidarPtr->getPointTime();
 
-  // //获取强度标识
-  // lidarPtr->getIntensityFlag();
-
+  t = getms();
   //计算采样率
   if (checkLidarAbnormal())
   {
@@ -495,6 +490,8 @@ bool CYdLidar::turnOn()
     isScanning = false;
     return false;
   }
+  printf("[YDLIDAR] Successed to check the lidar, Elapsed time %u ms\n", getms() - t);
+  fflush(stdout);
 
   if (m_SingleChannel && !isNetTOFLidar(m_LidarType))
   {
