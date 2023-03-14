@@ -67,7 +67,7 @@ GS2LidarDriver::GS2LidarDriver():
     CheckSumCal         = 0;
     SampleNumlAndCTCal  = 0;
     LastSampleAngleCal  = 0;
-    CheckSumResult      = true;
+    CheckSumResult      = false;
     Valu8Tou16          = 0;
     package_Sample_Num  = 0;
     moduleNum           = 0;
@@ -334,18 +334,16 @@ result_t GS2LidarDriver::getData(uint8_t *data, size_t size) {
     }
 
     size_t r;
-
     while (size)
     {
         r = _serial->readData(data, size);
-
         if (!r)
         {
             return RESULT_FAIL;
         }
 
-        // printf("recv: ");
-        // printHex(data, r);
+        printf("recv: ");
+        printHex(data, r);
 
         size -= r;
         data += r;
@@ -668,181 +666,176 @@ int GS2LidarDriver::cacheScanData()
 
 result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
 {
-    int recvPos = 0;
+    int pos = 0;
     uint32_t startTs = getms();
     uint32_t waitTime = 0;
     uint8_t *packageBuffer = (uint8_t *)&package;
     isValidPoint = true;
     int package_recvPos = 0;
     uint16_t sample_lens = 0;
-    has_device_header = false;
     uint16_t package_Sample_Num = 0;
     CheckSumCal = 0;
+    result_t ret = RESULT_FAIL;
+    size_t recvSize = 0;
+    size_t remainSize = 0;
 
     if (package_Sample_Index == 0)
     {
-        recvPos = 0;
-
+        pos = 0;
         while ((waitTime = getms() - startTs) <= timeout)
         {
-            size_t remainSize = PackagePaidBytes_GS - recvPos;
-            size_t recvSize = 0;
-            result_t ans = waitForData(remainSize, timeout - waitTime, &recvSize);
-
-            if (!IS_OK(ans))
-            {
-                return ans;
-            }
-
+            //解析协议头部分
+            remainSize = PackagePaidBytes_GS - pos;
+            recvSize = 0;
+            ret = waitForData(remainSize, timeout - waitTime, &recvSize);
+            if (!IS_OK(ret))
+                return ret;
             if (recvSize > remainSize)
-            {
                 recvSize = remainSize;
-            }
-
             getData(globalRecvBuffer, recvSize);
 
-            for (size_t pos = 0; pos < recvSize; ++pos)
+PARSEHEAD:
+            for (size_t i = 0; i < recvSize; ++i)
             {
-                uint8_t currentByte = globalRecvBuffer[pos];
-                switch (recvPos)
+                uint8_t c = globalRecvBuffer[i];
+                switch (pos)
                 {
                 case 0:
-                    if (currentByte != LIDAR_ANS_SYNC_BYTE1)
+                    if (c != LIDAR_ANS_SYNC_BYTE1)
                     {
-                        recvPos = 0;
+                        pos = 0;
                         continue;
                     }
                     break;
                 case 1:
-                    if (currentByte != LIDAR_ANS_SYNC_BYTE1)
+                    if (c != LIDAR_ANS_SYNC_BYTE1)
                     {
-                        recvPos = 0;
+                        pos = 0;
                         continue;
                     }
                     break;
                 case 2:
-                    if (currentByte != LIDAR_ANS_SYNC_BYTE1)
+                    if (c != LIDAR_ANS_SYNC_BYTE1)
                     {
-                        recvPos = 0;
+                        pos = 0;
                         continue;
                     }
                     break;
                 case 3:
-                    if (currentByte != LIDAR_ANS_SYNC_BYTE1)
+                    if (c != LIDAR_ANS_SYNC_BYTE1)
                     {
-                        recvPos = 0;
+                        pos = 0;
                         continue;
                     }
-                    has_device_header = true;
                     break;
                 case 4:
-                    if (currentByte == LIDAR_ANS_SYNC_BYTE1) //如果出现超过4个包头标识的情况
+                    if (c == LIDAR_ANS_SYNC_BYTE1) //过滤出现超过4个包头标识的情况
                         continue;
-                    moduleNum = currentByte;
-                    CheckSumCal = currentByte;
+                    moduleNum = c;
+                    CheckSumCal = c;
                     break;
                 case 5:
-                    if (currentByte != GS_LIDAR_ANS_SCAN)
+                    if (c != GS_LIDAR_ANS_SCAN)
                     {
-                        recvPos = 0;
+                        pos = 0;
                         CheckSumCal = 0;
                         moduleNum = 0;
-                        has_device_header = false;
                         continue;
                     }
-                    CheckSumCal += currentByte;
+                    CheckSumCal += c;
                     break;
                 case 6:
-                    sample_lens |= 0x00ff & currentByte;
-                    CheckSumCal += currentByte;
+                    sample_lens |= 0x00ff & c;
+                    CheckSumCal += c;
                     break;
                 case 7:
-                    sample_lens |= (0x00ff & currentByte) << 8;
-                    CheckSumCal += currentByte;
+                    sample_lens |= (0x00ff & c) << 8;
+                    CheckSumCal += c;
                     break;
                 default:
                     break;
                 }
 
-                packageBuffer[recvPos++] = currentByte;
-            }
+                packageBuffer[pos++] = c;
 
-            if (has_device_header &&
-                recvPos == PackagePaidBytes_GS)
-            {
-                if (!sample_lens)
+                // 如果解析到协议头
+                if (pos == PackagePaidBytes_GS)
                 {
-                    moduleNum = 0;
-                    recvPos = 0;
-                    has_device_header = false;
-                    continue;
-                }
-                package_Sample_Num = sample_lens + 1; //环境2Bytes + 点云320Bytes + CRC
-                package_recvPos = recvPos;
-                // printf("sample num %d\n", (package_Sample_Num - 3) / 2);
-                break;
-            }
-        }
+                    // 如果协议数据长度不对则跳过，继续解析协议头
+                    if (!sample_lens)
+                    {
+                        moduleNum = 0;
+                        pos = 0;
+                        continue;
+                    }
+                    package_Sample_Num = sample_lens + 1; // 环境2Bytes + 点云320Bytes + CRC
+                    package_recvPos = pos;
+                    // printf("sample num %d\n", (package_Sample_Num - 3) / 2);
+                    pos = 0;
+                    // 解析协议数据部分
+                    while ((waitTime = getms() - startTs) <= timeout)
+                    {
+                        int offset = 0; // 缓存偏移量
+                        // 如果解析协议头时接收数据长度超过定义的长度则认为是从校验和错误处跳转过来的
+                        if (recvSize > PackagePaidBytes_GS)
+                        {
+                            offset = i + 1;
+                        }
+                        else
+                        {
+                            remainSize = package_Sample_Num - pos;
+                            recvSize = 0;
+                            ret = waitForData(remainSize, timeout - waitTime, &recvSize);
+                            if (!IS_OK(ret))
+                                return ret;
+                            if (recvSize > remainSize)
+                                recvSize = remainSize;
+                            getData(globalRecvBuffer, recvSize);
+                        }
 
-        if (PackagePaidBytes_GS == recvPos)
-        {
-            recvPos = 0;
+                        for (size_t j = offset; j < recvSize; ++j)
+                        {
+                            if (pos + 1 == package_Sample_Num)
+                            {
+                                CheckSum = globalRecvBuffer[recvSize - 1];       // crc
+                                packageBuffer[package_recvPos + pos] = CheckSum; // crc
+                                pos ++;
+                                break;
+                            }
 
-            while ((waitTime = getms() - startTs) <= timeout)
-            {
-                size_t remainSize = package_Sample_Num - recvPos;
-                size_t recvSize = 0;
-                result_t ans = waitForData(remainSize, timeout - waitTime, &recvSize);
-                if (!IS_OK(ans))
-                {
-                    return ans;
-                }
+                            CheckSumCal += globalRecvBuffer[j];
+                            packageBuffer[package_recvPos + pos] = globalRecvBuffer[j];
+                            pos ++;
+                        }
+                        
+                        if (pos == package_Sample_Num)
+                        {
+                            pos = 0;
+                            // 判断校验和是否一致
+                            if (CheckSumCal != CheckSum)
+                            {
+                                CheckSumResult = false;
+                                printf("[YDLIDAR] GS2 cs 0x%02X != 0x%02X\n", CheckSumCal, CheckSum);
+                                // 如果校验和不一致，则需要跳转去当前缓存中查找协议头，
+                                // 以免因当前数据包有缺失导致下一包数据解析失败
+                                goto PARSEHEAD;
+                            }
+                            else
+                            {
+                                CheckSumResult = true;
+                            }
+                            break;
+                        }
+                        recvSize = 0; //重置缓存数据大小
+                    }
 
-                if (recvSize > remainSize)
-                {
-                    recvSize = remainSize;
-                }
-
-                getData(globalRecvBuffer, recvSize);
-
-                for (size_t pos = 0; pos < recvSize - 1; pos++)
-                {
-                    CheckSumCal += globalRecvBuffer[pos];
-                    packageBuffer[package_recvPos + recvPos] = globalRecvBuffer[pos];
-                    recvPos++;
-                }
-                CheckSum = globalRecvBuffer[recvSize - 1];           // crc
-                packageBuffer[package_recvPos + recvPos] = CheckSum; // crc
-                recvPos += 1;
-
-                if (package_Sample_Num == recvPos)
-                {
-                    package_recvPos += recvPos;
                     break;
-                }
-            }
-
-            if (package_Sample_Num != recvPos)
-            {
-                return RESULT_FAIL;
-            }
-        }
-        else
-        {
-            return RESULT_FAIL;
-        }
-
-        if (CheckSumCal != CheckSum)
-        {
-            CheckSumResult = false;
-            // has_package_error = true;
-            printf("[YDLIDAR] GS2 cs 0x%02X != 0x%02X\n", CheckSumCal, CheckSum);
-        }
-        else
-        {
-            CheckSumResult = true;
-        }
-    }
+                } // end if (pos == PackagePaidBytes_GS)
+            } //end for (size_t i = 0; i < recvSize; ++i)
+            if (CheckSumResult)
+                break;
+        } //end while ((waitTime = getms() - startTs) <= timeout)
+    } //end if (package_Sample_Index == 0)
 
     (*node).stamp = getTime();
 
