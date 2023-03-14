@@ -1005,10 +1005,9 @@ result_t YDlidarDriver::parseResponseHeader(
         }
         else if (currentByte == PH1) //防止出现连续0xAA
         {
-          recvPos = 1;
           continue;
         }
-        else if (currentByte == PH3)
+        else if (currentByte == PH3) //时间戳标识
         {
           recvPos = 0;
           size_t lastPos = pos - 1;
@@ -1044,7 +1043,7 @@ result_t YDlidarDriver::parseResponseHeader(
           }
           if (csc != csr)
           {
-            printf("Stamp checksum error c[0x%02X] != r[0x%02X]\n", csc, csr);
+            printf("[YDLIDAR] Checksum error c[0x%02X] != r[0x%02X]\n", csc, csr);
           }
           else
           {
@@ -1953,7 +1952,6 @@ result_t YDlidarDriver::createThread()
   }
 
   _thread = CLASS_THREAD(YDlidarDriver, cacheScanData);
-
   if (!_thread.getHandle()) {
     return RESULT_FAIL;
   }

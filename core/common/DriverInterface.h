@@ -547,13 +547,13 @@ protected:
   bool            m_isConnected = false;
   /// Scan Data Event
   Event           _dataEvent;
-  /// Data Locker
+  /// Data Locker（不支持嵌套）
   Locker          _lock;
   /// Parse Data thread
   Thread          _thread;
-  /// command locker
+  /// command locker（不支持嵌套）
   Locker          _cmd_lock;
-  /// driver error locker
+  /// driver error locker（不支持嵌套）
   Locker          _error_lock;
 
   /// LiDAR com port or IP Address

@@ -83,12 +83,11 @@ class Thread {
     return _param;
   }
   int join(unsigned long timeout = -1) {
-    if (!this->_handle) {
+    if (!_handle) {
       return 0;
     }
 
 #if defined(_WIN32)
-
     switch (WaitForSingleObject(reinterpret_cast<HANDLE>(this->_handle), timeout)) {
       case WAIT_OBJECT_0:
         CloseHandle(reinterpret_cast<HANDLE>(this->_handle));
@@ -101,24 +100,22 @@ class Thread {
       case WAIT_TIMEOUT:
         return -1;
     }
-
 #else
     UNUSED(timeout);
     void *res;
     int s = -1;
-    s = pthread_cancel((pthread_t)(this->_handle));
+    s = pthread_cancel((pthread_t)(_handle));
     if (s != 0) {
     }
-
-    s = pthread_join((pthread_t)(this->_handle), &res);
+    s = pthread_join((pthread_t)(_handle), &res);
     if (s != 0) {
     }
-
     if (res == PTHREAD_CANCELED) {
-      printf("0x%X thread has been canceled\n", this->_handle);
+      printf("[YDLIDAR] Thread 0x%X has been canceled\n", _handle);
+      _handle = 0; //强制置空线程句柄，以免再次调用该函数时出现异常
+    } else {
+      fprintf(stderr, "[YDLIDAR] An error occurred while thread[0x%X] cancelled!\n", _handle);
     }
-    this->_handle = 0; //强制置空线程句柄，以免再次调用该函数时出现异常
-
 #endif
     return 0;
   }

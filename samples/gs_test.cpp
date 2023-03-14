@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
   printf("Baudrate:\n");
   for (std::map<int, int>::iterator it = baudrateList.begin();
        it != baudrateList.end(); it++) {
-    printf("%d. %d\n", it->first, it->second);
+    printf("[%d] %d\n", it->first, it->second);
   }
 
   while (ydlidar::os_isOk()) 
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
   /// lidar baudrate
   laser.setlidaropt(LidarPropSerialBaudrate, &baudrate, sizeof(int));
   /// gs lidar
-  int optval = TYPE_GS1;
+  int optval = TYPE_GS;
   laser.setlidaropt(LidarPropLidarType, &optval, sizeof(int));
   /// device type
   optval = YDLIDAR_TYPE_SERIAL;

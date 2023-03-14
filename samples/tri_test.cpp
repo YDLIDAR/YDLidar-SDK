@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
 
     for (it = ports.begin(); it != ports.end(); it++)
     {
-      printf("%d. %s\n", id, it->first.c_str());
+      printf("[%d] %s\n", id, it->first.c_str());
       id++;
     }
 
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
   for (std::map<int, int>::iterator it = baudrateList.begin();
        it != baudrateList.end(); it++)
   {
-    printf("%d. %d\n", it->first, it->second);
+    printf("[%d] %d\n", it->first, it->second);
   }
 
   while (ydlidar::os_isOk())
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 
   bool isSingleChannel = false;
   std::string input_channel;
-  printf("Whether the Lidar is one-way communication[yes/no]:");
+  printf("Whether the Lidar is one-way communication [yes/no]:");
   std::cin >> input_channel;
   std::transform(input_channel.begin(), input_channel.end(),
                  input_channel.begin(),
@@ -197,8 +197,8 @@ int main(int argc, char *argv[])
       break;
     }
 
-    fprintf(stderr,
-            "Invalid scan frequency,The scanning frequency range is 5 to 12 HZ, Please re-enter.\n");
+    fprintf(stderr, "Invalid scan frequency,"
+      "The scanning frequency range is 5 to 12 HZ, Please re-enter.\n");
   }
 
   if (!ydlidar::os_isOk())
