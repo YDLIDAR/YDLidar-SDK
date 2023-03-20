@@ -36,6 +36,8 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
+#include <core/base/timer.h>
+
 using namespace std;
 using namespace ydlidar;
 
@@ -232,16 +234,23 @@ int main(int argc, char *argv[])
   }
 
   LaserScan scan;
+  std::map<int, uint32_t> ts;
+  ts[0] = getms();
+  ts[1] = getms();
+  ts[2] = getms();
 
   while (ret && ydlidar::os_isOk())
   {
     if (laser.doProcessSimple(scan))
     {
-      printf("[%lu] points in [0x%016lX] module num [%d] env flag [0x%04X]\n",
-             scan.points.size(),
-             scan.stamp,
-             scan.moduleNum,
-             scan.envFlag);
+      // printf("[%lu] points in [0x%016lX] module num [%d] env flag [0x%04X]\n",
+      //        scan.points.size(),
+      //        scan.stamp,
+      //        scan.moduleNum,
+      //        scan.envFlag);
+      uint32_t t = getms();
+      printf("module[%d] time[%lld]\n", scan.moduleNum, t - ts[scan.moduleNum]);
+      ts[scan.moduleNum] = t;
 
       // for (size_t i = 0; i < scan.points.size(); ++i)
       // {

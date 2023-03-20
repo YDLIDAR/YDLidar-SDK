@@ -194,16 +194,15 @@ int main(int argc, char *argv[])
       //获取GS2点云数据
       if (lidarGs.doProcessSimple(scanGs))
       {
-        printf("[%lu] points in [0x%016lX] module num [%d] env flag [0x%04X]\n",
+        printf("[%lu] points module num [%d] env flag [0x%04X]\n",
                scanGs.points.size(),
-               scanGs.stamp,
                scanGs.moduleNum,
                scanGs.envFlag);
         fflush(stdout);
       }
       else
       {
-        fprintf(stderr, "Failed to get Lidar GS2 Data\n");
+        fprintf(stderr, "Failed to get GS2 lidar data\n");
         fflush(stderr);
       }
       //获取S2点云数据
@@ -216,7 +215,7 @@ int main(int argc, char *argv[])
       }
       else
       {
-        fprintf(stderr, "Failed to get Lidar S2 Data\n");
+        fprintf(stderr, "Failed to get S2 ldiar data\n");
         fflush(stderr);
         static int s_errorCount = 0;
         if (s_errorCount++ > 10)

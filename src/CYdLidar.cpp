@@ -1777,7 +1777,8 @@ bool CYdLidar::checkCOMMs()
   lidarPtr->setLidarType(m_LidarType);
   lidarPtr->setScanFreq(m_ScanFrequency);
 
-  printf("[YDLIDAR] Lidar successfully connected\n");
+  printf("[YDLIDAR] Lidar successfully connected %s[%d]\n", 
+    m_SerialPort.c_str(), m_SerialBaudrate);
   return true;
 }
 

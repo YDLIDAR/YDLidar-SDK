@@ -342,8 +342,8 @@ result_t GS2LidarDriver::getData(uint8_t *data, size_t size) {
             return RESULT_FAIL;
         }
 
-        printf("recv: ");
-        printHex(data, r);
+        // printf("recv: ");
+        // printHex(data, r);
 
         size -= r;
         data += r;

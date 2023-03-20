@@ -235,14 +235,13 @@ void YDlidarDriver::disconnect() {
   m_isConnected = false;
 }
 
-
-void YDlidarDriver::disableDataGrabbing() {
+void YDlidarDriver::disableDataGrabbing()
+{
+  if (m_isScanning)
   {
-    if (m_isScanning) {
-      m_isScanning = false;
-      _dataEvent.set();
-    }
+    m_isScanning = false;
   }
+  _dataEvent.set();
   _thread.join();
 }
 
