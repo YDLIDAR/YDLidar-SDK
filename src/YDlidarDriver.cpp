@@ -650,6 +650,7 @@ int YDlidarDriver::cacheScanData()
 
         // printf("count %llu ret %d\n", count, ans);
         // fflush(stdout);
+        Thread::needExit();
 
         if (!IS_OK(ans)) {
             if (IS_FAIL(ans) || timeout_count > DEFAULT_TIMEOUT_COUNT) {

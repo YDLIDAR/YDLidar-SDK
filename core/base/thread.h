@@ -104,12 +104,11 @@ namespace ydlidar
         {
           return _param;
         }
+        //等待线程退出
         int join(unsigned long timeout = -1)
         {
           if (!_handle)
-          {
             return 0;
-          }
 
 #if defined(_WIN32)
           switch (WaitForSingleObject(reinterpret_cast<HANDLE>(this->_handle), timeout))
@@ -127,7 +126,6 @@ namespace ydlidar
           }
 #else
           UNUSED(timeout);
-          void *res;
           int s = -1;
           uint32_t t = getms();
           s = pthread_cancel((pthread_t)(_handle));
@@ -135,26 +133,33 @@ namespace ydlidar
           {
             // return s;
           }
-          printf("[YDLIDAR] Thread [0x%X] ready to cancel[%d]\n", _handle, s);
-          s = pthread_join((pthread_t)(_handle), &res);
-          printf("[YDLIDAR] Thread [0x%X] ready to cancel[%d][%d] time[%u]\n",
-            _handle, s, res, getms() - t);
-          if (s != 0 && s != ESRCH)
+          printf("[YDLIDAR DEBUG] Thread [0x%X] ready to cancel[%d]\n", _handle, s);
+          s = pthread_join((pthread_t)(_handle), NULL);
+          printf("[YDLIDAR DEBUG] Thread [0x%X] ready to cancel[%d] time[%u]\n",
+            _handle, s, getms() - t);
+          if (ESRCH == s)
+          {
+            printf("[YDLIDAR] Thread [0x%X] has been canceled in other thread\n", _handle);
+            return s;
+          }
+          if (s != 0)
           {
             fprintf(stderr, "[YDLIDAR] An error occurred while thread[0x%X] cancelled!\n", _handle);
             return s;
           }
-          // if (res == PTHREAD_CANCELED)
-          {
-            printf("[YDLIDAR] Thread [0x%X] has been canceled\n", _handle);
-            _handle = 0;
-          }
-          // else
-          // {
-          //   fprintf(stderr, "[YDLIDAR] An error occurred while thread[0x%X] cancelled!\n", _handle);
-          // }
+
+          printf("[YDLIDAR] Thread [0x%X] has been canceled\n", _handle);
+          _handle = 0;
 #endif
           return 0;
+        }
+        //判断是否需要退出线程（限子线程内调用）
+        static void needExit()
+        {
+#if defined(_WIN32)
+#else
+          pthread_testcancel();
+#endif
         }
 
         bool operator==(const Thread &right)
