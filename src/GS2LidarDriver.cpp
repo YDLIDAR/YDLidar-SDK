@@ -603,6 +603,7 @@ int GS2LidarDriver::cacheScanData()
     {
         count = 160;
         ans = waitScanData(local_buf, count);
+        Thread::needExit();
         if (!IS_OK(ans)) 
         {
             if (IS_FAIL(ans) && timeout_count > DEFAULT_TIMEOUT_COUNT) 
