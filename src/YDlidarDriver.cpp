@@ -2669,20 +2669,23 @@ result_t YDlidarDriver::getIntensityFlag()
       {
         if (lastZero)
         {
-          offset = headPos - lastPos;
-          // printf("lastPos %u currPos %u offset %u\n", lastPos, headPos, offset);
-          // fflush(stdout);
+          lastZero = 0;
 
+          offset = headPos - lastPos;
+          printf("lastPos %u currPos %u offset %u\n", lastPos, headPos, offset);
+          fflush(stdout);
+
+          if (offset != 12 && 
+            offset != 13)
+            continue;
+            
           if (lastOffset && 
             lastOffset != offset)
             return RESULT_FAIL;
 
           lastOffset = offset;
-
-          lastZero = 0;
           break;
         }
-        lastZero = 0;
       }
 
       lastPos = headPos;
