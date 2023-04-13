@@ -628,12 +628,9 @@ int YDlidarDriver::cacheScanData()
     result_t       ans = RESULT_FAIL;
     memset(local_scan, 0, sizeof(local_scan));
 
-    if (m_SingleChannel) {
-        waitDevicePackage(1000);
-    }
-
-    // flushSerial();
-    // waitScanData(local_buf, count);
+    // if (m_SingleChannel) {
+    //     waitDevicePackage(1000);
+    // }
 
     int timeout_count = 0;
     retryCount = 0;
@@ -648,8 +645,6 @@ int YDlidarDriver::cacheScanData()
         count = 128;
         ans = waitScanData(local_buf, count, DEFAULT_TIMEOUT / 2);
 
-        // printf("count %llu ret %d\n", count, ans);
-        // fflush(stdout);
         Thread::needExit();
 
         if (!IS_OK(ans)) {
@@ -709,11 +704,6 @@ int YDlidarDriver::cacheScanData()
                 {
                     ScopedLocker l(_lock);
                     //将下一圈的第一个点的采集时间作为当前圈数据的采集时间
-//                    local_scan[0].stamp = local_buf[pos].stamp;
-//                    if (local_scan[0].stamp == 0) {
-//                        local_scan[0].stamp = getTime();
-//                    }
-//                    local_scan[0].scan_frequence = local_buf[pos].scan_frequence;
                     local_scan[0].delay_time = local_buf[pos].delay_time;
                     memcpy(scan_node_buf, local_scan, scan_count * sizeof(node_info));
                     scan_node_count = scan_count;
@@ -974,8 +964,6 @@ result_t YDlidarDriver::parseResponseHeader(
       recvSize = remainSize;
 
     ans = getData(globalRecvBuffer, recvSize);
-    // printf("recv: ");
-    // printHex(globalRecvBuffer, recvSize);
 
     for (size_t pos = 0; pos < recvSize; ++pos)
     {
@@ -1274,6 +1262,7 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout)
     if (!IS_OK(ans)) {
       return ans;
     }
+    // printf("index %u\n", package_Sample_Index);
 
     ans = parseResponseScanData(packageBuffer, timeout);
     if (!IS_OK(ans)) {
@@ -1484,16 +1473,14 @@ result_t YDlidarDriver::waitScanData(
     {
         node_info node;
         ans = waitPackage(&node, timeout - waitTime);
-
         if (!IS_OK(ans)) {
             count = recvNodeCount;
             return ans;
         }
 
-        // printf("%d r %u\n", recvNodeCount, node.distance_q2 / 4);
-        // fflush(stdout);
         nodebuffer[recvNodeCount++] = node;
 
+        //如果是零位包点
         if (node.sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT)
         {
             //计算延时时间

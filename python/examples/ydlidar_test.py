@@ -8,14 +8,15 @@ if __name__ == "__main__":
     port = "/dev/ydlidar";
     for key, value in ports.items():
         port = value;
+        print(port);
     laser = ydlidar.CYdLidar();
     laser.setlidaropt(ydlidar.LidarPropSerialPort, port);
-    laser.setlidaropt(ydlidar.LidarPropSerialBaudrate, 230400);
+    laser.setlidaropt(ydlidar.LidarPropSerialBaudrate, 128000);
     laser.setlidaropt(ydlidar.LidarPropLidarType, ydlidar.TYPE_TRIANGLE);
     laser.setlidaropt(ydlidar.LidarPropDeviceType, ydlidar.YDLIDAR_TYPE_SERIAL);
     laser.setlidaropt(ydlidar.LidarPropScanFrequency, 10.0);
     laser.setlidaropt(ydlidar.LidarPropSampleRate, 5);
-    laser.setlidaropt(ydlidar.LidarPropSingleChannel, False);
+    laser.setlidaropt(ydlidar.LidarPropSingleChannel, True);
     laser.setlidaropt(ydlidar.LidarPropMaxAngle, 180.0);
     laser.setlidaropt(ydlidar.LidarPropMinAngle, -180.0);
     laser.setlidaropt(ydlidar.LidarPropMaxRange, 16.0);

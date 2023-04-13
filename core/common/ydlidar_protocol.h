@@ -267,8 +267,8 @@ struct device_info {
   uint8_t   model; ///< LiDAR model
   uint16_t  firmware_version; ///< firmware version
   uint8_t   hardware_version; ///< hardare version
-  uint8_t   serialnum[16];    ///< serial number
-} __attribute__((packed)) ;
+  uint8_t   serialnum[SDK_SNLEN]; ///< serial number
+} __attribute__((packed));
 #define DEVICEINFOSIZE sizeof(device_info)
 
 /// LiDAR Health Information

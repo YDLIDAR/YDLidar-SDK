@@ -477,8 +477,6 @@ bool CYdLidar::turnOn()
   printf("[YDLIDAR] Successed to start scan mode, Elapsed time %u ms\n", getms() - t);
   fflush(stdout);
 
-  m_PointTime = lidarPtr->getPointTime();
-
   t = getms();
   //计算采样率
   if (checkLidarAbnormal())
@@ -524,10 +522,11 @@ bool CYdLidar::turnOn()
   m_FristNodeTime = getTime();
   m_AllNode = 0;
   m_PointTime = lidarPtr->getPointTime();
-  isScanning = true;
   lidarPtr->setAutoReconnect(m_AutoReconnect);
   printf("[YDLIDAR] Now lidar is scanning...\n");
   fflush(stdout);
+
+  isScanning = true;
   return true;
 }
 
@@ -536,7 +535,7 @@ bool CYdLidar::turnOn()
 -------------------------------------------------------------*/
 bool CYdLidar::doProcessSimple(LaserScan &outscan)
 {
-  // Boud?
+  //判断是否已启动扫描
   if (!checkHardware())
   {
     delay(200 / m_ScanFrequency);
@@ -657,7 +656,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     float range = 0.0;
     float intensity = 0.0;
     float angle = 0.0;
-    debug.MaxDebugIndex = 0;
+    debug.maxIndex = 0;
 
     // printf("AngleOffset %f\n", m_AngleOffset);
 
@@ -764,7 +763,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       parsePackageNode(global_nodes[i], debug);
       if (global_nodes[i].error_package)
       {
-        debug.MaxDebugIndex = 255;
+        debug.maxIndex = 255;
       }
     } //end for (int i = 0; i < count; i++)
 
@@ -777,6 +776,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     handleVersionInfoByPackage(debug);
     // resample sample rate
     resample(scanfrequency, count, tim_scan_end, tim_scan_start);
+
     return true;
   }
   else
@@ -963,7 +963,7 @@ void CYdLidar::handleVersionInfoByPackage(const LaserDebug &debug)
   }
 
   device_info info;
-  memset(&info, 0, sizeof(device_info));
+  memset(&info, 0, DEVICEINFOSIZE);
 
   if (ParseLaserDebugInfo(debug, info))
   {

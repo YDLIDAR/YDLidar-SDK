@@ -70,8 +70,8 @@ class CMakeBuild(build_ext):
 
 setup(
     name='ydlidar',
-    version='1.0.2',
-    author='Tony',
+    version='1.1.7',
+    author='EAI',
     author_email='chushuifurong618@eaibot.com',
     url='https://github.com/YDLIDAR/YDLidar-SDK',
     description='YDLIDAR python SDK',

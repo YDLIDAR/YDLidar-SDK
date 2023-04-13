@@ -36,23 +36,23 @@
 #include <vector>
 #include "ydlidar_def.h"
 
+#define MAX_DEBUG_INDEX 14
+
 /**
  * @brief The Laser Debug struct
  */
 typedef struct  {
-  uint8_t     W3F4CusMajor_W4F0CusMinor;
-  uint8_t     W4F3Model_W3F0DebugInfTranVer;
-  uint8_t     W3F4HardwareVer_W4F0FirewareMajor;
-  uint8_t     W7F0FirewareMinor;
-  uint8_t     W3F4BoradHardVer_W4F0Moth;
-  uint8_t     W2F5Output2K4K5K_W5F0Date;
-  uint8_t     W1F6GNoise_W1F5SNoise_W1F4MotorCtl_W4F0SnYear;
-  uint8_t     W7F0SnNumH;
-  uint8_t     W7F0SnNumL;
-  uint8_t     W7F0Health;
-  uint8_t     W3F4CusHardVer_W4F0CusSoftVer;
-  uint8_t     W7F0LaserCurrent;
-  uint8_t     MaxDebugIndex;
+  uint8_t     cVer;
+  uint8_t     debug2;
+  uint8_t     hfVer;
+  uint8_t     fVer;
+  uint8_t     month;
+  uint8_t     day;
+  uint8_t     year;
+  uint8_t     numH;
+  uint8_t     numL;
+  uint8_t     health;
+  uint8_t     maxIndex;
 } LaserDebug;
 
 

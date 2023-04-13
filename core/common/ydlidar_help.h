@@ -42,6 +42,7 @@
 #pragma once
 #include "DriverInterface.h"
 #include <sstream>
+#include <iomanip>
 
 /**
  * @brief ydlidar
@@ -778,10 +779,10 @@ inline bool isValidValue(uint8_t value) {
 inline bool isVersionValid(const LaserDebug &info) {
   bool ret = false;
 
-  if (isValidValue(info.W3F4CusMajor_W4F0CusMinor) &&
-      isValidValue(info.W4F3Model_W3F0DebugInfTranVer) &&
-      isValidValue(info.W3F4HardwareVer_W4F0FirewareMajor) &&
-      isValidValue(info.W3F4BoradHardVer_W4F0Moth)) {
+  if (isValidValue(info.cVer) &&
+      isValidValue(info.debug2) &&
+      isValidValue(info.hfVer) &&
+      isValidValue(info.month)) {
     ret = true;
   }
 
@@ -796,10 +797,10 @@ inline bool isVersionValid(const LaserDebug &info) {
 inline bool isSerialNumbValid(const LaserDebug &info) {
   bool ret = false;
 
-  if (isValidValue(info.W2F5Output2K4K5K_W5F0Date) &&
-      isValidValue(info.W1F6GNoise_W1F5SNoise_W1F4MotorCtl_W4F0SnYear) &&
-      isValidValue(info.W7F0SnNumH) &&
-      isValidValue(info.W7F0SnNumH)) {
+  if (isValidValue(info.day) &&
+      isValidValue(info.year) &&
+      isValidValue(info.numH) &&
+      isValidValue(info.numH)) {
     ret = true;
   }
 
@@ -811,114 +812,106 @@ inline bool isSerialNumbValid(const LaserDebug &info) {
  * @param node  LiDAR node_info information
  * @param info  LiDAR LaserDebug information
  */
-inline void parsePackageNode(const node_info &node, LaserDebug &info) {
+inline void parsePackageNode(const node_info &node, LaserDebug &info) 
+{
   switch (node.index) {
-    case 0://scan frequency
+    case 0:
       break;
-
-    case 1://W3F3CusHardVer_W4F0CusSoftVer;
-      info.W3F4CusMajor_W4F0CusMinor = node.debugInfo;
+    case 1:
+      info.cVer = node.debugInfo;
       break;
-
-    case 2://W4F3Model_W3F0DebugInfTranVer
-      info.W4F3Model_W3F0DebugInfTranVer = node.debugInfo;
+    case 2:
+      info.debug2 = node.debugInfo;
       break;
-
-    case 3://W3F4HardwareVer_W4F0FirewareMajor
+    case 3:
       //健康信息
-      info.W7F0Health = node.debugInfo;
+      info.health = node.debugInfo;
       break;
-
-    case 4://W7F0FirewareMinor
-      info.W3F4HardwareVer_W4F0FirewareMajor = node.debugInfo;
+    case 4:
+      info.hfVer = node.debugInfo;
       break;
-    case 5://W3F4BoradHardVer_W4F0Moth
-      info.W7F0FirewareMinor = node.debugInfo;
+    case 5:
+      info.fVer = node.debugInfo;
       break;
-
-    case 6://W2F5Output2K4K5K_W5F0Date
+    case 6:
       break;
-    case 7://W1F6GNoise_W1F5SNoise_W1F4MotorCtl_W4F0SnYear
+    case 7:
       break;
-    case 8://W7F0SnNumH
+    case 8:
       break;
-
-    case 9://W7F0SnNumL
-      info.W1F6GNoise_W1F5SNoise_W1F4MotorCtl_W4F0SnYear =
-        node.debugInfo;
+    case 9:
+      info.year = node.debugInfo;
       break;
-    case 10://W7F0Health
-      info.W3F4BoradHardVer_W4F0Moth = node.debugInfo;
+    case 10:
+      info.month = node.debugInfo;
       break;
-    case 11://W3F4CusHardVer_W4F0CusSoftVer
-      info.W2F5Output2K4K5K_W5F0Date = node.debugInfo;
-      // info.W3F4CusHardVer_W4F0CusSoftVer = node.debugInfo;
+    case 11:
+      info.day = node.debugInfo;
       break;
-
-    case 12://W7F0LaserCurrent
-      // info.W7F0LaserCurrent = node.debugInfo;
-      info.W7F0SnNumH = node.debugInfo;
+    case 12:
+      info.numH = node.debugInfo;
       break;
     case 13:
-      info.W7F0SnNumL = node.debugInfo;
+      info.numL = node.debugInfo;
       break;
-
     default:
       break;
   }
 
-  if (info.MaxDebugIndex > node.index) {
-    info.W3F4CusMajor_W4F0CusMinor = 0xff;
-  }
+  // if (info.MaxDebugIndex > node.index) {
+  //   info.W3F4CusMajor_W4F0CusMinor = 0xff;
+  // }
 
-  if (static_cast<int>(node.index) > info.MaxDebugIndex && node.index < 100) {
-    info.MaxDebugIndex = static_cast<int>(node.index);
+  if (node.index > info.maxIndex) {
+    info.maxIndex = node.index;
   }
 }
 
+// #include <iostream>
+// #include <iomanip>
 /**
  * @brief convert LaserDebug information to device_info
  * @param info      LiDAR LaserDebug information
  * @param value     LiDAR Device information
  * @return true if converted successfully, otherwise false.
  */
-inline bool ParseLaserDebugInfo(const LaserDebug &info, device_info &value) {
+inline bool ParseLaserDebugInfo(const LaserDebug &info, device_info &di)
+{
   bool ret = false;
-  uint8_t CustomVerMajor = (static_cast<uint8_t>
-                            (info.W3F4HardwareVer_W4F0FirewareMajor & 0x0F));
-  uint8_t CustomVerMinor = static_cast<uint8_t>
-                           (info.W7F0FirewareMinor);
-  uint8_t lidarmodel = (static_cast<uint8_t>(info.W4F3Model_W3F0DebugInfTranVer)
-                        >> 3);
-  uint8_t hardwareVer = static_cast<uint8_t>
-                        (info.W3F4HardwareVer_W4F0FirewareMajor) >> 4;
 
-  uint8_t Year = static_cast<uint8_t>
-                 (info.W1F6GNoise_W1F5SNoise_W1F4MotorCtl_W4F0SnYear >> 2);
-  uint8_t Moth = static_cast<uint8_t>(info.W3F4BoradHardVer_W4F0Moth >> 3);
-  uint8_t Date = static_cast<uint8_t>(info.W2F5Output2K4K5K_W5F0Date >> 2);
+  uint8_t CustomVerMajor = uint8_t(info.hfVer & 0x0F);
+  uint8_t CustomVerMinor = info.fVer;
+  uint8_t lidarmodel = uint8_t(info.debug2) >> 3;
+  uint8_t hardwareVer = uint8_t(info.hfVer) >> 4;
 
-  uint16_t Number = ((static_cast<uint8_t>(info.W7F0SnNumH) << 7) |
-                     static_cast<uint8_t>(info.W7F0SnNumL));
+  uint8_t Year = uint8_t(info.year >> 2);
+  uint8_t Moth = uint8_t(info.month >> 3);
+  uint8_t Date = uint8_t(info.day >> 2);
+  uint16_t Number = uint16_t(info.numH << 7) |
+                    uint16_t(info.numL);
 
-  if (isVersionValid(info) && info.MaxDebugIndex > 0 && Year) {
-
-    if (isSerialNumbValid(info) && info.MaxDebugIndex > 8) {
-      value.firmware_version = (CustomVerMajor << 8 | CustomVerMinor);
-      value.hardware_version = hardwareVer;
-      value.model = lidarmodel;
-      uint32_t year = Year + 2020;
-      sprintf(reinterpret_cast<char *>(value.serialnum), "%04d", year);
-      sprintf(reinterpret_cast<char *>(value.serialnum + 4), "%02d", Moth);
-      sprintf(reinterpret_cast<char *>(value.serialnum + 6), "%02d", Date);
-      sprintf(reinterpret_cast<char *>(value.serialnum + 8), "%08d", Number);
-
-      for (int i = 0; i < 16; i++) {
-        value.serialnum[i] -= 48;
-      }
-
-      ret = true;
+  if (Moth && Date && Number)
+  {
+    di.firmware_version = uint16_t(CustomVerMajor << 8) |
+                          uint16_t(CustomVerMinor);
+    di.hardware_version = hardwareVer;
+    di.model = lidarmodel;
+    std::stringstream ss;
+    ss << std::setw(4) << std::setfill('0') << int(Year + 2020);
+    ss << std::setw(2) << std::setfill('0') << int(Moth);
+    ss << std::setw(2) << std::setfill('0') << int(Date);
+    ss << std::setw(8) << std::setfill('0') << int(Number);
+    std::string sn(ss.str());
+    // printf("SN: %s %04u%02u%02u%08u\n", sn.c_str(), Year + 2020, Moth, Date, Number);
+    // 此处在Python调用中会导致缓存溢出
+    //  sprintf(reinterpret_cast<char*>(di.serialnum),
+    //    "%04u%02u%02u%08u", Year + 2020, Moth, Date, Number);
+    for (int i = 0; i < SDK_SNLEN && i < sn.size(); i++)
+    {
+      di.serialnum[i] = std::stoi(std::string(1, sn.at(i)));
     }
+
+    ret = true;
   }
 
   return ret;
