@@ -1318,8 +1318,8 @@ bool CYdLidar::getDeviceHealth()
     if (healthinfo.status == 2)
     {
       fprintf(stderr,
-              "[YDLIDAR] Error, YDLidar internal error detected. "
-              "Please reboot the device to retry.\n");
+              "[YDLIDAR] Error, YDLidar internal error[0x%X] detected. "
+              "Please reboot the device to retry.\n", healthinfo.error_code);
       return false;
     }
     else

@@ -1901,8 +1901,12 @@ result_t YDlidarDriver::startScan(bool force, uint32_t timeout)
       }
     }
 
-    //获取强度标识
-    getIntensityFlag();
+    //非Tmini系列雷达才自动获取强度标识
+    if (!isTminiLidar(model))
+    {
+      // 获取强度标识
+      getIntensityFlag();
+    }
 
     //创建数据解析线程
     ans = createThread();
@@ -2624,6 +2628,8 @@ result_t YDlidarDriver::parseHeader(
   return ans;
 }
 
+#define ZERO_OFFSET12 12 //零位包数据长度12（不带光强）
+#define ZERO_OFFSET13 13 //零位包数据长度13（带光强）
 result_t YDlidarDriver::getIntensityFlag()
 {
   //只针对三角雷达
@@ -2636,7 +2642,7 @@ result_t YDlidarDriver::getIntensityFlag()
   m_dataPos = 0;
   uint32_t lastOffset = 0;
   //遍历5圈，如果5圈结果一致则认为准确
-  int i = 2;
+  int i = 5;
   while (i-- > 0)
   {
     uint8_t zero = 0; //零位包标记
@@ -2659,16 +2665,19 @@ result_t YDlidarDriver::getIntensityFlag()
           lastZero = 0;
 
           offset = headPos - lastPos;
-          //printf("lastPos %u currPos %u offset %u\n", lastPos, headPos, offset);
+          // printf("lastPos %u currPos %u offset %u\n", lastPos, headPos, offset);
           //fflush(stdout);
 
-          if (offset != 12 && 
-            offset != 13)
-            continue;
+          if (offset != ZERO_OFFSET12 && 
+            offset != ZERO_OFFSET13)
+            break;
             
           if (lastOffset && 
             lastOffset != offset)
+          {
+            printf("[YDLIDAR] Fail to getting intensity\n");
             return RESULT_FAIL;
+          }
 
           lastOffset = offset;
           break;
@@ -2681,18 +2690,16 @@ result_t YDlidarDriver::getIntensityFlag()
 
   if (lastOffset)
   {
-    if (lastOffset == 12)
+    if (lastOffset == ZERO_OFFSET12)
     {
       setIntensities(false);
     }
-    else if (lastOffset == 13)
+    else if (lastOffset == ZERO_OFFSET13)
     {
       setIntensities(true);
       m_intensityBit = 8;
     }
-
     printf("[YDLIDAR] Auto set intensity %d\n", m_intensities);
-    fflush(stdout);
   }
 
   printf("[YDLIDAR] End to getting intensity flag\n");

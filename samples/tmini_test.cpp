@@ -111,72 +111,70 @@ int main(int argc, char *argv[]) {
   }
 
   int baudrate = 230400;
-  std::map<int, int> baudrateList;
-  baudrateList[0] = 115200;
-  baudrateList[1] = 128000;
-  baudrateList[2] = 153600;
-  baudrateList[3] = 230400;
-  baudrateList[4] = 460800;
-  baudrateList[5] = 512000;
+  // std::map<int, int> baudrateList;
+  // baudrateList[0] = 115200;
+  // baudrateList[1] = 128000;
+  // baudrateList[2] = 153600;
+  // baudrateList[3] = 230400;
+  // baudrateList[4] = 460800;
+  // baudrateList[5] = 512000;
 
-  printf("Baudrate:\n");
+  // printf("Baudrate:\n");
 
-  for (std::map<int, int>::iterator it = baudrateList.begin();
-       it != baudrateList.end(); it++) {
-    printf("%d. %d\n", it->first, it->second);
-  }
+  // for (std::map<int, int>::iterator it = baudrateList.begin();
+  //      it != baudrateList.end(); it++) {
+  //   printf("%d. %d\n", it->first, it->second);
+  // }
 
-  while (ydlidar::os_isOk()) {
-    printf("Please select the lidar baudrate:");
-    std::string number;
-    std::cin >> number;
+  // while (ydlidar::os_isOk()) {
+  //   printf("Please select the lidar baudrate:");
+  //   std::string number;
+  //   std::cin >> number;
 
-    if ((size_t)atoi(number.c_str()) > baudrateList.size()) {
-      continue;
-    }
+  //   if ((size_t)atoi(number.c_str()) > baudrateList.size()) {
+  //     continue;
+  //   }
 
-    baudrate = baudrateList[atoi(number.c_str())];
-    break;
-  }
+  //   baudrate = baudrateList[atoi(number.c_str())];
+  //   break;
+  // }
 
   if (!ydlidar::os_isOk()) {
     return 0;
   }
 
   bool isSingleChannel = false;
-  std::string input_channel;
-  printf("Whether the Lidar is one-way communication[yes/no]:");
-  std::cin >> input_channel;
-  std::transform(input_channel.begin(), input_channel.end(),
-                 input_channel.begin(),
-  [](unsigned char c) {
-    return std::tolower(c);  // correct
-  });
+  // std::string input_channel;
+  // printf("Whether the Lidar is one-way communication[yes/no]:");
+  // std::cin >> input_channel;
+  // std::transform(input_channel.begin(), input_channel.end(),
+  //                input_channel.begin(),
+  // [](unsigned char c) {
+  //   return std::tolower(c);  // correct
+  // });
 
-  if (input_channel.find("y") != std::string::npos) {
-    isSingleChannel = true;
-  }
+  // if (input_channel.find("y") != std::string::npos) {
+  //   isSingleChannel = true;
+  // }
 
-  if (!ydlidar::os_isOk()) {
-    return 0;
-  }
+  // if (!ydlidar::os_isOk()) {
+  //   return 0;
+  // }
 
   std::string input_frequency;
 
-  float frequency = 8.0;
+  float frequency = 4.0;
 
-  while (ydlidar::os_isOk() && !isSingleChannel) {
-    printf("Please enter the lidar scan frequency[5-12]:");
-    std::cin >> input_frequency;
-    frequency = atof(input_frequency.c_str());
-
-    if (frequency <= 12 && frequency >= 5.0) {
-      break;
-    }
-
-    fprintf(stderr,
-            "Invalid scan frequency,The scanning frequency range is 5 to 12 HZ, Please re-enter.\n");
-  }
+  // while (ydlidar::os_isOk() && !isSingleChannel) {
+  //   printf("Please enter the lidar scan frequency[5-12]:");
+  //   std::cin >> input_frequency;
+  //   frequency = atof(input_frequency.c_str());
+  //   if (frequency <= 12 && frequency >= 5.0) {
+  //     break;
+  //   }
+  //   fprintf(stderr,
+  //           "Invalid scan frequency,The scanning frequency range is 5 to 12 HZ, Please re-enter.\n");
+  // }
 
   if (!ydlidar::os_isOk()) {
     return 0;
@@ -213,8 +211,9 @@ int main(int argc, char *argv[]) {
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
-  bool b_optvalue = false;
+  bool b_optvalue = true;
   laser.setlidaropt(LidarPropFixedResolution, &b_optvalue, sizeof(bool));
+  b_optvalue = false;
   /// rotate 180
   laser.setlidaropt(LidarPropReversion, &b_optvalue, sizeof(bool));
   /// Counterclockwise
@@ -227,7 +226,7 @@ int main(int argc, char *argv[]) {
   b_optvalue = true;
   laser.setlidaropt(LidarPropIntenstiy, &b_optvalue, sizeof(bool));
   /// Motor DTR
-  b_optvalue = true;
+  b_optvalue = false;
   laser.setlidaropt(LidarPropSupportMotorDtrCtrl, &b_optvalue, sizeof(bool));
   /// HeartBeat
   b_optvalue = false;
