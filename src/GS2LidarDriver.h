@@ -508,7 +508,7 @@ public:
     DEFAULT_TIMEOUT = 2000,    /**< 默认超时时间. */
     DEFAULT_HEART_BEAT = 1000, /**< 默认检测掉电功能时间. */
     MAX_SCAN_NODES = 3600,	   /**< 最大扫描点数. */
-    DEFAULT_TIMEOUT_COUNT = 1,
+    DEFAULT_TIMEOUT_COUNT = 3, //错误数
   };
 
   // node_info      *scan_node_buf;    ///< 激光点信息
@@ -544,44 +544,24 @@ public:
   uint16_t Valu8Tou16;
 
   // std::string serial_port;///< 雷达端口
-  uint8_t *globalRecvBuffer;
-  // int retryCount;
-  bool has_device_header;
-  uint8_t last_device_byte;
-  int         asyncRecvPos;
-  uint16_t    async_size;
-
-  //singleChannel
-  device_info info_;
-  device_health health_;
-  gs_lidar_ans_header header_;
-  uint8_t  *headerBuffer;
-  uint8_t  *infoBuffer;
-  uint8_t  *healthBuffer;
-  bool     get_device_info_success;
-  bool     get_device_health_success;
+  uint8_t *globalRecvBuffer = nullptr;
 
   int package_index;
   uint8_t package_type;
   bool has_package_error;
 
-  double  d_compensateK0[PackageMaxModuleNums];
-  double  d_compensateK1[PackageMaxModuleNums];
-  double  d_compensateB0[PackageMaxModuleNums];
-  double  d_compensateB1[PackageMaxModuleNums];
-  uint16_t  u_compensateK0[PackageMaxModuleNums];
-  uint16_t  u_compensateK1[PackageMaxModuleNums];
-  uint16_t  u_compensateB0[PackageMaxModuleNums];    
-  uint16_t  u_compensateB1[PackageMaxModuleNums];
-  double  bias[PackageMaxModuleNums];
+  double k0[PackageMaxModuleNums];
+  double k1[PackageMaxModuleNums];
+  double b0[PackageMaxModuleNums];
+  double b1[PackageMaxModuleNums];
+  double bias[PackageMaxModuleNums];
   bool isValidPoint;
-  uint8_t  package_Sample_Num;
 
   uint8_t frameNum = 0;  //帧序号
   uint8_t moduleNum = 0;  //模块编号
   bool isPrepareToSend = false; //是否准备好发送
   uint8_t moduleCount = 1; //当前模组数量
-  std::vector<GS2_Multi_Package>  multi_package;
+  std::vector<GS2_Multi_Package> packages;
 };
 
 }// namespace ydlidar

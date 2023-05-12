@@ -886,7 +886,7 @@ class YDLIDAR_API CYdLidar {
    * @brief Start the device scanning routine which runs on a separate thread and enable motor.
    * @return true if successfully started, otherwise false.
    */
-  bool  turnOn();
+  bool turnOn();
   /**
    * @brief Get the LiDAR Scan Data. turnOn is successful before doProcessSimple scan data.
    * @param[out] outscan             LiDAR Scan Data
@@ -898,7 +898,7 @@ class YDLIDAR_API CYdLidar {
    * @brief Stop the device scanning thread and disable motor.
    * @return true if successfully Stoped, otherwise false.
    */
-  bool  turnOff();
+  bool turnOff();
   /**
    * @brief Uninitialize the SDK and Disconnect the LiDAR.
    */
@@ -945,6 +945,9 @@ class YDLIDAR_API CYdLidar {
    * @return 成功返回true，否则返回false
    */
   bool getUserVersion(std::string &version);
+
+  //获取设备信息
+  bool getDeviceInfo(device_info& di);
 
  private:
   /**
@@ -1075,8 +1078,7 @@ class YDLIDAR_API CYdLidar {
   int     lidar_model;              ///< LiDAR Model
   uint8_t Major;                    ///< Firmware Major Version
   uint8_t Minjor;                   ///< Firmware Minjor Version
-  ydlidar::core::common::DriverInterface
-  *lidarPtr;        ///< LiDAR Driver Interface pointer
+  ydlidar::core::common::DriverInterface *lidarPtr; ///< LiDAR Driver Interface pointer
   uint64_t m_PointTime;             ///< Time interval between two sampling point
   uint64_t last_node_time;          ///< Latest LiDAR Start Node Time
   node_info *global_nodes;          ///< global nodes buffer

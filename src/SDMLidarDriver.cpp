@@ -629,15 +629,15 @@ result_t SDMLidarDriver::waitPackage(node_info *node, uint32_t timeout)
 
     if (IS_OK(ret))
     {
-        (*node).sync_flag = Node_Sync;
+        (*node).sync = Node_Sync;
         (*node).stamp = getTime();
         (*node).index = 0;
-        (*node).scan_frequence = m_ScanFreq;
-        (*node).sync_quality = 0;
+        (*node).scanFreq = m_ScanFreq;
+        (*node).qual = 0;
 
-        (*node).distance_q2 = pcs.point.dist;
-        (*node).angle_q6_checkbit = 0;
-        (*node).sync_quality = pcs.point.intensity;
+        (*node).dist = pcs.point.dist;
+        (*node).angle = 0;
+        (*node).qual = pcs.point.intensity;
         (*node).is = pcs.point.env;
         return RESULT_OK;
     }

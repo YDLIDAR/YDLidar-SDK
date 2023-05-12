@@ -609,11 +609,11 @@ class YDlidarDriver : public DriverInterface {
   int sample_rate;
 
   /// has intensity protocol package
-  node_package package;
+  tri_node_package2 package;
   /// TOF Lidar has intensity protocol package
   tof_node_package tof_package;
   /// non-intensity protocol package
-  node_packages packages;
+  tri_node_package packages;
 
   float IntervalSampleAngle;
   float IntervalSampleAngle_LastPackage;
@@ -631,7 +631,7 @@ class YDlidarDriver : public DriverInterface {
   uint16_t LastSampleAngleCal;
   bool CheckSumResult;
   uint16_t Valu8Tou16;
-  uint8_t package_CT;
+  uint8_t ct;
   uint8_t nowPackageNum;
   uint8_t package_Sample_Num;
 

@@ -262,22 +262,28 @@ inline std::vector<int> getDefaultSampleRate(int model)
  * @param model lidar model
  * @return true if the current lidar sampling rate is octave, otherwise false
  */
-inline bool isOctaveLidar(int model) {
+inline bool isOctaveLidar(int model)
+{
   bool ret = false;
-
   if (model == DriverInterface::YDLIDAR_G6 ||
-      model == DriverInterface::YDLIDAR_G7) {
-    ret = true;
+      model == DriverInterface::YDLIDAR_G7)
+  {
+      ret = true;
   }
-
   return ret;
 }
 
 //根据雷达码判断是否是Tmini雷达
 inline bool isTminiLidar(int model)
 {
-    return (model == DriverInterface::YDLIDAR_Tmini ||
-      model == DriverInterface::YDLIDAR_TminiPRO);
+  return (model == DriverInterface::YDLIDAR_Tmini ||
+          model == DriverInterface::YDLIDAR_TminiPRO);
+}
+
+//根据雷达码判断是否是SCL雷达
+inline bool isSCLLidar(int model)
+{
+  return model == DriverInterface::YDLIDAR_SCL;
 }
 
 /*!
@@ -522,18 +528,7 @@ inline bool isTriangleLidar(int type) {
  */
 inline bool isGSLidar(int type) 
 {
-  return (type == TYPE_GS1 ||
-    type == TYPE_GS);
-}
-
-/**
- * @brief Whether it is a GS1 type LiDAR
- * @param type  LiDAR type
- * @return true if it is a Triangle type, otherwise false.
- */
-inline bool isGS1Lidar(int type) 
-{
-  return (type == TYPE_GS1);
+  return (type == TYPE_GS);
 }
 
 /**

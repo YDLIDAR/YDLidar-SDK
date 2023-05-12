@@ -33,7 +33,6 @@
 #include "core/common/ydlidar_help.h"
 #include "YDlidarDriver.h"
 #include "ETLidarDriver.h"
-#include "GS1LidarDriver.h"
 #include "GS2LidarDriver.h"
 #include "SDMLidarDriver.h"
 
@@ -585,7 +584,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     }
 
     tim_scan_end -= m_PointTime;
-    tim_scan_end -= global_nodes[0].delay_time;
+    tim_scan_end -= global_nodes[0].delayTime;
     tim_scan_start = tim_scan_end - scan_time;
 
     if (!HighPayLoad && tim_scan_start < startTs)
@@ -666,16 +665,16 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       const node_info& node = global_nodes[i];
 
       // printf("%lu a %.01f r %u\n", 
-      //   i, float(node.angle_q6_checkbit) / 64.0f, node.distance_q2);
+      //   i, float(node.angle) / 64.0f, node.dist);
 
       if (isNetTOFLidar(m_LidarType))
       {
-        angle = static_cast<float>(global_nodes[i].angle_q6_checkbit / 100.0f) +
+        angle = static_cast<float>(global_nodes[i].angle / 100.0f) +
                 m_AngleOffset;
       }
       else
       {
-        angle = static_cast<float>((global_nodes[i].angle_q6_checkbit >>
+        angle = static_cast<float>((global_nodes[i].angle >>
                                     LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) /
                                    64.0f) +
                 m_AngleOffset;
@@ -684,7 +683,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       if (isOctaveLidar(lidar_model) ||
           isOldVersionTOFLidar(lidar_model, Major, Minjor))
       {
-        range = static_cast<float>(global_nodes[i].distance_q2 / 2000.f);
+        range = static_cast<float>(global_nodes[i].dist / 2000.f);
       }
       else
       {
@@ -693,27 +692,27 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
           isGSLidar(m_LidarType) ||
           isSDMLidar(m_LidarType))
         {
-          range = static_cast<float>(global_nodes[i].distance_q2 / 1000.f);
+          range = static_cast<float>(global_nodes[i].dist / 1000.f);
         }
         else
         {
-          range = static_cast<float>(global_nodes[i].distance_q2 / 4000.f);
+          range = static_cast<float>(global_nodes[i].dist / 4000.f);
         }
       }
 
-      intensity = static_cast<float>(global_nodes[i].sync_quality);
+      intensity = static_cast<float>(global_nodes[i].qual);
 
       angle = math::from_degrees(angle);
 
-      if (global_nodes[i].scan_frequence != 0)
+      if (global_nodes[i].scanFreq != 0)
       {
-        scanfrequency = global_nodes[i].scan_frequence / 10.0;
+        scanfrequency = global_nodes[i].scanFreq / 10.0;
 
         if (isTOFLidar(m_LidarType))
         {
           if (!isOldVersionTOFLidar(lidar_model, Major, Minjor))
           {
-            scanfrequency = global_nodes[i].scan_frequence / 10.0 + 3.0;
+            scanfrequency = global_nodes[i].scanFreq / 10.0 + 3.0;
           }
         }
       }
@@ -747,7 +746,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       }
 
       // printf("i %d d %.03f a %.02f flag %u\n",
-      //   i, range, angle*180.0/M_PI, node.sync_flag);
+      //   i, range, angle*180.0/M_PI, node.sync);
 
       if (angle >= outscan.config.min_angle &&
           angle <= outscan.config.max_angle)
@@ -761,7 +760,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       }
 
       parsePackageNode(global_nodes[i], debug);
-      if (global_nodes[i].error_package)
+      if (global_nodes[i].error)
       {
         debug.maxIndex = 255;
       }
@@ -776,6 +775,9 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     handleVersionInfoByPackage(debug);
     // resample sample rate
     resample(scanfrequency, count, tim_scan_end, tim_scan_start);
+
+    outscan.scanFreq = scanfrequency;
+    outscan.sampleRate = m_SampleRate;
 
     return true;
   }
@@ -917,6 +919,14 @@ bool CYdLidar::getUserVersion(std::string &version)
     }
 
     return false;
+}
+
+bool CYdLidar::getDeviceInfo(device_info& di)
+{
+  if (lidarPtr)
+    return lidarPtr->getDeviceInfo(di);
+
+  return false;
 }
 
 /*-------------------------------------------------------------
@@ -1206,21 +1216,21 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time)
   float sr = 0;
   bool ret = false;
 
-  if (global_nodes[0].scan_frequence != 0)
+  if (global_nodes[0].scanFreq != 0)
   {
     //如果解析到转速信息，根据转速计算采样率
-    double scanfrequency = global_nodes[0].scan_frequence / 10.0;
+    double scanfrequency = global_nodes[0].scanFreq / 10.0;
     if (isTOFLidar(m_LidarType) &&
         !isOldVersionTOFLidar(lidar_model, Major, Minjor))
     {
-      scanfrequency = global_nodes[0].scan_frequence / 10.0 + 3.0;
+      scanfrequency = global_nodes[0].scanFreq / 10.0 + 3.0;
     }
     sr = static_cast<int>((count * scanfrequency + 500) / 1000);
 
     if (isSDMLidar(m_LidarType))
     {
       defalutSampleRate.clear(); //SDM雷达通过协议获取转速计算采样率
-      sr = float(count * global_nodes[0].scan_frequence) / 1000;
+      sr = float(count * global_nodes[0].scanFreq) / 1000;
     }
   }
   else
@@ -1712,8 +1722,6 @@ bool CYdLidar::checkCOMMs()
     //根据雷达类型创建对应的实例
     if (isNetTOFLidar(m_LidarType))
       lidarPtr = new ydlidar::ETLidarDriver(); //T15
-    else if (isGS1Lidar(m_LidarType)) //GS1
-      lidarPtr = new ydlidar::GS1LidarDriver();
     else if (isGS2Lidar(m_LidarType)) //GS2
       lidarPtr = new ydlidar::GS2LidarDriver();
     else if (isSDMLidar(m_LidarType)) //SDM

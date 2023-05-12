@@ -306,9 +306,10 @@ int main(int argc, char *argv[])
   {
     if (laser.doProcessSimple(scan))
     {
-      printf("Scan received [%u] points inc [%f]\n",
+      printf("Scan received [%u] "
+             "points scanFreq [%.02f]\n",
              (unsigned int)scan.points.size(),
-             scan.config.angle_increment);
+             scan.scanFreq);
       // for (size_t i = 0; i < scan.points.size(); ++i)
       // {
       //   const LaserPoint &p = scan.points.at(i);

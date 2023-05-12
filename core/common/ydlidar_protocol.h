@@ -184,7 +184,7 @@ typedef enum {
 /// ET LiDAR Protocol Type
 typedef enum {
   Protocol_V1 = 0,///< V1 version
-  Protocol_V2  = 1,///< V2 version
+  Protocol_V2 = 1,///< V2 version
 } ProtocolVer;
 
 #if defined(_WIN32)
@@ -193,64 +193,69 @@ typedef enum {
 
 //雷达节点信息
 struct node_info {
-  uint8_t sync_flag; //首包标记
+  uint8_t sync; //首包标记
   uint8_t is; //抗干扰标志
-  uint16_t sync_quality; //信号强度
-  uint16_t angle_q6_checkbit; //角度值（°）
-  uint16_t distance_q2; //距离值
+  uint16_t qual; //信号强度
+  uint16_t angle; //角度值（°）
+  uint16_t dist; //距离值
   uint64_t stamp; //时间戳
-  uint32_t delay_time; ///< delay time
-  uint8_t scan_frequence; //扫描频率
-  uint8_t debugInfo; ///< debug information
+  uint32_t delayTime; //delay time
+  uint8_t scanFreq; //扫描频率
+  uint8_t debugInfo; //debug information
   uint8_t index; //包序号
-  uint8_t error_package; ///< error package state
+  uint8_t error; //error package state
 } __attribute__((packed));
 #define SDKNODESIZE sizeof(node_info)
 
-/// package node info
-struct PackageNode {
-  uint8_t PakageSampleQuality;///< intensity
-  uint16_t PakageSampleDistance;///< range
+//package node info
+struct tri_node {
+  uint16_t dist; //range
 } __attribute__((packed));
 
-/// TOF Intensity package node info
-struct TOFPackageNode {
-  uint16_t PakageSampleQuality;
-  uint16_t PakageSampleDistance;
+//package node info
+struct tri_node2 {
+  uint8_t qual;///< intensity
+  uint16_t dist;///< range
 } __attribute__((packed));
 
-/// LiDAR Intensity Nodes Package
-struct node_package {
-  uint16_t  package_Head;///< package header
-  uint8_t   package_CT;///< package ct
-  uint8_t   nowPackageNum;///< package number
-  uint16_t  packageFirstSampleAngle;///< first sample angle
-  uint16_t  packageLastSampleAngle;///< last sample angle
-  uint16_t  checkSum;///< checksum
-  PackageNode  packageSample[PackageSampleMaxLngth];
-} __attribute__((packed)) ;
+// TOF Intensity package node info
+struct tof_node {
+  uint16_t qual;
+  uint16_t dist;
+} __attribute__((packed));
 
-/// TOF LiDAR Intensity Nodes Package
+//LiDAR Normal Nodes package
+struct tri_node_package {
+  uint16_t  head;///< package header
+  uint8_t   ct;///< package ct
+  uint8_t   count; ///< package number
+  uint16_t  firstAngle;///< first sample angle
+  uint16_t  lastAngle;///< last sample angle
+  uint16_t  cs;///< checksum
+  uint16_t  nodes[PackageSampleMaxLngth];
+} __attribute__((packed));
+
+//LiDAR Intensity Nodes Package
+struct tri_node_package2 {
+  uint16_t  head;///< package header
+  uint8_t   ct;///< package ct
+  uint8_t   count;///< package number
+  uint16_t  firstAngle;///< first sample angle
+  uint16_t  lastAngle;///< last sample angle
+  uint16_t  cs;///< checksum
+  tri_node2  nodes[PackageSampleMaxLngth];
+} __attribute__((packed));
+
+// TOF LiDAR Intensity Nodes Package
 struct tof_node_package {
-  uint16_t  package_Head;
-  uint8_t   package_CT;
-  uint8_t   nowPackageNum;
-  uint16_t  packageFirstSampleAngle;
-  uint16_t  packageLastSampleAngle;
-  uint16_t  checkSum;
-  TOFPackageNode  packageSample[PackageSampleMaxLngth];
-} __attribute__((packed)) ;
-
-/// LiDAR Normal Nodes package
-struct node_packages {
-  uint16_t  package_Head;///< package header
-  uint8_t   package_CT;///< package ct
-  uint8_t   nowPackageNum; ///< package number
-  uint16_t  packageFirstSampleAngle;///< first sample angle
-  uint16_t  packageLastSampleAngle;///< last sample angle
-  uint16_t  checkSum;///< checksum
-  uint16_t  packageSampleDistance[PackageSampleMaxLngth];
-} __attribute__((packed)) ;
+  uint16_t  head;
+  uint8_t   ct;
+  uint8_t   count;
+  uint16_t  firstAngle;
+  uint16_t  lastAngle;
+  uint16_t  cs;
+  tof_node  nodes[PackageSampleMaxLngth];
+} __attribute__((packed));
 
 //时间戳结构体
 struct stamp_package {
@@ -337,7 +342,7 @@ struct GS1_Multi_Package {
     int moduleNum;
     bool left = false;
     bool right = false;
-    node_info all_points[MaxPointsPerPackge_GS1];
+    node_info points[MaxPointsPerPackge_GS1];
 } __attribute__((packed));
 //GS2
 struct GS2_Multi_Package {
@@ -345,32 +350,32 @@ struct GS2_Multi_Package {
     int moduleNum;
     bool left = false;
     bool right = false;
-    node_info all_points[MaxPointsPerPackge_GS2];
+    node_info points[MaxPointsPerPackge_GS2];
 } __attribute__((packed));
 
 struct GS2PackageNode {
-  uint16_t PakageSampleDistance : 9;
-  uint16_t PakageSampleQuality : 7;
+  uint16_t dist : 9;
+  uint16_t qual : 7;
 } __attribute__((packed));
 
 struct gs1_node_package {
-  uint32_t  package_Head;
+  uint32_t  head;
   uint8_t   address;
-  uint8_t   package_CT;
+  uint8_t   ct;
   uint16_t  size;
-  uint16_t  BackgroudLight;
-  GS2PackageNode  packageSample[MaxPointsPerPackge_GS1];
-  uint8_t  checkSum;
+  uint16_t  env;
+  GS2PackageNode  nodes[MaxPointsPerPackge_GS1];
+  uint8_t  cs;
 } __attribute__((packed));
 
 struct gs2_node_package {
-  uint32_t  package_Head;
-  uint8_t   address;
-  uint8_t   package_CT;
-  uint16_t  size;
-  uint16_t  BackgroudLight;
-  GS2PackageNode  packageSample[MaxPointsPerPackge_GS2];
-  uint8_t  checkSum;
+  uint32_t head;
+  uint8_t address;
+  uint8_t ct;
+  uint16_t size;
+  uint16_t env;
+  GS2PackageNode  nodes[MaxPointsPerPackge_GS2];
+  uint8_t  cs;
 } __attribute__((packed));
 
 struct gs_lidar_ans_header {
@@ -384,12 +389,12 @@ struct gs_lidar_ans_header {
 } __attribute__((packed));
 
 struct gs_device_para {
-    uint16_t u_compensateK0;
-    uint16_t u_compensateB0;
-    uint16_t u_compensateK1;
-    uint16_t u_compensateB1;
-    int8_t  bias;
-    uint8_t  crc;
+    uint16_t k0;
+    uint16_t b0;
+    uint16_t k1;
+    uint16_t b1;
+    int8_t bias;
+    uint8_t crc;
 } __attribute__((packed));
 
 struct cmd_packet_gs {

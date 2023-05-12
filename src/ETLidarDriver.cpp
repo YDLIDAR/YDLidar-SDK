@@ -1043,7 +1043,7 @@ int ETLidarDriver::cacheScanData() {
 
           if (IS_OK(ans)) {
             timeout_count = 0;
-            local_scan[0].sync_flag = Node_NotSync;
+            local_scan[0].sync = Node_NotSync;
           } else {
             m_isScanning = false;
             return RESULT_FAIL;
@@ -1051,7 +1051,7 @@ int ETLidarDriver::cacheScanData() {
         }
       } else {
         timeout_count++;
-        local_scan[0].sync_flag = Node_NotSync;
+        local_scan[0].sync = Node_NotSync;
 
         if (m_driverErrno == NoError) {
           setDriverError(TimeoutError);
@@ -1073,12 +1073,12 @@ int ETLidarDriver::cacheScanData() {
 
 
     for (size_t pos = 0; pos < count; ++pos) {
-      if (local_buf[pos].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT) {
-        if ((local_scan[0].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT)) {
+      if (local_buf[pos].sync & LIDAR_RESP_MEASUREMENT_SYNCBIT) {
+        if ((local_scan[0].sync & LIDAR_RESP_MEASUREMENT_SYNCBIT)) {
           _lock.lock();//timeout lock, wait resource copy
           local_scan[0].stamp = local_buf[pos].stamp;
-          local_scan[0].delay_time = local_buf[pos].delay_time;
-          local_scan[0].scan_frequence = local_buf[pos].scan_frequence;
+          local_scan[0].delayTime = local_buf[pos].delayTime;
+          local_scan[0].scanFreq = local_buf[pos].scanFreq;
           memcpy(scan_node_buf, local_scan, scan_count * sizeof(node_info));
           scan_node_count = scan_count;
           _dataEvent.set();
@@ -1124,7 +1124,7 @@ result_t ETLidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
 
     nodebuffer[recvNodeCount++] = node;
 
-    if (node.sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT) {
+    if (node.sync & LIDAR_RESP_MEASUREMENT_SYNCBIT) {
       count = recvNodeCount;
       CheckLaserStatus();
       return RESULT_OK;
@@ -1152,24 +1152,24 @@ result_t ETLidarDriver::waitPackage(node_info *node, uint32_t timeout) {
     }
   }
 
-  (*node).sync_flag =  Node_NotSync;
-  (*node).scan_frequence = 0;
+  (*node).sync =  Node_NotSync;
+  (*node).scanFreq = 0;
   (*node).debugInfo = 0xff;
   (*node).index = 0xff;
 
   offset = frame.dataIndex + 4 * package_Sample_Index;
-  (*node).distance_q2 = static_cast<uint16_t>(DSL(frame.frameBuf[offset + 2],
+  (*node).dist = static_cast<uint16_t>(DSL(frame.frameBuf[offset + 2],
                         8) | DSL(frame.frameBuf[offset + 3], 0));
 
-  if ((*node).distance_q2 > 0) {
+  if ((*node).dist > 0) {
     m_InvalidNodeCount++;
   }
 
   if (isV1Protocol(frame.dataFormat)) {
-    (*node).sync_quality = (uint16_t)(DSL(frame.frameBuf[offset],
+    (*node).qual = (uint16_t)(DSL(frame.frameBuf[offset],
                                           8) | DSL(frame.frameBuf[offset + 1], 0));
   } else {
-    (*node).sync_quality = (uint16_t)frame.frameBuf[offset];
+    (*node).qual = (uint16_t)frame.frameBuf[offset];
   }
 
   if (package_Sample_Index > 0) {
@@ -1187,14 +1187,14 @@ result_t ETLidarDriver::waitPackage(node_info *node, uint32_t timeout) {
 
   m_currentAngle = ydlidar::core::math::normalize_angle_positive_from_degree(
                      m_currentAngle);
-  (*node).angle_q6_checkbit = static_cast<uint16_t>(m_currentAngle * 100);
+  (*node).angle = static_cast<uint16_t>(m_currentAngle * 100);
   m_lastAngle = m_currentAngle;
   package_Sample_Index++;
 
   if (package_Sample_Index >= frame.dataNum) {
-    (*node).sync_flag = frame.headFrameFlag ? Node_Sync : Node_NotSync;
+    (*node).sync = frame.headFrameFlag ? Node_Sync : Node_NotSync;
     (*node).stamp = getTime();//(uint64_t)(frame.timestamp * 100);
-    (*node).delay_time = 0;
+    (*node).delayTime = 0;
     package_Sample_Index = 0;
     m_lastAngle = 0.f;
     m_currentAngle = 0.f;
