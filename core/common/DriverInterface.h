@@ -103,6 +103,8 @@ class DriverInterface {
 
   //是否底板优先
   PropertyBuilderByName(bool, Bottom, protected);
+  //是否已获取到设备信息
+  PropertyBuilderByName(bool, HasDeviceInfo, protected);
 
   /**
    * @par Constructor
@@ -134,6 +136,8 @@ class DriverInterface {
     m_BufferSize          = 0;
     m_Debug = false;
     m_ScanFreq = 0;
+    m_Bottom = true;
+    m_HasDeviceInfo = false;
   }
 
   virtual ~DriverInterface() {}
@@ -289,6 +293,12 @@ class DriverInterface {
    */
   virtual result_t getDeviceInfo(device_info &info,
                                  uint32_t timeout = DEFAULT_TIMEOUT) = 0;
+  
+  //获取设备信息
+  virtual bool getDeviceInfoEx(device_info &info) {
+    UNUSED(info); 
+    return false;
+  }
 
   /**
    * @brief Turn on scanning \n

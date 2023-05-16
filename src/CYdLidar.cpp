@@ -83,7 +83,6 @@ CYdLidar::CYdLidar() : lidarPtr(nullptr)
   m_DeviceType = YDLIDAR_TYPE_SERIAL;
   m_SupportMotorDtrCtrl = true;
   m_SupportHearBeat = false;
-  m_parsingCompleted = false;
   m_isAngleOffsetCorrected = false;
   m_field_of_view = 360.f;
   memset(&m_LidarVersion, 0, sizeof(LidarVersion));
@@ -921,10 +920,15 @@ bool CYdLidar::getUserVersion(std::string &version)
     return false;
 }
 
+void CYdLidar::setBottomPriority(bool yes)
+{
+  m_Bottom = yes;
+}
+
 bool CYdLidar::getDeviceInfo(device_info& di)
 {
   if (lidarPtr)
-    return lidarPtr->getDeviceInfo(di);
+    return IS_OK(lidarPtr->getDeviceInfoEx(di));
 
   return false;
 }
@@ -967,7 +971,9 @@ bool CYdLidar::isRangeIgnore(double angle) const
 -------------------------------------------------------------*/
 void CYdLidar::handleVersionInfoByPackage(const LaserDebug &debug)
 {
-  if (m_parsingCompleted)
+  if (!lidarPtr || 
+    lidarPtr->getBottom() || //如果是底板优先
+    lidarPtr->getHasDeviceInfo()) //如果已获取设备信息
   {
     return;
   }
@@ -994,7 +1000,7 @@ void CYdLidar::handleVersionInfoByPackage(const LaserDebug &debug)
       }
 
       m_SerialNumber = serial_number;
-      m_parsingCompleted = true;
+      lidarPtr->setHasDeviceInfo(true);
     }
   }
 }
@@ -1422,7 +1428,6 @@ bool CYdLidar::getDeviceInfo()
     }
 
     m_SerialNumber = serial_number;
-    m_parsingCompleted = true;
     zero_offset_angle_scale = lidarZeroOffsetAngleScale(
       di.model, di.firmware_version >> 8, di.firmware_version & 0x00ff);
   }
@@ -1473,7 +1478,9 @@ bool CYdLidar::getDeviceInfo()
 -------------------------------------------------------------*/
 void CYdLidar::handleSingleChannelDevice()
 {
-  if (!lidarPtr || !lidarPtr->getSingleChannel())
+  if (!lidarPtr || 
+    lidarPtr->getBottom() ||
+    !lidarPtr->getSingleChannel())
   {
     return;
   }
@@ -1489,7 +1496,6 @@ void CYdLidar::handleSingleChannelDevice()
 
   if (printfVersionInfo(devinfo, m_SerialPort, m_SerialBaudrate))
   {
-    m_parsingCompleted = true;
     m_LidarVersion.hardware = devinfo.hardware_version;
     m_LidarVersion.soft_major = Major;
     m_LidarVersion.soft_minor = Minjor / 10;
@@ -1738,7 +1744,6 @@ bool CYdLidar::checkCOMMs()
     printf("[YDLIDAR] SDK has been initialized\n");
     printf("[YDLIDAR] SDK Version: %s\n", lidarPtr->getSDKVersion().c_str());
     fflush(stdout);
-    lidarPtr->setSupportMotorDtrCtrl(m_SupportMotorDtrCtrl);
   }
 
   if (lidarPtr->isconnected())
@@ -1784,6 +1789,8 @@ bool CYdLidar::checkCOMMs()
   lidarPtr->setSingleChannel(m_SingleChannel);
   lidarPtr->setLidarType(m_LidarType);
   lidarPtr->setScanFreq(m_ScanFrequency);
+  lidarPtr->setSupportMotorDtrCtrl(m_SupportMotorDtrCtrl);
+  lidarPtr->setBottom(m_Bottom);
 
   printf("[YDLIDAR] Lidar successfully connected %s[%d]\n", 
     m_SerialPort.c_str(), m_SerialBaudrate);

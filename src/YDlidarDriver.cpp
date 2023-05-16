@@ -86,7 +86,7 @@ YDlidarDriver::YDlidarDriver(uint8_t type):
   has_package_error     = false;
 
   get_device_health_success         = false;
-  get_device_info_success           = false;
+  m_HasDeviceInfo           = false;
   IntervalSampleAngle_LastPackage   = 0.0;
   m_heartbeat_ts = getms();
   m_BlockRevSize = 0;
@@ -537,8 +537,7 @@ result_t YDlidarDriver::checkAutoConnecting(bool serialError)
       if (!m_SingleChannel && m_driverErrno != BlockError)
       {
         device_info devinfo;
-        ans = getDeviceInfo(devinfo);
-
+        ans = getDeviceInfo(devinfo, 1000);
         if (!IS_OK(ans))
         {
             stopScan();
@@ -554,11 +553,8 @@ result_t YDlidarDriver::checkAutoConnecting(bool serialError)
 
       {
         ans = startAutoScan();
-
         if (!IS_OK(ans))
-        {
             ans = startAutoScan();
-        }
       }
 
       if (IS_OK(ans))
@@ -628,10 +624,6 @@ int YDlidarDriver::cacheScanData()
     result_t       ans = RESULT_FAIL;
     memset(local_scan, 0, sizeof(local_scan));
 
-    // if (m_SingleChannel) {
-    //     waitDevicePackage(1000);
-    // }
-
     int timeout_count = 0;
     retryCount = 0;
     m_BufferSize = 0;
@@ -663,7 +655,6 @@ int YDlidarDriver::cacheScanData()
                     }
 
                     ans = checkAutoConnecting(IS_FAIL(ans));
-
                     if (IS_OK(ans)) {
                         timeout_count = 0;
                         local_scan[0].sync = Node_NotSync;
@@ -797,7 +788,7 @@ result_t YDlidarDriver::checkDeviceInfo(uint8_t *recvBuffer, uint8_t byte,
             if (async_size == sizeof(info_)) {
               asyncRecvPos = 0;
               async_size = 0;
-              get_device_info_success = true;
+              m_HasDeviceInfo = true;
 
               last_device_byte = byte;
               return RESULT_OK;
@@ -906,7 +897,7 @@ result_t YDlidarDriver::waitDevicePackage(uint32_t timeout) {
       }
     }
 
-    if (get_device_info_success) {
+    if (m_HasDeviceInfo) {
       ans = RESULT_OK;
       break;
     }
@@ -1727,7 +1718,7 @@ result_t YDlidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
   if (m_SingleChannel)
   {
     //获取启动时抛出的设备信息或每帧数据中的设备信息
-    if (get_device_info_success)
+    if (m_HasDeviceInfo)
     {
       info = this->info_;
       return RESULT_OK;
@@ -1742,9 +1733,9 @@ result_t YDlidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
   //双通，此处仅能获取到底板设备信息
   else
   {
-    flushSerial();
     if (m_Bottom)
     {
+      flushSerial();
       ScopedLocker l(_cmd_lock);
       if ((ans = sendCommand(LIDAR_CMD_GET_DEVICE_INFO)) != RESULT_OK)
         return ans;
@@ -1761,11 +1752,22 @@ result_t YDlidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
 
       getData(reinterpret_cast<uint8_t *>(&info), sizeof(info));
       model = info.model;
-      get_device_info_success = true;
+      m_HasDeviceInfo = true;
       info_ = info;
     }
     return ans;
   }
+}
+
+bool YDlidarDriver::getDeviceInfoEx(device_info &info)
+{
+  if (m_HasDeviceInfo)
+  {
+    info = info_;
+    return true;
+  }
+
+  return false;
 }
 
 /************************************************************************/
@@ -1888,7 +1890,6 @@ result_t YDlidarDriver::startScan(bool force, uint32_t timeout)
     if (!m_SingleChannel)
     {
       lidar_ans_header response_header;
-
       if ((ans = waitResponseHeader(&response_header, timeout)) != RESULT_OK)
       {
         return ans;
@@ -1897,13 +1898,16 @@ result_t YDlidarDriver::startScan(bool force, uint32_t timeout)
       {
         return RESULT_FAIL;
       }
-
       if (response_header.size < 5)
       {
         return RESULT_FAIL;
       }
     }
 
+    //此处仅获取模组设备信息
+    if (!m_Bottom) {
+        waitDevicePackage(1000);
+    }
     //非Tmini系列雷达才自动获取强度标识
     if (!isTminiLidar(model))
     {

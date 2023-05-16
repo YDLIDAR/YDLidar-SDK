@@ -37,6 +37,7 @@
 #include <algorithm>
 #include <cctype>
 #include <core/base/timer.h>
+#include <core/common/ydlidar_help.h>
 
 using namespace std;
 using namespace ydlidar;
@@ -275,6 +276,9 @@ int main(int argc, char *argv[])
   laser.enableGlassNoise(false);
   laser.enableSunNoise(false);
 
+  //设置是否底板优先
+  laser.setBottomPriority(true);
+
   bool ret = laser.initialize();
   if (!ret)
   {
@@ -298,6 +302,19 @@ int main(int argc, char *argv[])
     if (laser.getUserVersion(userVersion))
     {
       printf("User version %s\n", userVersion.c_str());
+    }
+  }
+
+  //获取设备信息
+  if (ret)
+  {
+    device_info di;
+    memset(&di, 0, DEVICEINFOSIZE);
+    if (!laser.getDeviceInfo(di)) {
+      ydlidar::core::common::printfVersionInfo(di, "", 0);
+    }
+    else {
+      printf("Fail to get device info\n");
     }
   }
 

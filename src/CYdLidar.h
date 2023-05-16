@@ -946,6 +946,8 @@ class YDLIDAR_API CYdLidar {
    */
   bool getUserVersion(std::string &version);
 
+  //设置是否优先获取底板设备信息
+  void setBottomPriority(bool yes=true);
   //获取设备信息
   bool getDeviceInfo(device_info& di);
 
@@ -1089,7 +1091,6 @@ class YDLIDAR_API CYdLidar {
   std::string m_SerialNumber;       ///< LiDAR serial number
   // int defalutSampleRate;            ///< LiDAR Default Sampling Rate
   std::vector<int> defalutSampleRate; //默认采样率可能是多个值
-  bool m_parsingCompleted;          ///< LiDAR Version Information is successfully parsed
   float m_field_of_view;            ///< LiDAR Field of View Angle.
   LidarVersion m_LidarVersion;      ///< LiDAR Version information
   float zero_offset_angle_scale;   ///< LiDAR Zero Offset Angle
@@ -1121,6 +1122,7 @@ class YDLIDAR_API CYdLidar {
   float m_MaxRange;                 ///< LiDAR maximum range
   float m_MinRange;                 ///< LiDAR minimum range
   float m_ScanFrequency;            ///< LiDAR scanning frequency
+  bool m_Bottom = true; //是否底板优先
 
   bool m_SunNoise = false; //阳光噪点过滤标识
   bool m_GlassNoise = false; //玻璃噪点过滤标识

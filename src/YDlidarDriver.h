@@ -171,6 +171,9 @@ class YDlidarDriver : public DriverInterface {
    */
   virtual result_t getDeviceInfo(device_info &info,
                                  uint32_t timeout = DEFAULT_TIMEOUT);
+  
+  //获取设备信息
+  virtual bool getDeviceInfoEx(device_info &info);
 
   /**
    * @brief Turn on scanning \n
@@ -648,8 +651,7 @@ class YDlidarDriver : public DriverInterface {
   uint8_t  *headerBuffer;
   uint8_t  *infoBuffer;
   uint8_t  *healthBuffer;
-  bool     get_device_info_success;
-  bool     get_device_health_success;
+  bool get_device_health_success;
 
   int package_index;
   bool has_package_error;

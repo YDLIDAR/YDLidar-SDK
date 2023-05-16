@@ -930,13 +930,12 @@ inline bool printfVersionInfo(const device_info &info,
 
   uint8_t Major = (uint8_t)(info.firmware_version >> 8);
   uint8_t Minjor = (uint8_t)(info.firmware_version & 0xff);
-  printf("[YDLIDAR] Connection established in [%s][%d]\n"
+
+  printf("[YDLIDAR] Device info\n"
          "Firmware version: %u.%u\n"
          "Hardware version: %u\n"
          "Model: %s\n"
          "Serial: ",
-         port.c_str(),
-         baudrate,
          Major,
          Minjor,
          (unsigned int)info.hardware_version,

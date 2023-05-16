@@ -906,7 +906,9 @@ PARSEHEAD:
         else if (1 == package_Sample_Index)
             (*node).is = package.env >> 8;
 
-        // printf("%u %u %u\n", package_Sample_Index, node->angle, node->dist);
+        // printf("%u 0x%X %.02f %.02f\n", package_Sample_Index, 
+        //     package.nodes[package_Sample_Index].dist,
+        //     sampleAngle, node->dist/1.0);
     }
     else
     {
