@@ -86,12 +86,12 @@
 #define LIDAR_ANS_SYNC_BYTE1                0xA5
 #define LIDAR_ANS_SYNC_BYTE2                0x5A
 #define LIDAR_ANS_TYPE_MEASUREMENT          0x81
-#define LIDAR_RESP_MEASUREMENT_SYNCBIT        (0x1<<0)
-#define LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT  2
-#define LIDAR_RESP_MEASUREMENT_CHECKBIT       (0x1<<0)
-#define LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT    1
-#define LIDAR_RESP_MEASUREMENT_DISTANCE_SHIFT  2
-#define LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT 8
+#define LIDAR_RESP_SYNCBIT        (0x1<<0)
+#define LIDAR_RESP_QUALITY_SHIFT  2
+#define LIDAR_RESP_CHECKBIT       (0x1<<0)
+#define LIDAR_RESP_ANGLE_SHIFT    1
+#define LIDAR_RESP_DIST_SHIFT  2
+#define LIDAR_RESP_ANGLE_SAMPLE_SHIFT 8
 
 #define LIDAR_CMD_RUN_POSITIVE             0x06
 #define LIDAR_CMD_RUN_INVERSION            0x07
@@ -121,10 +121,11 @@
 
 #define LIDAR_CMD_SET_HEART_BEAT            0xD9
 
-//GS2命令
+//GS命令
 #define GS_LIDAR_CMD_GET_ADDRESS               0x60
 #define GS_LIDAR_CMD_GET_PARAMETER             0x61
 #define GS_LIDAR_CMD_GET_VERSION               0x62
+#define GS_LIDAR_CMD_GET_VERSION3              0x6B
 #define GS_LIDAR_CMD_SCAN                      0x63
 #define GS_LIDAR_ANS_SCAN                      0x63
 #define GS_LIDAR_CMD_STOP                      0x64
@@ -135,7 +136,7 @@
 
 /** @} LIDAR CMD Protocol */
 
-//GS2
+//GS
 #define Angle_Px   1.22
 #define Angle_Py   5.315
 #define Angle_PAngle   22.5
@@ -336,16 +337,8 @@ struct lidar_ans_header {
   uint8_t  type;
 } __attribute__((packed));
 
-//GS1
-struct GS1_Multi_Package {
-    int frameNum;
-    int moduleNum;
-    bool left = false;
-    bool right = false;
-    node_info points[MaxPointsPerPackge_GS1];
-} __attribute__((packed));
 //GS2
-struct GS2_Multi_Package {
+struct gs_packages {
     int frameNum;
     int moduleNum;
     bool left = false;
@@ -353,41 +346,22 @@ struct GS2_Multi_Package {
     node_info points[MaxPointsPerPackge_GS2];
 } __attribute__((packed));
 
-struct GS2PackageNode {
+struct gs_node {
   uint16_t dist : 9;
   uint16_t qual : 7;
 } __attribute__((packed));
+#define GSNODESIZE sizeof(gs_node) //定义GS点大小
 
-struct gs1_node_package {
-  uint32_t  head;
-  uint8_t   address;
-  uint8_t   ct;
-  uint16_t  size;
-  uint16_t  env;
-  GS2PackageNode  nodes[MaxPointsPerPackge_GS1];
-  uint8_t  cs;
-} __attribute__((packed));
-
-struct gs2_node_package {
+struct gs_node_package {
   uint32_t head;
   uint8_t address;
   uint8_t ct;
   uint16_t size;
   uint16_t env;
-  GS2PackageNode  nodes[MaxPointsPerPackge_GS2];
-  uint8_t  cs;
+  gs_node nodes[MaxPointsPerPackge_GS2];
+  uint8_t cs;
 } __attribute__((packed));
-
-struct gs_lidar_ans_header {
-    uint8_t  syncByte0;
-    uint8_t  syncByte1;
-    uint8_t  syncByte2;
-    uint8_t  syncByte3;
-    uint8_t  address;
-    uint8_t  type;
-    uint16_t size;
-} __attribute__((packed));
-
+//GS设备参数
 struct gs_device_para {
     uint16_t k0;
     uint16_t b0;
@@ -396,22 +370,30 @@ struct gs_device_para {
     int8_t bias;
     uint8_t crc;
 } __attribute__((packed));
-
-struct cmd_packet_gs {
+//GS包头
+struct gs_package_head {
     uint8_t syncByte0;
     uint8_t syncByte1;
     uint8_t syncByte2;
     uint8_t syncByte3;
     uint8_t address;
-    uint8_t cmd_flag;
+    uint8_t type;
     uint16_t size;
 } __attribute__((packed));
 //GS系列设备信息
 struct gs_device_info {
-    uint8_t hardware_version; //硬件版本号
-    uint16_t firmware_version; //固件版本号
-    uint8_t serialnum[16]; //序列号
+    uint8_t hwVersion; //硬件版本号
+    uint16_t fwVersion; //固件版本号
+    uint8_t sn[16]; //序列号
 } __attribute__((packed));
+//GS系列设备信息（带雷达型号）
+struct gs_device_info2 {
+    uint8_t hwVersion; //硬件版本号
+    uint16_t fwVersion; //固件版本号
+    uint8_t model; //型号
+    uint8_t sn[16]; //序列号
+} __attribute__((packed));
+#define GSDEVINFO2SIZE sizeof(gs_device_info2)
 
 #if defined(_WIN32)
 #pragma pack()

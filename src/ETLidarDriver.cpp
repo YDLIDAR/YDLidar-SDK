@@ -1073,8 +1073,8 @@ int ETLidarDriver::cacheScanData() {
 
 
     for (size_t pos = 0; pos < count; ++pos) {
-      if (local_buf[pos].sync & LIDAR_RESP_MEASUREMENT_SYNCBIT) {
-        if ((local_scan[0].sync & LIDAR_RESP_MEASUREMENT_SYNCBIT)) {
+      if (local_buf[pos].sync & LIDAR_RESP_SYNCBIT) {
+        if ((local_scan[0].sync & LIDAR_RESP_SYNCBIT)) {
           _lock.lock();//timeout lock, wait resource copy
           local_scan[0].stamp = local_buf[pos].stamp;
           local_scan[0].delayTime = local_buf[pos].delayTime;
@@ -1124,7 +1124,7 @@ result_t ETLidarDriver::waitScanData(node_info *nodebuffer, size_t &count,
 
     nodebuffer[recvNodeCount++] = node;
 
-    if (node.sync & LIDAR_RESP_MEASUREMENT_SYNCBIT) {
+    if (node.sync & LIDAR_RESP_SYNCBIT) {
       count = recvNodeCount;
       CheckLaserStatus();
       return RESULT_OK;

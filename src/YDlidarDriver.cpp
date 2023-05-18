@@ -688,10 +688,10 @@ int YDlidarDriver::cacheScanData()
 
         for (size_t pos = 0; pos < count; ++pos)
         {
-            if (local_buf[pos].sync & LIDAR_RESP_MEASUREMENT_SYNCBIT)
+            if (local_buf[pos].sync & LIDAR_RESP_SYNCBIT)
             {
                 // printf("[YDLIDAR] S2 points Stored in buffer start %lu\n", scan_count);
-                if (local_scan[0].sync & LIDAR_RESP_MEASUREMENT_SYNCBIT)
+                if (local_scan[0].sync & LIDAR_RESP_SYNCBIT)
                 {
                     ScopedLocker l(_lock);
                     //将下一圈的第一个点的采集时间作为当前圈数据的采集时间
@@ -1069,7 +1069,7 @@ result_t YDlidarDriver::parseResponseHeader(
         break;
 
       case 4:
-        if (currentByte & LIDAR_RESP_MEASUREMENT_CHECKBIT)
+        if (currentByte & LIDAR_RESP_CHECKBIT)
         {
           FirstSampleAngle = currentByte;
         }
@@ -1088,7 +1088,7 @@ result_t YDlidarDriver::parseResponseHeader(
         break;
 
       case 6:
-        if (currentByte & LIDAR_RESP_MEASUREMENT_CHECKBIT)
+        if (currentByte & LIDAR_RESP_CHECKBIT)
         {
           LastSampleAngle = currentByte;
         }
@@ -1354,7 +1354,7 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
                 else
                 {
                     (*node).qual = ((uint16_t)((package.nodes[package_Sample_Index].dist & 0x03) <<
-                        LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT) |
+                        LIDAR_RESP_ANGLE_SAMPLE_SHIFT) |
                         (package.nodes[package_Sample_Index].qual));
                 }
 
@@ -1381,7 +1381,7 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
             {
                 (*node).qual = ((uint16_t)(0xfc |
                     packages.nodes[package_Sample_Index] &
-                    0x0003)) << LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT;
+                    0x0003)) << LIDAR_RESP_QUALITY_SHIFT;
             }
         }
 
@@ -1420,23 +1420,23 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
         if ((FirstSampleAngle + sampleAngle +
              correctAngle) < 0) {
             (*node).angle = (((uint16_t)(FirstSampleAngle + sampleAngle +
-                                                     correctAngle + 23040)) << LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) +
-                    LIDAR_RESP_MEASUREMENT_CHECKBIT;
+                                                     correctAngle + 23040)) << LIDAR_RESP_ANGLE_SHIFT) +
+                    LIDAR_RESP_CHECKBIT;
         } else {
             if ((FirstSampleAngle + sampleAngle + correctAngle) > 23040) {
                 (*node).angle = (((uint16_t)(FirstSampleAngle + sampleAngle +
-                                                         correctAngle - 23040)) << LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) +
-                        LIDAR_RESP_MEASUREMENT_CHECKBIT;
+                                                         correctAngle - 23040)) << LIDAR_RESP_ANGLE_SHIFT) +
+                        LIDAR_RESP_CHECKBIT;
             } else {
                 (*node).angle = (((uint16_t)(FirstSampleAngle + sampleAngle +
-                                                         correctAngle)) << LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) +
-                        LIDAR_RESP_MEASUREMENT_CHECKBIT;
+                                                         correctAngle)) << LIDAR_RESP_ANGLE_SHIFT) +
+                        LIDAR_RESP_CHECKBIT;
             }
         }
     } else {
         (*node).sync = Node_NotSync;
         (*node).qual = Node_Default_Quality;
-        (*node).angle = LIDAR_RESP_MEASUREMENT_CHECKBIT;
+        (*node).angle = LIDAR_RESP_CHECKBIT;
         (*node).dist = 0;
         (*node).scanFreq = 0;
     }
@@ -1478,7 +1478,7 @@ result_t YDlidarDriver::waitScanData(
         nodebuffer[recvNodeCount++] = node;
 
         //如果是零位包点
-        if (node.sync & LIDAR_RESP_MEASUREMENT_SYNCBIT)
+        if (node.sync & LIDAR_RESP_SYNCBIT)
         {
             //计算延时时间
             size_t size = _serial->available();
@@ -1555,7 +1555,7 @@ result_t YDlidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
       while (i != 0) {
         i--;
         float expect_angle = (nodebuffer[i + 1].angle >>
-                              LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) /
+                              LIDAR_RESP_ANGLE_SHIFT) /
                              64.0f - inc_origin_angle;
 
         if (expect_angle < 0.0f) {
@@ -1563,9 +1563,9 @@ result_t YDlidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
         }
 
         uint16_t checkbit = nodebuffer[i].angle &
-                            LIDAR_RESP_MEASUREMENT_CHECKBIT;
+                            LIDAR_RESP_CHECKBIT;
         nodebuffer[i].angle = (((uint16_t)(expect_angle * 64.0f)) <<
-                                           LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + checkbit;
+                                           LIDAR_RESP_ANGLE_SHIFT) + checkbit;
       }
 
       break;
@@ -1583,7 +1583,7 @@ result_t YDlidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
       while (i != ((int)count - 1)) {
         i++;
         float expect_angle = (nodebuffer[i - 1].angle >>
-                              LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) /
+                              LIDAR_RESP_ANGLE_SHIFT) /
                              64.0f + inc_origin_angle;
 
         if (expect_angle > 360.0f) {
@@ -1591,9 +1591,9 @@ result_t YDlidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
         }
 
         uint16_t checkbit = nodebuffer[i].angle &
-                            LIDAR_RESP_MEASUREMENT_CHECKBIT;
+                            LIDAR_RESP_CHECKBIT;
         nodebuffer[i].angle = (((uint16_t)(expect_angle * 64.0f)) <<
-                                           LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + checkbit;
+                                           LIDAR_RESP_ANGLE_SHIFT) + checkbit;
       }
 
       break;
@@ -1601,7 +1601,7 @@ result_t YDlidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
   }
 
   float frontAngle = (nodebuffer[0].angle >>
-                      LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f;
+                      LIDAR_RESP_ANGLE_SHIFT) / 64.0f;
 
   for (i = 1; i < (int)count; i++) {
     if (nodebuffer[i].dist == 0) {
@@ -1612,19 +1612,19 @@ result_t YDlidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
       }
 
       uint16_t checkbit = nodebuffer[i].angle &
-                          LIDAR_RESP_MEASUREMENT_CHECKBIT;
+                          LIDAR_RESP_CHECKBIT;
       nodebuffer[i].angle = (((uint16_t)(expect_angle * 64.0f)) <<
-                                         LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + checkbit;
+                                         LIDAR_RESP_ANGLE_SHIFT) + checkbit;
     }
   }
 
   size_t zero_pos = 0;
   float pre_degree = (nodebuffer[0].angle >>
-                      LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f;
+                      LIDAR_RESP_ANGLE_SHIFT) / 64.0f;
 
   for (i = 1; i < (int)count ; ++i) {
     float degree = (nodebuffer[i].angle >>
-                    LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f;
+                    LIDAR_RESP_ANGLE_SHIFT) / 64.0f;
 
     if (zero_pos == 0 && (pre_degree - degree > 180)) {
       zero_pos = i;
@@ -2589,7 +2589,7 @@ result_t YDlidarDriver::parseHeader(
         break;
 
       case 4:
-        if (c & LIDAR_RESP_MEASUREMENT_CHECKBIT)
+        if (c & LIDAR_RESP_CHECKBIT)
         {
         }
         else
@@ -2603,7 +2603,7 @@ result_t YDlidarDriver::parseHeader(
         break;
 
       case 6:
-        if (c & LIDAR_RESP_MEASUREMENT_CHECKBIT)
+        if (c & LIDAR_RESP_CHECKBIT)
         {
         }
         else

@@ -674,7 +674,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       else
       {
         angle = static_cast<float>((global_nodes[i].angle >>
-                                    LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) /
+                                    LIDAR_RESP_ANGLE_SHIFT) /
                                    64.0f) +
                 m_AngleOffset;
       }
