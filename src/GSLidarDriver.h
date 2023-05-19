@@ -32,19 +32,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/** @page GS2LidarDriver
- * GS2LidarDriver API
+/** @page GSLidarDriver
+ * GSLidarDriver API
     <table>
-        <tr><th>Library     <td>GS2LidarDriver
-        <tr><th>File        <td>GS2LidarDriver.h
+        <tr><th>Library     <td>GSLidarDriver
+        <tr><th>File        <td>GSLidarDriver.h
         <tr><th>Author      <td>Tony [code at ydlidar com]
         <tr><th>Source      <td>https://github.com/ydlidar/YDLidar-SDK
         <tr><th>Version     <td>1.0.0
     </table>
-    This GS2LidarDriver support [TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE) and [TYPE_TOF](\ref LidarTypeID::TYPE_TOF) LiDAR
+    This GSLidarDriver support [TYPE_TRIANGLE](\ref LidarTypeID::TYPE_TRIANGLE) and [TYPE_TOF](\ref LidarTypeID::TYPE_TOF) LiDAR
 
 * @copyright    Copyright (c) 2018-2020  EAIBOT
-     Jump to the @link ::ydlidar::GS2LidarDriver @endlink interface documentation.
+     Jump to the @link ::ydlidar::GSLidarDriver @endlink interface documentation.
 */
 #ifndef GS2_YDLIDAR_DRIVER_H
 #define GS2_YDLIDAR_DRIVER_H
@@ -76,7 +76,7 @@ namespace ydlidar
   /*!
    * GS2操控类
    */
-  class GS2LidarDriver : public DriverInterface
+  class GSLidarDriver : public DriverInterface
   {
   public:
     /**
@@ -131,13 +131,13 @@ namespace ydlidar
      * A constructor.
      * A more elaborate description of the constructor.
      */
-    GS2LidarDriver();
+    GSLidarDriver();
 
     /*!
      * A destructor.
      * A more elaborate description of the destructor.
      */
-    virtual ~GS2LidarDriver();
+    virtual ~GSLidarDriver();
 
     /*!
      * @brief 连接雷达 \n
@@ -148,7 +148,7 @@ namespace ydlidar
      * @retval 0     成功
      * @retval < 0   失败
      * @note连接成功后，必须使用::disconnect函数关闭
-     * @see 函数::GS2LidarDriver::disconnect (“::”是指定有连接功能,可以看文档里的disconnect变成绿,点击它可以跳转到disconnect.)
+     * @see 函数::GSLidarDriver::disconnect (“::”是指定有连接功能,可以看文档里的disconnect变成绿,点击它可以跳转到disconnect.)
      */
     result_t connect(const char *port_path, uint32_t baudrate);
 

@@ -32,7 +32,7 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 #include <math.h>
-#include "GS2LidarDriver.h"
+#include "GSLidarDriver.h"
 #include "core/serial/common.h"
 #include "ydlidar_config.h"
 
@@ -40,7 +40,7 @@ using namespace impl;
 
 namespace ydlidar {
 
-GS2LidarDriver::GS2LidarDriver():
+GSLidarDriver::GSLidarDriver():
     _serial(NULL) 
     {
     //串口配置参数
@@ -76,7 +76,7 @@ GS2LidarDriver::GS2LidarDriver():
     bias[2] = 0;
 }
 
-GS2LidarDriver::~GS2LidarDriver() 
+GSLidarDriver::~GSLidarDriver() 
 {
     m_isScanning = false;
     isAutoReconnect = false;
@@ -104,7 +104,7 @@ GS2LidarDriver::~GS2LidarDriver()
     }
 }
 
-result_t GS2LidarDriver::connect(const char *port_path, uint32_t baudrate) 
+result_t GSLidarDriver::connect(const char *port_path, uint32_t baudrate) 
 {
     m_baudrate = baudrate;
     serial_port = string(port_path);
@@ -130,8 +130,7 @@ result_t GS2LidarDriver::connect(const char *port_path, uint32_t baudrate)
     return RESULT_OK;
 }
 
-
-void GS2LidarDriver::setDTR() {
+void GSLidarDriver::setDTR() {
     if (!m_isConnected) {
         return ;
     }
@@ -142,7 +141,7 @@ void GS2LidarDriver::setDTR() {
 
 }
 
-void GS2LidarDriver::clearDTR() {
+void GSLidarDriver::clearDTR() {
     if (!m_isConnected) {
         return ;
     }
@@ -151,7 +150,8 @@ void GS2LidarDriver::clearDTR() {
         _serial->setDTR(0);
     }
 }
-void GS2LidarDriver::flushSerial() {
+
+void GSLidarDriver::flushSerial() {
     if (!m_isConnected) {
         return;
     }
@@ -164,8 +164,7 @@ void GS2LidarDriver::flushSerial() {
     delay(20);
 }
 
-
-void GS2LidarDriver::disconnect() {
+void GSLidarDriver::disconnect() {
     isAutoReconnect = false;
 
     if (!m_isConnected) {
@@ -185,8 +184,7 @@ void GS2LidarDriver::disconnect() {
     m_isConnected = false;
 }
 
-
-void GS2LidarDriver::disableDataGrabbing() 
+void GSLidarDriver::disableDataGrabbing() 
 {
     if (m_isScanning) {
         m_isScanning = false;
@@ -195,14 +193,14 @@ void GS2LidarDriver::disableDataGrabbing()
     _thread.join();
 }
 
-bool GS2LidarDriver::isscanning() const {
+bool GSLidarDriver::isscanning() const {
     return m_isScanning;
 }
-bool GS2LidarDriver::isconnected() const {
+bool GSLidarDriver::isconnected() const {
     return m_isConnected;
 }
 
-result_t GS2LidarDriver::sendCommand(uint8_t cmd,
+result_t GSLidarDriver::sendCommand(uint8_t cmd,
                                     const void *payload,
                                     size_t payloadsize)
 {
@@ -240,7 +238,7 @@ result_t GS2LidarDriver::sendCommand(uint8_t cmd,
 //    return RESULT_OK;
 }
 
-result_t GS2LidarDriver::sendCommand(uint8_t addr,
+result_t GSLidarDriver::sendCommand(uint8_t addr,
                                     uint8_t cmd,
                                     const void *payload,
                                     size_t payloadsize)
@@ -279,7 +277,7 @@ result_t GS2LidarDriver::sendCommand(uint8_t addr,
     return RESULT_OK;
 }
 
-result_t GS2LidarDriver::sendData(const uint8_t *data, size_t size) {
+result_t GSLidarDriver::sendData(const uint8_t *data, size_t size) {
     if (!_serial || !_serial->isOpen()) {
         return RESULT_FAIL;
     }
@@ -308,7 +306,7 @@ result_t GS2LidarDriver::sendData(const uint8_t *data, size_t size) {
     return RESULT_OK;
 }
 
-result_t GS2LidarDriver::getData(uint8_t *data, size_t size) {
+result_t GSLidarDriver::getData(uint8_t *data, size_t size) {
     if (!_serial || !_serial->isOpen()) {
         return RESULT_FAIL;
     }
@@ -332,7 +330,7 @@ result_t GS2LidarDriver::getData(uint8_t *data, size_t size) {
     return RESULT_OK;
 }
 
-result_t GS2LidarDriver::waitResponseHeader(gs_package_head *header,
+result_t GSLidarDriver::waitResponseHeader(gs_package_head *header,
                                            uint32_t timeout) {
     int  recvPos     = 0;
     uint32_t startTs = getms();
@@ -406,7 +404,7 @@ result_t GS2LidarDriver::waitResponseHeader(gs_package_head *header,
     return RESULT_FAIL;
 }
 
-result_t GS2LidarDriver::waitResponseHeaderEx(
+result_t GSLidarDriver::waitResponseHeaderEx(
     gs_package_head *header, 
     uint8_t cmd, 
     uint32_t timeout)
@@ -490,7 +488,7 @@ result_t GS2LidarDriver::waitResponseHeaderEx(
     return RESULT_FAIL;
 }
 
-result_t GS2LidarDriver::waitForData(size_t data_count, uint32_t timeout,
+result_t GSLidarDriver::waitForData(size_t data_count, uint32_t timeout,
                                     size_t *returned_size) {
     size_t length = 0;
 
@@ -501,7 +499,7 @@ result_t GS2LidarDriver::waitForData(size_t data_count, uint32_t timeout,
     return (result_t)_serial->waitfordata(data_count, timeout, returned_size);
 }
 
-result_t GS2LidarDriver::checkAutoConnecting() 
+result_t GSLidarDriver::checkAutoConnecting() 
 {
     result_t ans = RESULT_FAIL;
     isAutoconnting = true;
@@ -568,7 +566,7 @@ result_t GS2LidarDriver::checkAutoConnecting()
     return RESULT_FAIL;
 }
 
-int GS2LidarDriver::cacheScanData()
+int GSLidarDriver::cacheScanData()
 {
     node_info      local_buf[200];
     size_t         count = 200;
@@ -658,7 +656,7 @@ int GS2LidarDriver::cacheScanData()
     return RESULT_OK;
 }
 
-result_t GS2LidarDriver::waitPackage(node_info *node, uint32_t timeout)
+result_t GSLidarDriver::waitPackage(node_info *node, uint32_t timeout)
 {
     int pos = 0;
     uint32_t startTs = getms();
@@ -925,7 +923,7 @@ PARSEHEAD:
     return RESULT_OK;
 }
 
-void GS2LidarDriver::angTransform(
+void GSLidarDriver::angTransform(
     uint16_t dist, 
     int n, 
     double *dstTheta, 
@@ -984,7 +982,7 @@ void GS2LidarDriver::angTransform(
     *dstDist = Dist;
 }
 
-void GS2LidarDriver::angTransform2(
+void GSLidarDriver::angTransform2(
     uint16_t dist, 
     int n, 
     double *dstTheta, 
@@ -1005,7 +1003,7 @@ void GS2LidarDriver::angTransform2(
     *dstDist = Dist;
 }
 
-void GS2LidarDriver::addPointsToVec(node_info *nodebuffer, size_t &count){
+void GSLidarDriver::addPointsToVec(node_info *nodebuffer, size_t &count){
     size_t size = packages.size();
     bool isFound = false;
     for(size_t i =0;i < size; i++){
@@ -1034,7 +1032,7 @@ void GS2LidarDriver::addPointsToVec(node_info *nodebuffer, size_t &count){
     //   fflush(stdout);
 }
 
-result_t GS2LidarDriver::waitScanData(
+result_t GSLidarDriver::waitScanData(
     node_info *nodebuffer,
     size_t &count,
     uint32_t timeout)
@@ -1105,7 +1103,7 @@ result_t GS2LidarDriver::waitScanData(
     return RESULT_FAIL;
 }
 
-result_t GS2LidarDriver::grabScanData(node_info *nodebuffer, size_t &count,
+result_t GSLidarDriver::grabScanData(node_info *nodebuffer, size_t &count,
                                      uint32_t timeout) {
     switch (_dataEvent.wait(timeout)) {
     case Event::EVENT_TIMEOUT:
@@ -1129,7 +1127,7 @@ result_t GS2LidarDriver::grabScanData(node_info *nodebuffer, size_t &count,
 }
 
 
-result_t GS2LidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
+result_t GSLidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
     float inc_origin_angle = (float)360.0 / count;
     int i = 0;
 
@@ -1238,7 +1236,7 @@ result_t GS2LidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
 /************************************************************************/
 /* get device parameters of gs lidar                                             */
 /************************************************************************/
-result_t GS2LidarDriver::getDevicePara(gs_device_para &info, uint32_t timeout) {
+result_t GSLidarDriver::getDevicePara(gs_device_para &info, uint32_t timeout) {
   result_t  ans;
   uint8_t crcSum, mdNum;
   uint8_t *pInfo = reinterpret_cast<uint8_t *>(&info);
@@ -1296,7 +1294,7 @@ result_t GS2LidarDriver::getDevicePara(gs_device_para &info, uint32_t timeout) {
   return RESULT_OK;
 }
 
-result_t GS2LidarDriver::setDeviceAddress(uint32_t timeout)
+result_t GSLidarDriver::setDeviceAddress(uint32_t timeout)
 {
     result_t ans;
 
@@ -1329,7 +1327,7 @@ result_t GS2LidarDriver::setDeviceAddress(uint32_t timeout)
 /************************************************************************/
 /* the set to signal quality                                            */
 /************************************************************************/
-void GS2LidarDriver::setIntensities(const bool &isintensities) {
+void GSLidarDriver::setIntensities(const bool &isintensities) {
     if (m_intensities != isintensities) {
         if (globalRecvBuffer) {
             delete[] globalRecvBuffer;
@@ -1353,11 +1351,11 @@ void GS2LidarDriver::setIntensities(const bool &isintensities) {
 *     true	开启
 *	  false 关闭
 */
-void GS2LidarDriver::setAutoReconnect(const bool &enable) {
+void GSLidarDriver::setAutoReconnect(const bool &enable) {
     isAutoReconnect = enable;
 }
 
-void GS2LidarDriver::checkTransDelay() 
+void GSLidarDriver::checkTransDelay() 
 {
     //采样率
     trans_delay = _serial->getByteTime();
@@ -1368,7 +1366,7 @@ void GS2LidarDriver::checkTransDelay()
 /************************************************************************/
 /*  start to scan                                                       */
 /************************************************************************/
-result_t GS2LidarDriver::startScan(bool force, uint32_t timeout) 
+result_t GSLidarDriver::startScan(bool force, uint32_t timeout) 
 {
     result_t ans;
 
@@ -1409,7 +1407,7 @@ result_t GS2LidarDriver::startScan(bool force, uint32_t timeout)
     return ans;
 }
 
-result_t GS2LidarDriver::stopScan(uint32_t timeout) {
+result_t GSLidarDriver::stopScan(uint32_t timeout) {
     UNUSED(timeout);
     result_t  ans;
 
@@ -1430,7 +1428,7 @@ result_t GS2LidarDriver::stopScan(uint32_t timeout) {
     return RESULT_OK;
 }
 
-result_t GS2LidarDriver::createThread()
+result_t GSLidarDriver::createThread()
 {
     // 如果线程已启动，则先退出线程
     if (_thread.getHandle())
@@ -1438,7 +1436,7 @@ result_t GS2LidarDriver::createThread()
         m_isScanning = false;
         _thread.join();
     }
-    _thread = CLASS_THREAD(GS2LidarDriver, cacheScanData);
+    _thread = CLASS_THREAD(GSLidarDriver, cacheScanData);
 
     if (!_thread.getHandle()) {
         return RESULT_FAIL;
@@ -1450,7 +1448,7 @@ result_t GS2LidarDriver::createThread()
     return RESULT_OK;
 }
 
-result_t GS2LidarDriver::startAutoScan(bool force, uint32_t timeout) {
+result_t GSLidarDriver::startAutoScan(bool force, uint32_t timeout) {
     result_t ans;
 
     if (!m_isConnected) {
@@ -1480,7 +1478,7 @@ result_t GS2LidarDriver::startAutoScan(bool force, uint32_t timeout) {
 /************************************************************************/
 /*   stop scan                                                   */
 /************************************************************************/
-result_t GS2LidarDriver::stop() 
+result_t GSLidarDriver::stop() 
 {
     if (isAutoconnting) {
         isAutoReconnect = false;
@@ -1495,7 +1493,7 @@ result_t GS2LidarDriver::stop()
 /************************************************************************/
 /*  reset device                                                        */
 /************************************************************************/
-result_t GS2LidarDriver::reset(uint8_t addr, uint32_t timeout) {
+result_t GSLidarDriver::reset(uint8_t addr, uint32_t timeout) {
     UNUSED(timeout);
     result_t ans;
 
@@ -1512,11 +1510,11 @@ result_t GS2LidarDriver::reset(uint8_t addr, uint32_t timeout) {
     return RESULT_OK;
 }
 
-std::string GS2LidarDriver::getSDKVersion() {
+std::string GSLidarDriver::getSDKVersion() {
     return YDLIDAR_SDK_VERSION_STR;
 }
 
-std::map<std::string, std::string> GS2LidarDriver::lidarPortList() {
+std::map<std::string, std::string> GSLidarDriver::lidarPortList() {
     std::vector<PortInfo> lst = list_ports();
     std::map<std::string, std::string> ports;
 
@@ -1528,7 +1526,7 @@ std::map<std::string, std::string> GS2LidarDriver::lidarPortList() {
     return ports;
 }
 
-const char *GS2LidarDriver::DescribeError(bool isTCP) 
+const char *GSLidarDriver::DescribeError(bool isTCP) 
 {
   if (_serial) {
     return _serial->DescribeError();
@@ -1536,12 +1534,12 @@ const char *GS2LidarDriver::DescribeError(bool isTCP)
   return nullptr;
 }
 
-result_t GS2LidarDriver::getHealth(device_health &, uint32_t) 
+result_t GSLidarDriver::getHealth(device_health &, uint32_t) 
 {
   return RESULT_OK;
 }
 
-result_t GS2LidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
+result_t GSLidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
 {
     result_t ret = RESULT_OK;
 
@@ -1592,7 +1590,7 @@ result_t GS2LidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
     return RESULT_OK;
 }
 
-result_t GS2LidarDriver::getDeviceInfo2(device_info &info, uint32_t timeout)
+result_t GSLidarDriver::getDeviceInfo2(device_info &info, uint32_t timeout)
 {
     result_t ret = RESULT_FAIL;
 
@@ -1625,7 +1623,7 @@ result_t GS2LidarDriver::getDeviceInfo2(device_info &info, uint32_t timeout)
     return ret;
 }
 
-result_t GS2LidarDriver::setWorkMode(int mode, uint8_t addr)
+result_t GSLidarDriver::setWorkMode(int mode, uint8_t addr)
 {
     result_t ans;
     uint32_t timeout = 300;

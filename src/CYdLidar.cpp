@@ -33,7 +33,7 @@
 #include "core/common/ydlidar_help.h"
 #include "YDlidarDriver.h"
 #include "ETLidarDriver.h"
-#include "GS2LidarDriver.h"
+#include "GSLidarDriver.h"
 #include "SDMLidarDriver.h"
 
 using namespace std;
@@ -1729,7 +1729,7 @@ bool CYdLidar::checkCOMMs()
     if (isNetTOFLidar(m_LidarType))
       lidarPtr = new ydlidar::ETLidarDriver(); //T15
     else if (isGS2Lidar(m_LidarType)) //GS2
-      lidarPtr = new ydlidar::GS2LidarDriver();
+      lidarPtr = new ydlidar::GSLidarDriver();
     else if (isSDMLidar(m_LidarType)) //SDM
       lidarPtr = new ydlidar::SDMLidarDriver();
     else //通用雷达

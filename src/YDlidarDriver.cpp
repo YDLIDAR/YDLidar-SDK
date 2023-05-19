@@ -52,7 +52,7 @@ YDlidarDriver::YDlidarDriver(uint8_t type):
   trans_delay           = 0;
   scan_frequence        = 0;
   m_sampling_rate       = -1;
-  model                 = -1;
+  model                 = YDLIDAR_SCL;
   retryCount            = 0;
   has_device_header     = false;
   m_SingleChannel       = false;

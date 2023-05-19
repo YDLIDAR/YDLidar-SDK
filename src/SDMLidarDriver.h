@@ -141,7 +141,7 @@ public:
   * @retval 0     成功
   * @retval < 0   失败
   * @note连接成功后，必须使用::disconnect函数关闭
-  * @see 函数::GS2LidarDriver::disconnect (“::”是指定有连接功能,可以看文档里的disconnect变成绿,点击它可以跳转到disconnect.)
+  * @see 函数::GSLidarDriver::disconnect (“::”是指定有连接功能,可以看文档里的disconnect变成绿,点击它可以跳转到disconnect.)
   */
   result_t connect(const char *port, uint32_t baudrate);
 
