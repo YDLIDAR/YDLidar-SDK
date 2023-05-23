@@ -1729,7 +1729,7 @@ bool CYdLidar::checkCOMMs()
     if (isNetTOFLidar(m_LidarType))
       lidarPtr = new ydlidar::ETLidarDriver(); //T15
     else if (isGS2Lidar(m_LidarType)) //GS2
-      lidarPtr = new ydlidar::GSLidarDriver();
+      lidarPtr = new ydlidar::GSLidarDriver(m_DeviceType);
     else if (isSDMLidar(m_LidarType)) //SDM
       lidarPtr = new ydlidar::SDMLidarDriver();
     else //通用雷达

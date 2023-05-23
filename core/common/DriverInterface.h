@@ -54,6 +54,8 @@ class DriverInterface {
   * @see DriverInterface::setLidarType and DriverInterface::getLidarType
   */
   PropertyBuilderByName(int, LidarType, protected);
+  //设备类型（串口或网络）
+  PropertyBuilderByName(uint8_t, DeviceType, protected);
   /**
   * @brief Set and Get Sampling interval.
   * @note Negative correlation between sampling interval and lidar sampling rate.\n
@@ -82,25 +84,11 @@ class DriverInterface {
   */
   PropertyBuilderByName(bool, SupportMotorDtrCtrl, protected);
 
-  /**
-  * @brief Set and Get LiDAR HeartBeat function.
-  * @note The current paramter settings are only valid
-  * if the LiDAR is BigScreen.\n
-  * Set the LiDAR HeartBeat to match the LiDAR.
-  * @remarks
-   <table>
-        <tr><th>G4/G4PRO                               <td>false
-    </table>
-  * @see DriverInterface::setHeartBeat and DriverInterface::getHeartBeat
-  */
   PropertyBuilderByName(bool, HeartBeat, protected);
-
   //是否开启调试
   PropertyBuilderByName(bool, Debug, protected);
-
   //扫描频率
   PropertyBuilderByName(float, ScanFreq, protected);
-
   //是否底板优先
   PropertyBuilderByName(bool, Bottom, protected);
   //是否已获取到设备信息
@@ -110,7 +98,8 @@ class DriverInterface {
    * @par Constructor
    *
    */
-  DriverInterface() :  serial_port(""),
+  DriverInterface() :  
+    serial_port(""),
     m_baudrate(8000),
     m_intensities(false),
     m_intensityBit(10),
@@ -122,6 +111,7 @@ class DriverInterface {
     isAutoconnting(false) {
     m_SingleChannel = false;
     m_LidarType = TYPE_TRIANGLE;
+    m_DeviceType = YDLIDAR_TYPE_SERIAL;
     m_PointTime = 0;
     m_SupportMotorDtrCtrl = true;
     m_HeartBeat  = false;

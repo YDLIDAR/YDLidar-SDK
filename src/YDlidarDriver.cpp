@@ -27,6 +27,7 @@
 #include <core/serial/common.h>
 #include <math.h>
 #include <ydlidar_config.h>
+
 using namespace impl;
 
 namespace ydlidar {
@@ -34,9 +35,9 @@ using namespace core::serial;
 using namespace core::common;
 using namespace core::network;
 
-YDlidarDriver::YDlidarDriver(uint8_t type):
-  _serial(NULL),
-  m_TranformerType(type) {
+YDlidarDriver::YDlidarDriver(uint8_t type) :
+  _serial(NULL)
+{
   m_isConnected         = false;
   m_isScanning          = false;
   //串口配置参数
@@ -57,6 +58,7 @@ YDlidarDriver::YDlidarDriver(uint8_t type):
   has_device_header     = false;
   m_SingleChannel       = false;
   m_LidarType           = TYPE_TRIANGLE;
+  m_DeviceType = type;
 
   //解析参数
   PackageSampleBytes    = 2;
@@ -132,7 +134,7 @@ YDlidarDriver::~YDlidarDriver()
   }
 }
 
-result_t YDlidarDriver::connect(const char *port_path, uint32_t baudrate) 
+result_t YDlidarDriver::connect(const char *port_path, uint32_t baudrate)
 {
   m_baudrate = baudrate;
   serial_port = string(port_path);
@@ -141,24 +143,22 @@ result_t YDlidarDriver::connect(const char *port_path, uint32_t baudrate)
     ScopedLocker l(_cmd_lock);
     if (!_serial)
     {
-      if (m_TranformerType == YDLIDAR_TYPE_TCP)
+      if (m_DeviceType == YDLIDAR_TYPE_TCP)
       {
         _serial = new CActiveSocket();
       }
       else
       {
         _serial = new serial::Serial(port_path, m_baudrate,
-                                     serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT));
+          serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT));
       }
       _serial->bindport(port_path, baudrate);
     }
-
     if (!_serial->open())
     {
       setDriverError(NotOpenError);
       return RESULT_FAIL;
     }
-
     m_isConnected = true;
   }
 

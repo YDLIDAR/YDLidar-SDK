@@ -34,15 +34,19 @@
 #include <math.h>
 #include "GSLidarDriver.h"
 #include "core/serial/common.h"
+#include <core/serial/serial.h>
+#include <core/network/ActiveSocket.h>
 #include "ydlidar_config.h"
 
 using namespace impl;
 
 namespace ydlidar {
+using namespace core::common;
+using namespace core::serial;
+using namespace core::network;
 
-GSLidarDriver::GSLidarDriver():
-    _serial(NULL) 
-    {
+GSLidarDriver::GSLidarDriver(uint8_t type)
+{
     //串口配置参数
     m_intensities       = false;
     isAutoReconnect     = true;
@@ -57,7 +61,7 @@ GSLidarDriver::GSLidarDriver():
     retryCount          = 0;
     m_SingleChannel     = false;
     m_LidarType         = TYPE_GS;
-
+    m_DeviceType = type;
     //解析参数
     PackageSampleBytes  = 2;
     CheckSum            = 0;
@@ -83,15 +87,13 @@ GSLidarDriver::~GSLidarDriver()
     _thread.join();
 
     ScopedLocker l(_cmd_lock);
-    if (_serial) {
-        if (_serial->isOpen()) {
-            _serial->flush();
-            _serial->closePort();
+    if (_comm) {
+        if (_comm->isOpen()) {
+            _comm->flush();
+            _comm->closePort();
         }
-    }
-    if (_serial) {
-        delete _serial;
-        _serial = NULL;
+        delete _comm;
+        _comm = NULL;
     }
 
     if (globalRecvBuffer) {
@@ -110,16 +112,24 @@ result_t GSLidarDriver::connect(const char *port_path, uint32_t baudrate)
     serial_port = string(port_path);
     {
         ScopedLocker l(_cmd_lock);
-        if (!_serial)
+        if (!_comm)
         {
-            _serial = new serial::Serial(port_path, m_baudrate,
-                                         serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT));
+            if (m_DeviceType == YDLIDAR_TYPE_TCP)
+            {
+                _comm = new CActiveSocket();
+            }
+            else
+            {
+                _comm = new serial::Serial(port_path, m_baudrate,
+                    serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT));
+            }
+            _comm->bindport(port_path, baudrate);
         }
-        if (!_serial->open())
+        if (!_comm->open())
         {
+            setDriverError(NotOpenError);
             return RESULT_FAIL;
         }
-
         m_isConnected = true;
     }
 
@@ -135,8 +145,8 @@ void GSLidarDriver::setDTR() {
         return ;
     }
 
-    if (_serial) {
-        _serial->setDTR(1);
+    if (_comm) {
+        _comm->setDTR(1);
     }
 
 }
@@ -146,8 +156,8 @@ void GSLidarDriver::clearDTR() {
         return ;
     }
 
-    if (_serial) {
-        _serial->setDTR(0);
+    if (_comm) {
+        _comm->setDTR(0);
     }
 }
 
@@ -156,9 +166,9 @@ void GSLidarDriver::flushSerial() {
         return;
     }
 
-    size_t len = _serial->available();
+    size_t len = _comm->available();
     if (len) {
-        _serial->readSize(len);
+        _comm->readSize(len);
     }
 
     delay(20);
@@ -175,9 +185,9 @@ void GSLidarDriver::disconnect() {
     delay(10);
     ScopedLocker l(_cmd_lock);
 
-    if (_serial) {
-        if (_serial->isOpen()) {
-            _serial->closePort();
+    if (_comm) {
+        if (_comm->isOpen()) {
+            _comm->closePort();
         }
     }
 
@@ -278,7 +288,7 @@ result_t GSLidarDriver::sendCommand(uint8_t addr,
 }
 
 result_t GSLidarDriver::sendData(const uint8_t *data, size_t size) {
-    if (!_serial || !_serial->isOpen()) {
+    if (!_comm || !_comm->isOpen()) {
         return RESULT_FAIL;
     }
 
@@ -290,7 +300,7 @@ result_t GSLidarDriver::sendData(const uint8_t *data, size_t size) {
 
     while (size) 
     {
-        r = _serial->writeData(data, size);
+        r = _comm->writeData(data, size);
 
         if (!r) {
             return RESULT_FAIL;
@@ -307,14 +317,14 @@ result_t GSLidarDriver::sendData(const uint8_t *data, size_t size) {
 }
 
 result_t GSLidarDriver::getData(uint8_t *data, size_t size) {
-    if (!_serial || !_serial->isOpen()) {
+    if (!_comm || !_comm->isOpen()) {
         return RESULT_FAIL;
     }
 
     size_t r;
     while (size)
     {
-        r = _serial->readData(data, size);
+        r = _comm->readData(data, size);
         if (!r)
         {
             return RESULT_FAIL;
@@ -496,7 +506,7 @@ result_t GSLidarDriver::waitForData(size_t data_count, uint32_t timeout,
         returned_size = (size_t *)&length;
     }
 
-    return (result_t)_serial->waitfordata(data_count, timeout, returned_size);
+    return (result_t)_comm->waitfordata(data_count, timeout, returned_size);
 }
 
 result_t GSLidarDriver::checkAutoConnecting() 
@@ -511,12 +521,12 @@ result_t GSLidarDriver::checkAutoConnecting()
     {
         {
             ScopedLocker l(_cmd_lock);
-            if (_serial) {
-                if (_serial->isOpen() || m_isConnected) {
+            if (_comm) {
+                if (_comm->isOpen() || m_isConnected) {
                     m_isConnected = false;
-                    _serial->closePort();
-                    delete _serial;
-                    _serial = NULL;
+                    _comm->closePort();
+                    delete _comm;
+                    _comm = NULL;
                 }
             }
         }
@@ -1063,7 +1073,7 @@ result_t GSLidarDriver::waitScanData(
 
         if (!package_Sample_Index)
         {
-            size_t size = _serial->available();
+            size_t size = _comm->available();
             uint64_t delayTime = 0;
             size_t PackageSize = NORMAL_PACKAGE_SIZE;
 
@@ -1358,7 +1368,7 @@ void GSLidarDriver::setAutoReconnect(const bool &enable) {
 void GSLidarDriver::checkTransDelay() 
 {
     //采样率
-    trans_delay = _serial->getByteTime();
+    trans_delay = _comm->getByteTime();
     sample_rate = 27 * 160;
     m_PointTime = 1e9 / sample_rate;
 }
@@ -1528,8 +1538,8 @@ std::map<std::string, std::string> GSLidarDriver::lidarPortList() {
 
 const char *GSLidarDriver::DescribeError(bool isTCP) 
 {
-  if (_serial) {
-    return _serial->DescribeError();
+  if (_comm) {
+    return _comm->DescribeError();
   }
   return nullptr;
 }

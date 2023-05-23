@@ -75,6 +75,8 @@ int main(int argc, char *argv[])
   std::map<std::string, std::string> ports = ydlidar::lidarPortList();
   std::map<std::string, std::string>::iterator it;
 
+  ports["IP1"] = "192.168.1.200";
+
   if (ports.size() == 1) {
     port = ports.begin()->second;
   } else {
@@ -115,6 +117,7 @@ int main(int argc, char *argv[])
   int baudrate = 921600;
   std::map<int, int> baudrateList;
   baudrateList[0] = 921600;
+  baudrateList[1] = 8000; //网络端口
   printf("Baudrate:\n");
   for (std::map<int, int>::iterator it = baudrateList.begin();
        it != baudrateList.end(); it++) {
@@ -158,7 +161,7 @@ int main(int argc, char *argv[])
   int optval = TYPE_GS;
   laser.setlidaropt(LidarPropLidarType, &optval, sizeof(int));
   /// device type
-  optval = YDLIDAR_TYPE_SERIAL;
+  optval = YDLIDAR_TYPE_TCP; //YDLIDAR_TYPE_TCP YDLIDAR_TYPE_SERIAL
   laser.setlidaropt(LidarPropDeviceType, &optval, sizeof(int));
   /// sample rate
   optval = isSingleChannel ? 3 : 4;

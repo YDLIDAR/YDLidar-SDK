@@ -600,9 +600,6 @@ class YDlidarDriver : public DriverInterface {
   int PackageSampleBytes;
   /// serial port
   ChannelDevice *_serial;
-  /// tranformer type
-  uint8_t m_TranformerType;
-//  bool isSupportMotorDtrCtrl;
   /// sampling inteval
   uint32_t trans_delay;
   /// sampling rate
