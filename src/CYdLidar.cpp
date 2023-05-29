@@ -1728,7 +1728,7 @@ bool CYdLidar::checkCOMMs()
     //根据雷达类型创建对应的实例
     if (isNetTOFLidar(m_LidarType))
       lidarPtr = new ydlidar::ETLidarDriver(); //T15
-    else if (isGS2Lidar(m_LidarType)) //GS2
+    else if (isGSLidar(m_LidarType)) //GS
       lidarPtr = new ydlidar::GSLidarDriver(m_DeviceType);
     else if (isSDMLidar(m_LidarType)) //SDM
       lidarPtr = new ydlidar::SDMLidarDriver();

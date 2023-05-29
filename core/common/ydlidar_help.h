@@ -281,7 +281,7 @@ inline bool isTminiLidar(int model)
 }
 
 //根据雷达码判断是否是SCL雷达
-inline bool isSCLLidar(int model)
+inline bool isSCLLidar2(int model)
 {
   return model == DriverInterface::YDLIDAR_SCL;
 }
@@ -514,7 +514,8 @@ inline bool isNetTOFLidar(int type) {
 inline bool isTriangleLidar(int type) {
   bool ret = false;
 
-  if (type == TYPE_TRIANGLE) {
+  if (type == TYPE_TRIANGLE ||
+    type == TYPE_SCL) {
     ret = true;
   }
 
@@ -532,13 +533,13 @@ inline bool isGSLidar(int type)
 }
 
 /**
- * @brief Whether it is a GS2 type LiDAR
+ * @brief Whether it is a SCL type LiDAR
  * @param type  LiDAR type
- * @return true if it is a Triangle type, otherwise false.
+ * @return true if it is a Triangle SCL type, otherwise false.
  */
-inline bool isGS2Lidar(int type) 
+inline bool isSCLLidar(int type) 
 {
-  return (type == TYPE_GS);
+  return (type == TYPE_SCL);
 }
 
 inline bool isSDMLidar(int type)

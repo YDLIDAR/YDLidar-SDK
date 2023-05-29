@@ -46,6 +46,7 @@ typedef enum {
   TYPE_TRIANGLE = 1,/**< G4. G6. G2 LiDAR.*/
   TYPE_TOF_NET = 2,/**< T15 LiDAR.*/
   TYPE_GS = 3, //GS系列雷达（目前只有GS2）
+  TYPE_SCL = 4, //SCL雷达
   TYPE_SDM = 5, //SDM单点雷达
   TYPE_Tail,
 } LidarTypeID;

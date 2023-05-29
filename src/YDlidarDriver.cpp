@@ -53,7 +53,7 @@ YDlidarDriver::YDlidarDriver(uint8_t type) :
   trans_delay           = 0;
   scan_frequence        = 0;
   m_sampling_rate       = -1;
-  model                 = YDLIDAR_SCL;
+  model                 = YDLIDAR_S2PRO;
   retryCount            = 0;
   has_device_header     = false;
   m_SingleChannel       = false;
@@ -1387,25 +1387,26 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
 
         if ((*node).dist != 0)
         {
+            //printf("has angle 2nd parse %d %d\n", m_LidarType, model);
             if (isOctaveLidar(model))
             {
                 correctAngle = (int32_t)(((atan(((21.8 * (155.3 - ((*node).dist / 2.0))) / 155.3) / ((*node).dist / 2.0))) * 180.0 / 3.1415) * 64.0);
             }
-            else if (isSCLLidar(model))
+            else if (isSCLLidar(m_LidarType) || 
+                isSCLLidar2(model))
             {
                 //SCL雷达角度二级解析公式（α = asind（17.8/dist））
                 correctAngle = int32_t(asin(17.8 / node->dist) * 180.0 / M_PI * 64.0);
-                printf("SCL correct angle [%d]\n", correctAngle);
+                // printf("SCL correct angle [%d]\n", correctAngle);
             }
             else if (isTriangleLidar(m_LidarType) &&
                 !isTminiLidar(model)) //去掉Tmini雷达的角度二级解析
             {
-//                printf("has angle 2nd parse\n");
                 correctAngle = (int32_t)(((atan(((21.8 * (155.3 - ((*node).dist / 4.0))) / 155.3) / ((*node).dist / 4.0))) * 180.0 / 3.1415) * 64.0);
             }
             else
             {
-//                printf("no angle 2nd parse\n");
+//              printf("no angle 2nd parse\n");
             }
 
             m_InvalidNodeCount ++;
