@@ -9,6 +9,7 @@ class FilterInterface
 public:
     FilterInterface() {}
     virtual ~FilterInterface() {}
+    
     virtual void filter(const LaserScan &in,
                          int lidarType,
                          int version,
@@ -16,7 +17,9 @@ public:
     virtual std::string name() const {
         return m_name;
     }
-    virtual std::string version() const = 0;
+    virtual std::string version() const {
+        return "V1.0";
+    }
     virtual void setName(const std::string &name) {
         m_name = name;
     }

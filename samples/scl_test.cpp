@@ -38,6 +38,7 @@
 #include <cctype>
 #include <core/base/timer.h>
 #include <core/common/ydlidar_help.h>
+#include "filters/StrongLightFilter.h"
 
 using namespace std;
 using namespace ydlidar;
@@ -221,7 +222,7 @@ int main(int argc, char *argv[])
   /// lidar baudrate
   laser.setlidaropt(LidarPropSerialBaudrate, &baudrate, sizeof(int));
   /// tof lidar
-  int optval = TYPE_TRIANGLE;
+  int optval = TYPE_SCL;
   laser.setlidaropt(LidarPropLidarType, &optval, sizeof(int));
   /// device type
   optval = YDLIDAR_TYPE_SERIAL;
@@ -322,19 +323,24 @@ int main(int argc, char *argv[])
   // }
 
   LaserScan scan;
+  LaserScan outScan;
+  StrongLightFilter filter; //强光滤波器
+
   while (ydlidar::os_isOk())
   {
     if (laser.doProcessSimple(scan))
     {
-      printf("Scan received [%u] "
-             "points scanFreq [%.02f]\n",
-             (unsigned int)scan.points.size(),
+      printf("Scan received [%llu] points scanFreq [%.02f]\n",
+             scan.points.size(),
              scan.scanFreq);
       // for (size_t i = 0; i < scan.points.size(); ++i)
       // {
       //   const LaserPoint &p = scan.points.at(i);
-      //   printf("%d d %f a %f\n", i, p.range, p.angle * 180.0 / M_PI);
+      //   printf("%d d %.05f a %.02f\n", i, p.range, p.angle * 180.0 / M_PI);
       // }
+      //使用强光滤波器
+      filter.filter(scan, 0, 0, outScan);
+
       fflush(stdout);
     }
     else
