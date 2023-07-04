@@ -933,6 +933,13 @@ bool CYdLidar::getDeviceInfo(device_info& di)
   return false;
 }
 
+bool CYdLidar::getDeviceInfo(std::vector<device_info_ex>& dis)
+{
+  if (lidarPtr)
+    return IS_OK(lidarPtr->getDeviceInfo(dis));
+  return false;
+}
+
 /*-------------------------------------------------------------
                     isRangeValid
 -------------------------------------------------------------*/

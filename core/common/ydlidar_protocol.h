@@ -268,14 +268,20 @@ struct stamp_package {
 } __attribute__((packed));
 #define SIZE_STAMPPACKAGE sizeof(stamp_package)
 
-/// LiDAR Device Information
+//设备信息结构体
 struct device_info {
-  uint8_t   model; ///< LiDAR model
-  uint16_t  firmware_version; ///< firmware version
-  uint8_t   hardware_version; ///< hardare version
-  uint8_t   serialnum[SDK_SNLEN]; ///< serial number
+  uint8_t   model; //雷达型号码
+  uint16_t  firmware_version; //固件版本
+  uint8_t   hardware_version; //硬件版本
+  uint8_t   serialnum[SDK_SNLEN]; //序列号
 } __attribute__((packed));
 #define DEVICEINFOSIZE sizeof(device_info)
+
+//设备信息结构体（带模组序号）
+struct device_info_ex {
+  uint8_t id = 0;
+  device_info di = {0};
+};
 
 /// LiDAR Health Information
 struct device_health {
@@ -386,6 +392,7 @@ struct gs_device_info {
     uint16_t fwVersion; //固件版本号
     uint8_t sn[16]; //序列号
 } __attribute__((packed));
+#define GSDEVINFOSIZE sizeof(gs_device_info)
 //GS系列设备信息（带雷达型号）
 struct gs_device_info2 {
     uint8_t hwVersion; //硬件版本号

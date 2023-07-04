@@ -171,6 +171,8 @@ class YDLIDAR_API CYdLidar {
   void setBottomPriority(bool yes=true);
   //获取设备信息
   bool getDeviceInfo(device_info& di);
+  //获取级联设备信息
+  bool getDeviceInfo(std::vector<device_info_ex>& dis);
 
  private:
   /**

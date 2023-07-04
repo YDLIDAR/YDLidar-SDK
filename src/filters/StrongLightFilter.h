@@ -2,7 +2,7 @@
 #define STRONGLIGHTFILTER_H
 #include "FilterInterface.h"
 
-
+//强光滤波器
 class StrongLightFilter : public FilterInterface
 {
 public:

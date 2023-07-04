@@ -415,16 +415,17 @@ namespace ydlidar
      */
     virtual result_t getHealth(device_health &health, uint32_t timeout = DEFAULT_TIMEOUT);
 
-    /**
-     * @brief get Device information \n
-     * @param[in] info     Device information
-     * @param[in] timeout  timeout
-     * @return result status
-     * @retval RESULT_OK       success
-     * @retval RESULT_FAILE or RESULT_TIMEOUT   failed
-     */
-    virtual result_t getDeviceInfo(device_info &info, uint32_t timeout = DEFAULT_TIMEOUT);
-    virtual result_t getDeviceInfo2(device_info &info, uint32_t timeout = DEFAULT_TIMEOUT);
+    //获取设备信息
+    virtual result_t getDeviceInfo(
+      device_info &info, 
+      uint32_t timeout = DEFAULT_TIMEOUT);
+    //获取级联雷达设备信息
+    virtual result_t getDeviceInfo(
+      std::vector<device_info_ex> &dis,
+      uint32_t timeout = DEFAULT_TIMEOUT);
+    virtual result_t getDeviceInfo2(
+      device_info &info, 
+      uint32_t timeout = DEFAULT_TIMEOUT);
 
     /**
      * @brief 设置雷达工作模式（目前只针对GS2雷达）
