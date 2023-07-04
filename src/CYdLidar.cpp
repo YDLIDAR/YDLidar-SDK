@@ -1318,6 +1318,7 @@ bool CYdLidar::CalculateSampleRate(int count, double scan_time)
 /*-------------------------------------------------------------
                     getDeviceHealth
 -------------------------------------------------------------*/
+/** Returns true if the device is connected & operative */
 bool CYdLidar::getDeviceHealth()
 {
   if (!lidarPtr)
@@ -1326,36 +1327,49 @@ bool CYdLidar::getDeviceHealth()
   }
 
   lidarPtr->stop();
-
   result_t op_result;
   device_health healthinfo;
-  memset(&healthinfo, 0, sizeof(device_health));
-  op_result = lidarPtr->getHealth(healthinfo,
-                                  DriverInterface::DEFAULT_TIMEOUT / 2);
+  printf("[YDLIDAR]: SDK Version: %s\n", YDlidarDriver::getSDKVersion().c_str());
+  op_result = lidarPtr->getHealth(healthinfo);
 
   if (IS_OK(op_result))
   {
-    printf("[YDLIDAR] Lidar running correctly! The health status: %s\n",
-           (int)healthinfo.status == 0 ? "good" : "bad");
+    printf("[YDLIDAR]: Lidar running correctly! The health status: %s\n",
+           healthinfo.status == 0 ? "good" : "bad");
 
-    if (healthinfo.status == 2)
+    op_result = lidarPtr->getHealth(healthinfo);
+    if (IS_OK(op_result) && healthinfo.status == 0)
     {
-      fprintf(stderr,
-              "[YDLIDAR] Error, YDLidar internal error[0x%X] detected. "
-              "Please reboot the device to retry.\n", healthinfo.error_code);
+      printf("[YDLIDAR]: Lidar health status: good\n");
+      return true;
+    }
+    else if (healthinfo.status == 2)
+    {
+      fprintf(stderr, "Error: Yd Lidar internal error detected. Please reboot the device to retry.\n");
       return false;
     }
     else
     {
-      return true;
+      fprintf(stderr, "Error: Failed to turn off and on the Lidar. Cannot connect to the Lidar.\n");
+      return false;
     }
   }
   else
   {
-    fprintf(stderr, "[YDLIDAR] Error, cannot retrieve YDLidar health code: %x\n", op_result);
+    fprintf(stderr, "Error: Cannot retrieve Yd Lidar health code after turning on the Lidar.\n");
+    fprintf(stderr, "Error: Yd Lidar health code is ffffffff. Turning off and on the Lidar...\n");
+    lidarPtr->stop();
+    lidarPtr->disconnect();
+
+    if (lidarPtr->connect(m_SerialPort.c_str(), m_SerialBaudrate))
+    {
+      printf("[YDLIDAR INFO] Successfully turned off and on the Lidar.\n");
+      lidarPtr->startMotor();
+      lidarPtr->startScan();
+      return true;
+    }
     return false;
   }
-}
 
 /*-------------------------------------------------------------
                     getDeviceInfo
