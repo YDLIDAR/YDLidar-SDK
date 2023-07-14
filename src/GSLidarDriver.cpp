@@ -1674,6 +1674,7 @@ result_t GSLidarDriver::getDeviceInfo(
         di.di.firmware_version = uint16_t((gsdi.fwVersion & 0xFF) << 8) +
                               uint16_t(gsdi.fwVersion >> 8);
         memcpy(di.di.serialnum, gsdi.sn, SDK_SNLEN);
+        dis.push_back(di);
     }
 
     return ret;

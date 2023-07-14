@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
   for (int i=0; i<dis.size(); ++i)
   {
     const device_info_ex& di = dis.at(i);
-    printf("Device[%d]\n", di.id);
+    printf("Device [%u]\n", di.id);
     ydlidar::core::common::printfDeviceInfo(di.di, EPT_Module);
   }
 
