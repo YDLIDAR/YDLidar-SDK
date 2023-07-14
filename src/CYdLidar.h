@@ -237,7 +237,7 @@ class YDLIDAR_API CYdLidar {
    * @param scan_time   LiDAR scan time
    * @return true if successfully calculated, otherwise false.
    */
-  bool CalculateSampleRate(int count, double scan_time);
+  bool calcSampleRate(int count, double scan_time);
 
   /**
    * @brief Check if the LiDAR Offset Angle is corrected.
@@ -271,7 +271,7 @@ class YDLIDAR_API CYdLidar {
     * @brief Parse Version by Package Information
     * @param debug  LiDAR Point CT Pakcage Information
     */
-  void handleVersionInfoByPackage(const LaserDebug &debug);
+  bool getDeviceInfoByPackage(const LaserDebug &debug);
 
   /**
    * @brief Calculate real-time sampling frequency

@@ -92,7 +92,7 @@ class DriverInterface {
   //是否底板优先
   PropertyBuilderByName(bool, Bottom, protected);
   //是否已获取到设备信息
-  PropertyBuilderByName(bool, HasDeviceInfo, protected);
+  PropertyBuilderByName(int, HasDeviceInfo, protected);
 
   /**
    * @par Constructor
@@ -127,7 +127,7 @@ class DriverInterface {
     m_Debug = false;
     m_ScanFreq = 0;
     m_Bottom = true;
-    m_HasDeviceInfo = false;
+    m_HasDeviceInfo = EPT_None;
   }
 
   virtual ~DriverInterface() {}

@@ -871,35 +871,34 @@ inline void parsePackageNode(const node_info &node, LaserDebug &info)
  * @param value     LiDAR Device information
  * @return true if converted successfully, otherwise false.
  */
-inline bool ParseLaserDebugInfo(const LaserDebug &info, device_info &di)
+inline bool parseLaserDebugInfo(const LaserDebug &debug, device_info &di)
 {
   bool ret = false;
 
-  uint8_t CustomVerMajor = uint8_t(info.hfVer & 0x0F);
-  uint8_t CustomVerMinor = info.fVer;
-  uint8_t lidarmodel = uint8_t(info.debug2) >> 3;
-  uint8_t hardwareVer = uint8_t(info.hfVer) >> 4;
+  uint8_t CustomVerMajor = uint8_t(debug.hfVer & 0x0F);
+  uint8_t CustomVerMinor = debug.fVer;
+  // uint8_t lidarmodel = uint8_t(debug.debug2) >> 3;
+  uint8_t hardwareVer = uint8_t(debug.hfVer) >> 4;
 
-  uint8_t Year = uint8_t(info.year >> 2);
-  uint8_t Moth = uint8_t(info.month >> 3);
-  uint8_t Date = uint8_t(info.day >> 2);
-  uint16_t Number = uint16_t(info.numH << 7) |
-                    uint16_t(info.numL);
+  uint8_t Year = uint8_t(debug.year >> 2);
+  uint8_t Moth = uint8_t(debug.month >> 3);
+  uint8_t Date = uint8_t(debug.day >> 2);
+  uint16_t Number = uint16_t(debug.numH << 7) |
+                    uint16_t(debug.numL);
 
   if (Moth && Date && Number)
   {
     di.firmware_version = uint16_t(CustomVerMajor << 8) |
                           uint16_t(CustomVerMinor);
     di.hardware_version = hardwareVer;
-    di.model = lidarmodel;
+    // di.model = lidarmodel;
     std::stringstream ss;
     ss << std::setw(4) << std::setfill('0') << int(Year + 2020);
     ss << std::setw(2) << std::setfill('0') << int(Moth);
     ss << std::setw(2) << std::setfill('0') << int(Date);
     ss << std::setw(8) << std::setfill('0') << int(Number);
     std::string sn(ss.str());
-    // printf("SN: %s %04u%02u%02u%08u\n", sn.c_str(), Year + 2020, Moth, Date, Number);
-    // 此处在Python调用中会导致缓存溢出
+    // 此处sprintf函数在Python调用中会导致缓存溢出
     //  sprintf(reinterpret_cast<char*>(di.serialnum),
     //    "%04u%02u%02u%08u", Year + 2020, Moth, Date, Number);
     for (int i = 0; i < SDK_SNLEN && i < sn.size(); i++)
@@ -913,41 +912,32 @@ inline bool ParseLaserDebugInfo(const LaserDebug &info, device_info &di)
   return ret;
 }
 
-/**
- * @brief print LiDAR version information
- * @param info      LiDAR Device information
- * @param port      LiDAR serial port or IP Address
- * @param baudrate  LiDAR serial baudrate or network port
- * @return true if Device information is valid, otherwise false
- */
-inline bool printfVersionInfo(const device_info &info,
-                              const std::string &port,
-                              int baudrate)
+YDLIDAR_API inline bool printfDeviceInfo(const device_info &di,
+                              int platformType=EPT_Module)
 {
-  if (info.firmware_version == 0 &&
-      info.hardware_version == 0) {
+  if (di.firmware_version == 0 &&
+      di.hardware_version == 0) {
     return false;
   }
 
-  uint8_t Major = (uint8_t)(info.firmware_version >> 8);
-  uint8_t Minjor = (uint8_t)(info.firmware_version & 0xff);
-
-  printf("[YDLIDAR] Device info\n"
+  uint8_t Major = (uint8_t)(di.firmware_version >> 8);
+  uint8_t Minjor = (uint8_t)(di.firmware_version & 0xff);
+  
+  printf("[YDLIDAR] %s device info\n"
          "Firmware version: %u.%u\n"
          "Hardware version: %u\n"
          "Model: %s\n"
          "Serial: ",
+         EPT_Module == platformType ? "Module" : "Baseplate",
          Major,
          Minjor,
-         (unsigned int)info.hardware_version,
-         lidarModelToString(info.model).c_str());
-
-  for (int i = 0; i < 16; i++) {
-    printf("%01X", info.serialnum[i] & 0xff);
-  }
-
+         di.hardware_version,
+         lidarModelToString(di.model).c_str());
+  for (int i = 0; i < SDK_SNLEN; i++)
+    printf("%01X", di.serialnum[i] & 0xff);
   printf("\n");
   fflush(stdout);
+
   return true;
 }
 

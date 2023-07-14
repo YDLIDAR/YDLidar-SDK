@@ -263,26 +263,29 @@ int main(int argc, char *argv[]) {
 
   while (ret && ydlidar::os_isOk())
   {
-      /// Turn On success and loop
-      if (laser.doProcessSimple(scan))
-      {
-          fprintf(stdout, "Scan received at [%lu] %u points is [%f]s\n",
-                  scan.stamp / 100000,
-                  (unsigned int)scan.points.size(),
-                  scan.config.scan_time);
+    /// Turn On success and loop
+    if (laser.doProcessSimple(scan))
+    {
+      fprintf(stdout, "Scan received at [%lu] %u points is [%f]s\n",
+              scan.stamp / 100000,
+              (unsigned int)scan.points.size(),
+              scan.config.scan_time);
 
-          //使用拖尾滤波器
-          // filter.filter(scan, 0, 0, outScan);
-//          for (size_t i=0; i<scan.points.size(); ++i)
-//          {
-//              const LaserPoint& p = scan.points.at(i);
-//              printf("%d a %f d %f i %f\n", i, p.angle * 180 / M_PI, p.range, p.intensity);
-//          }
-          fflush(stdout);
-      } else {
-          fprintf(stderr, "Failed to get Lidar Data\n");
-          fflush(stderr);
-      }
+      // 使用拖尾滤波器
+      //  filter.filter(scan, 0, 0, outScan);
+      // for (size_t i = 0; i < scan.points.size(); ++i)
+      // {
+      //   const LaserPoint &p = scan.points.at(i);
+      //   printf("%d a %.02f d %.03f i %.0f\n",
+      //          i, p.angle * 180 / M_PI, p.range, p.intensity);
+      // }
+      fflush(stdout);
+    }
+    else
+    {
+      fprintf(stderr, "Failed to get Lidar Data\n");
+      fflush(stderr);
+    }
   }
 
   /// Stop the device scanning thread and disable motor.

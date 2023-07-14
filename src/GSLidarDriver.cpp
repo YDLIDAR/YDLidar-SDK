@@ -306,8 +306,8 @@ result_t GSLidarDriver::sendData(const uint8_t *data, size_t size) {
             return RESULT_FAIL;
         }
 
-        printf("send: ");
-        printHex(data, r);
+        // printf("send: ");
+        // printHex(data, r);
 
         size -= r;
         data += r;
@@ -330,8 +330,8 @@ result_t GSLidarDriver::getData(uint8_t *data, size_t size) {
             return RESULT_FAIL;
         }
 
-        printf("recv: ");
-        printHex(data, r);
+        // printf("recv: ");
+        // printHex(data, r);
 
         size -= r;
         data += r;

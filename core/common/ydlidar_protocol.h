@@ -182,11 +182,20 @@ typedef enum {
 #define USERVERSIONNDEX 1
 #define HEALTHINDEX 3
 
-/// ET LiDAR Protocol Type
+//雷达协议类型
 typedef enum {
-  Protocol_V1 = 0,///< V1 version
-  Protocol_V2 = 1,///< V2 version
+  Protocol_V1 = 0, //V1 version
+  Protocol_V2 = 1, //V2 version
 } ProtocolVer;
+
+//设备所属平台类型
+enum EaiPlatformType
+{
+  EPT_None = 0x00, //无
+  EPT_Module = 0x01, //模组
+  EPT_Baseplate = 0x02, //底板
+  EPT_All = (EPT_Module | EPT_Baseplate), //所有
+};
 
 #if defined(_WIN32)
 #pragma pack(1)
@@ -342,6 +351,7 @@ struct lidar_ans_header {
   uint32_t subType: 2;
   uint8_t  type;
 } __attribute__((packed));
+#define TRIRESPHEADSIZE sizeof(lidar_ans_header) //定义通用响应头大小
 
 //GS2
 struct gs_packages {

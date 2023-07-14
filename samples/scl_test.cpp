@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
   //   device_info di;
   //   memset(&di, 0, DEVICEINFOSIZE);
   //   if (!laser.getDeviceInfo(di)) {
-  //     ydlidar::core::common::printfVersionInfo(di, "", 0);
+  //     ydlidar::core::common::printfDeviceInfo(di);
   //   }
   //   else {
   //     printf("Fail to get device info\n");
@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
     }
     if (!c++)
     {
-      printf("Time consuming [%u] from initialization to parsing to point cloud data",
+      printf("Time consuming [%u] from initialization to parsing to point cloud data\n",
         getms() - t);
     }
   }
