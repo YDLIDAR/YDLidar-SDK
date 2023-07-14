@@ -62,7 +62,7 @@ CYdLidar::CYdLidar() : lidarPtr(nullptr)
   //   m_SampleRatebyD1      = 5;
   // defalutSampleRate     = 5;
   m_ScanFrequency = 10;
-  isScanning = false;
+  scanning = false;
   m_FixedSize = 720;
   frequencyOffset = 0.4f;
   m_AbnormalCheckCount = 2;
@@ -453,7 +453,7 @@ void CYdLidar::GetLidarVersion(LidarVersion &version)
 -------------------------------------------------------------*/
 bool CYdLidar::turnOn()
 {
-  if (isScanning && lidarPtr->isscanning())
+  if (scanning && lidarPtr->isscanning())
   {
     return true;
   }
@@ -468,7 +468,7 @@ bool CYdLidar::turnOn()
     {
       lidarPtr->stop();
       fprintf(stderr, "[YDLIDAR] Failed to start scan mode: %x\n", op_result);
-      isScanning = false;
+      scanning = false;
       return false;
     }
   }
@@ -483,7 +483,7 @@ bool CYdLidar::turnOn()
     fprintf(stderr,
             "[YDLIDAR] Failed to turn on the Lidar, because the lidar is [%s].\n",
             DriverInterface::DescribeDriverError(lidarPtr->getDriverError()));
-    isScanning = false;
+    scanning = false;
     return false;
   }
   printf("[YDLIDAR] Successed to check the lidar, Elapsed time %u ms\n", getms() - t);
@@ -525,8 +525,13 @@ bool CYdLidar::turnOn()
   printf("[YDLIDAR] Now lidar is scanning...\n");
   fflush(stdout);
 
-  isScanning = true;
+  scanning = true;
   return true;
+}
+
+bool CYdLidar::isScanning() const
+{
+  return lidarPtr && lidarPtr->isscanning();
 }
 
 bool CYdLidar::doProcessSimple(LaserScan &outscan)
@@ -617,7 +622,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     }
 
     int all_node_count = count;
-    LaserDebug debug;
+    LaserDebug debug = {0};
 
     memset(&debug, 0, sizeof(debug));
     outscan.config.min_angle = math::from_degrees(m_MinAngle);
@@ -809,13 +814,13 @@ bool CYdLidar::turnOff()
     lidarPtr->stop();
   }
 
-  if (isScanning)
+  if (scanning)
   {
     printf("[YDLIDAR] Now lidar scanning has stopped!\n");
     fflush(stdout);
   }
 
-  isScanning = false;
+  scanning = false;
   return true;
 }
 
@@ -831,7 +836,7 @@ void CYdLidar::disconnecting()
     lidarPtr = nullptr;
   }
 
-  isScanning = false;
+  scanning = false;
 }
 
 /*-------------------------------------------------------------
@@ -1798,7 +1803,7 @@ bool CYdLidar::checkHardware()
     return false;
   }
 
-  if (isScanning && lidarPtr->isscanning())
+  if (scanning && lidarPtr->isscanning())
   {
     return true;
   }

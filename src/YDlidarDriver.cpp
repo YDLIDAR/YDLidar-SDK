@@ -1965,7 +1965,7 @@ result_t YDlidarDriver::startScan(bool force, uint32_t timeout)
     if (!isTminiLidar(model))
     {
       // 获取强度标识
-      // getIntensityFlag();
+      getIntensityFlag();
     }
 
     //创建数据解析线程

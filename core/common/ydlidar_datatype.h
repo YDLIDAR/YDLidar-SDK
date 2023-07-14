@@ -52,6 +52,7 @@ typedef struct  {
   uint8_t     numH;
   uint8_t     numL;
   uint8_t     health;
+  uint8_t     model; //雷达型号
   uint8_t     maxIndex;
 } LaserDebug;
 

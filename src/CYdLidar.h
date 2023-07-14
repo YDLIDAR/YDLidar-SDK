@@ -108,6 +108,9 @@ class YDLIDAR_API CYdLidar {
    * @return true if successfully started, otherwise false.
    */
   bool turnOn();
+
+  //判断是否已启动扫描
+  bool isScanning() const;
   /**
    * @brief Get the LiDAR Scan Data. turnOn is successful before doProcessSimple scan data.
    * @param[out] outscan             LiDAR Scan Data
@@ -295,7 +298,7 @@ class YDLIDAR_API CYdLidar {
   bool isAngleOffsetCorrected() const;
 
  private:
-  bool    isScanning;               ///< LiDAR is Scanning
+  bool    scanning;               ///< LiDAR is Scanning
   int     m_FixedSize;              ///< Fixed LiDAR Points
   float   m_AngleOffset;            ///< Zero angle offset value
   bool    m_isAngleOffsetCorrected; ///< Has the Angle offset been corrected

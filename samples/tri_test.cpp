@@ -162,36 +162,36 @@ int main(int argc, char *argv[])
 
   //单通还是双通
   bool isSingleChannel = false;
-  // std::string input_channel;
-  // printf("Whether the Lidar is one-way communication [yes/no]:");
-  // std::cin >> input_channel;
-  // std::transform(input_channel.begin(), input_channel.end(),
-  //                input_channel.begin(),
-  //                [](unsigned char c)
-  //                {
-  //                  return std::tolower(c); // correct
-  //                });
-  // if (input_channel.find("y") != std::string::npos)
-  //   isSingleChannel = true;
+  std::string input_channel;
+  printf("Whether the Lidar is one-way communication [yes/no]:");
+  std::cin >> input_channel;
+  std::transform(input_channel.begin(), input_channel.end(),
+                 input_channel.begin(),
+                 [](unsigned char c)
+                 {
+                   return std::tolower(c); // correct
+                 });
+  if (input_channel.find("y") != std::string::npos)
+    isSingleChannel = true;
 
   if (!ydlidar::os_isOk())
     return 0;
 
   //转速
   float frequency = 5.0;
-  // std::string input_frequency;
-  // while (ydlidar::os_isOk() && !isSingleChannel)
-  // {
-  //   printf("Please enter the lidar scan frequency[5-12]:");
-  //   std::cin >> input_frequency;
-  //   frequency = atof(input_frequency.c_str());
-  //   if (frequency <= 12 && frequency >= 5.0)
-  //   {
-  //     break;
-  //   }
-  //   fprintf(stderr, "Invalid scan frequency,"
-  //     "The scanning frequency range is 5 to 12 HZ, Please re-enter.\n");
-  // }
+  std::string input_frequency;
+  while (ydlidar::os_isOk() && !isSingleChannel)
+  {
+    printf("Please enter the lidar scan frequency[5-12]:");
+    std::cin >> input_frequency;
+    frequency = atof(input_frequency.c_str());
+    if (frequency <= 12 && frequency >= 5.0)
+    {
+      break;
+    }
+    fprintf(stderr, "Invalid scan frequency,"
+      "The scanning frequency range is 5 to 12 HZ, Please re-enter.\n");
+  }
 
   if (!ydlidar::os_isOk())
     return 0;

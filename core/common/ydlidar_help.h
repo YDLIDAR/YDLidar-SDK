@@ -832,6 +832,7 @@ inline void parsePackageNode(const node_info &node, LaserDebug &info)
     case 6:
       break;
     case 7:
+      info.model = node.debugInfo;
       break;
     case 8:
       break;
@@ -875,6 +876,7 @@ inline bool parseLaserDebugInfo(const LaserDebug &debug, device_info &di)
 {
   bool ret = false;
 
+  uint8_t model = uint8_t(debug.model & 0x0F);
   uint8_t CustomVerMajor = uint8_t(debug.hfVer & 0x0F);
   uint8_t CustomVerMinor = debug.fVer;
   // uint8_t lidarmodel = uint8_t(debug.debug2) >> 3;
@@ -883,20 +885,24 @@ inline bool parseLaserDebugInfo(const LaserDebug &debug, device_info &di)
   uint8_t Year = uint8_t(debug.year >> 2);
   uint8_t Moth = uint8_t(debug.month >> 3);
   uint8_t Date = uint8_t(debug.day >> 2);
-  uint16_t Number = uint16_t(debug.numH << 7) |
-                    uint16_t(debug.numL);
+  uint32_t Number = 
+    uint32_t(debug.year & 0x03) << 19 |
+    uint32_t(debug.month & 0x07) << 16 |
+    uint32_t(debug.day & 0x03) << 14 |
+    uint32_t(debug.numH & 0x7F) << 7 |
+    uint32_t(debug.numL & 0x7F);
 
   if (Moth && Date && Number)
   {
     di.firmware_version = uint16_t(CustomVerMajor << 8) |
                           uint16_t(CustomVerMinor);
     di.hardware_version = hardwareVer;
-    // di.model = lidarmodel;
+    di.model = model;
     std::stringstream ss;
     ss << std::setw(4) << std::setfill('0') << int(Year + 2020);
     ss << std::setw(2) << std::setfill('0') << int(Moth);
     ss << std::setw(2) << std::setfill('0') << int(Date);
-    ss << std::setw(8) << std::setfill('0') << int(Number);
+    ss << std::setw(8) << std::setfill('0') << Number;
     std::string sn(ss.str());
     // 此处sprintf函数在Python调用中会导致缓存溢出
     //  sprintf(reinterpret_cast<char*>(di.serialnum),
