@@ -141,7 +141,7 @@
 #define Angle_Py   5.315
 #define Angle_PAngle   22.5
 #define PackageMaxModuleNums  0x03
-#define MaxPointsPerPackge_GS2 160  //GS2固定160个点
+#define GS_MAXPOINTS 160  //GS2固定160个点
 #define MaxPointsPerPackge_GS1 216  //GS1固定216个点
 #define PackagePaidBytes_GS 8
 #define NORMAL_PACKAGE_SIZE 331
@@ -353,30 +353,32 @@ struct lidar_ans_header {
 } __attribute__((packed));
 #define TRIRESPHEADSIZE sizeof(lidar_ans_header) //定义通用响应头大小
 
-//GS2
+//GS单帧数据
 struct gs_packages {
     int frameNum;
     int moduleNum;
     bool left = false;
     bool right = false;
-    node_info points[MaxPointsPerPackge_GS2];
+    node_info points[GS_MAXPOINTS];
 } __attribute__((packed));
-
+//GS点数据结构
 struct gs_node {
   uint16_t dist : 9;
   uint16_t qual : 7;
 } __attribute__((packed));
 #define GSNODESIZE sizeof(gs_node) //定义GS点大小
-
+//GS单包数据结构
 struct gs_node_package {
   uint32_t head;
   uint8_t address;
   uint8_t ct;
   uint16_t size;
   uint16_t env;
-  gs_node nodes[MaxPointsPerPackge_GS2];
+  gs_node nodes[GS_MAXPOINTS];
   uint8_t cs;
 } __attribute__((packed));
+#define GSPACKSIZE sizeof(gs_node_package) //定义GS点大小
+
 //GS设备参数
 struct gs_device_para {
     uint16_t k0;

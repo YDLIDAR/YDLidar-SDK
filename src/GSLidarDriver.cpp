@@ -73,7 +73,7 @@ GSLidarDriver::GSLidarDriver(uint8_t type)
     packages.resize(MaximumNumberOfPackages);
 
     package_Sample_Index = 0;
-    globalRecvBuffer = new uint8_t[sizeof(gs_node_package)];
+    globalRecvBuffer = new uint8_t[GSPACKSIZE];
     scan_node_buf = new node_info[MAX_SCAN_NODES];
     bias[0] = 0;
     bias[1] = 0;
@@ -763,7 +763,7 @@ PARSEHEAD:
                 if (pos == PackagePaidBytes_GS)
                 {
                     // 如果协议数据长度不对则跳过，继续解析协议头
-                    if (!sample_lens)
+                    if (!sample_lens || sample_lens >= GSPACKSIZE)
                     {
                         moduleNum = 0;
                         pos = 0;
@@ -1337,14 +1337,15 @@ result_t GSLidarDriver::setDeviceAddress(uint32_t timeout)
 /************************************************************************/
 /* the set to signal quality                                            */
 /************************************************************************/
-void GSLidarDriver::setIntensities(const bool &isintensities) {
+void GSLidarDriver::setIntensities(const bool &isintensities) 
+{
     if (m_intensities != isintensities) {
         if (globalRecvBuffer) {
             delete[] globalRecvBuffer;
             globalRecvBuffer = NULL;
         }
 
-        globalRecvBuffer = new uint8_t[sizeof(gs_node_package)];
+        globalRecvBuffer = new uint8_t[GSPACKSIZE];
     }
 
     m_intensities = isintensities;
