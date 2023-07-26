@@ -63,7 +63,7 @@ ETLidarDriver::ETLidarDriver() :
   scan_node_count = 0;
   m_lastAngle = 0.f;
   m_currentAngle = 0.f;
-  package_Sample_Index = 0;
+  nodeIndex = 0;
   retryCount = 0;
   isAutoReconnect = true;
   isAutoconnting = false;;
@@ -1144,7 +1144,7 @@ result_t ETLidarDriver::waitPackage(node_info *node, uint32_t timeout) {
   int offset;
   result_t ans;
 
-  if (package_Sample_Index == 0) {
+  if (nodeIndex == 0) {
     ans = getScanData();
 
     if (!IS_OK((ans))) {
@@ -1157,7 +1157,7 @@ result_t ETLidarDriver::waitPackage(node_info *node, uint32_t timeout) {
   (*node).debugInfo = 0xff;
   (*node).index = 0xff;
 
-  offset = frame.dataIndex + 4 * package_Sample_Index;
+  offset = frame.dataIndex + 4 * nodeIndex;
   (*node).dist = static_cast<uint16_t>(DSL(frame.frameBuf[offset + 2],
                         8) | DSL(frame.frameBuf[offset + 3], 0));
 
@@ -1172,7 +1172,7 @@ result_t ETLidarDriver::waitPackage(node_info *node, uint32_t timeout) {
     (*node).qual = (uint16_t)frame.frameBuf[offset];
   }
 
-  if (package_Sample_Index > 0) {
+  if (nodeIndex > 0) {
     if (isV1Protocol(frame.dataFormat)) {
       m_currentAngle = (frame.frameCrc - frame.startAngle) / (frame.dataNum - 1) /
                        100.f;
@@ -1189,13 +1189,13 @@ result_t ETLidarDriver::waitPackage(node_info *node, uint32_t timeout) {
                      m_currentAngle);
   (*node).angle = static_cast<uint16_t>(m_currentAngle * 100);
   m_lastAngle = m_currentAngle;
-  package_Sample_Index++;
+  nodeIndex++;
 
-  if (package_Sample_Index >= frame.dataNum) {
+  if (nodeIndex >= frame.dataNum) {
     (*node).sync = frame.headFrameFlag ? Node_Sync : Node_NotSync;
     (*node).stamp = getTime();//(uint64_t)(frame.timestamp * 100);
     (*node).delayTime = 0;
-    package_Sample_Index = 0;
+    nodeIndex = 0;
     m_lastAngle = 0.f;
     m_currentAngle = 0.f;
   }

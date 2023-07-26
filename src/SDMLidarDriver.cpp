@@ -54,7 +54,7 @@ SDMLidarDriver::SDMLidarDriver()
     m_SingleChannel = false;
     m_LidarType = TYPE_SDM;
 
-    package_Sample_Index = 0;
+    nodeIndex = 0;
     recvBuff = std::vector<uint8_t>(SDKSDMPCSSIZE, 0);
 
     scan_node_count = 0;

@@ -72,7 +72,7 @@ GSLidarDriver::GSLidarDriver(uint8_t type)
     isPrepareToSend     = false;
     packages.resize(MaximumNumberOfPackages);
 
-    package_Sample_Index = 0;
+    nodeIndex = 0;
     globalRecvBuffer = new uint8_t[GSPACKSIZE];
     scan_node_buf = new node_info[MAX_SCAN_NODES];
     bias[0] = 0;
@@ -680,7 +680,7 @@ result_t GSLidarDriver::waitPackage(node_info *node, uint32_t timeout)
     size_t remainSize = 0;
     CheckSumCal = 0;
 
-    if (package_Sample_Index == 0)
+    if (nodeIndex == 0)
     {
         pos = 0;
         while ((waitTime = getms() - startTs) <= timeout)
@@ -837,7 +837,7 @@ PARSEHEAD:
             if (CheckSumResult)
                 break;
         } //end while ((waitTime = getms() - startTs) <= timeout)
-    } //end if (package_Sample_Index == 0)
+    } //end if (nodeIndex == 0)
 
     (*node).stamp = getTime();
     (*node).sync = Node_NotSync;
@@ -848,46 +848,69 @@ PARSEHEAD:
         (*node).scanFreq = scan_frequence;
         (*node).qual = 0;
 
-        (*node).dist =
-            package.nodes[package_Sample_Index].dist;
-
-        if (m_intensities)
+        if (YDLIDAR_GS1 == model)
         {
-            (*node).qual = (uint16_t)package.nodes[package_Sample_Index].qual;
+            //GS1低10位为距离，高6位为信号强度
+            (*node).dist = uint16_t(package.nodes[nodeIndex].node & 0x03FF);
+            //如果配置了信号强度则处理信号强度
+            if (m_intensities)
+                (*node).qual = uint16_t(package.nodes[nodeIndex].node >> 10);
+        }
+        else if (YDLIDAR_GS5 == model ||
+            YDLIDAR_GS6 == model)
+        {
+            //GS5、GS6低11位为距离，高5位为信号强度
+            (*node).dist = uint16_t(package.nodes[nodeIndex].node & 0x07FF);
+            //如果配置了信号强度则处理信号强度
+            if (m_intensities)
+                (*node).qual = uint16_t(package.nodes[nodeIndex].node >> 11);
+        }
+        else
+        {
+            //GS2低9位为距离，高7位为信号强度
+            (*node).dist = uint16_t(package.nodes[nodeIndex].node & 0x01FF);
+            //如果配置了信号强度则处理信号强度
+            if (m_intensities)
+                (*node).qual = uint16_t(package.nodes[nodeIndex].node >> 9);
         }
 
         double sampleAngle = 0;
         if (node->dist > 0)
         {
-            if (YDLIDAR_GS2 == model)
-                angTransform((*node).dist, package_Sample_Index, &sampleAngle, &(*node).dist);
+            if (YDLIDAR_GS1 == model)
+                angTransform2((*node).dist, nodeIndex, 
+                    &sampleAngle, &(*node).dist);
+            else if (YDLIDAR_GS2 == model)
+                angTransform((*node).dist, nodeIndex, 
+                    &sampleAngle, &(*node).dist);
             else
-                angTransform2((*node).dist, package_Sample_Index, &sampleAngle, &(*node).dist);
+                angTransform2((*node).dist, nodeCount - nodeIndex, 
+                    &sampleAngle, &(*node).dist);
         }
 
         if (sampleAngle < 0)
         {
             (*node).angle = (((uint16_t)(sampleAngle * 64 + 23040)) << LIDAR_RESP_ANGLE_SHIFT) +
-                                        LIDAR_RESP_CHECKBIT;
+                LIDAR_RESP_CHECKBIT;
         }
         else
         {
             if ((sampleAngle * 64) > 23040)
             {
                 (*node).angle = (((uint16_t)(sampleAngle * 64 - 23040)) << LIDAR_RESP_ANGLE_SHIFT) +
-                                            LIDAR_RESP_CHECKBIT;
+                    LIDAR_RESP_CHECKBIT;
             }
             else
             {
                 (*node).angle = (((uint16_t)(sampleAngle * 64)) << LIDAR_RESP_ANGLE_SHIFT) +
-                                            LIDAR_RESP_CHECKBIT;
+                    LIDAR_RESP_CHECKBIT;
             }
         }
 
         if (YDLIDAR_GS2 == model)
         {
             // 过滤左右相机超过0°的点
-            if (package_Sample_Index < 80)
+            if (nodeIndex < 80)
             { // CT_RingStart  CT_Normal
                 if ((*node).angle <= 23041)
                 {
@@ -904,13 +927,13 @@ PARSEHEAD:
         }
 
         //处理环境数据（2个字节分别存储在两个点的is属性中）
-        if (0 == package_Sample_Index)
+        if (0 == nodeIndex)
             (*node).is = package.env & 0xFF;
-        else if (1 == package_Sample_Index)
+        else if (1 == nodeIndex)
             (*node).is = package.env >> 8;
 
-        // printf("%u 0x%X %.02f %.02f\n", package_Sample_Index, 
-        //     package.nodes[package_Sample_Index].dist,
+        // printf("%u 0x%X %.02f %.02f\n", nodeIndex, 
+        //     package.nodes[nodeIndex].dist,
         //     sampleAngle, node->dist/1.0);
     }
     else
@@ -922,10 +945,10 @@ PARSEHEAD:
         return RESULT_FAIL;
     }
 
-    package_Sample_Index ++;
-    if (package_Sample_Index >= nodeCount)
+    nodeIndex ++;
+    if (nodeIndex >= nodeCount)
     {
-        package_Sample_Index = 0;
+        nodeIndex = 0;
         (*node).sync = Node_Sync;
         CheckSumResult = false;
     }
@@ -941,9 +964,9 @@ void GSLidarDriver::angTransform(
 {
     double pixelU = n, Dist, theta, tempTheta, tempDist, tempX, tempY;
     uint8_t mdNum = 0x03 & (moduleNum >> 1);//1,2,4
-    if (n < 80)
+    if (n < nodeCount / 2)
     {
-      pixelU = 80 - pixelU;
+      pixelU = nodeCount / 2 - pixelU;
       if (b0[mdNum] > 1) {
           tempTheta = k0[mdNum] * pixelU - b0[mdNum];
       }
@@ -964,7 +987,7 @@ void GSLidarDriver::angTransform(
     }
     else
     {
-      pixelU = 160 - pixelU;
+      pixelU = nodeCount - pixelU;
       if (b1[mdNum] > 1)
       {
           tempTheta = k1[mdNum] * pixelU - b1[mdNum];
@@ -998,7 +1021,7 @@ void GSLidarDriver::angTransform2(
     double *dstTheta, 
     uint16_t *dstDist)
 {
-    double pixelU = n, Dist, theta, tempTheta;
+    double pixelU = nodeCount - n, Dist, theta, tempTheta;
     uint8_t mdNum = 0x03 & (moduleNum >> 1); // 1,2,4
 
     tempTheta = atan(k0[mdNum] * pixelU - b0[mdNum]) * 180 / M_PI;
@@ -1071,7 +1094,7 @@ result_t GSLidarDriver::waitScanData(
 
         nodebuffer[recvNodeCount++] = node;
 
-        if (!package_Sample_Index)
+        if (!nodeIndex)
         {
             size_t size = _comm->available();
             uint64_t delayTime = 0;

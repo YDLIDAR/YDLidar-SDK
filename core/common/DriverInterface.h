@@ -105,7 +105,7 @@ class DriverInterface {
     m_intensityBit(10),
     scan_node_buf(NULL),
     scan_node_count(0),
-    package_Sample_Index(0),
+    nodeIndex(0),
     retryCount(0),
     isAutoReconnect(true),
     isAutoconnting(false) {
@@ -592,7 +592,7 @@ protected:
   /// LiDAR scan count
   size_t         scan_node_count;   //<! LiDAR Scan Count
   /// package sample index
-  uint16_t package_Sample_Index;
+  uint16_t nodeIndex;
   ///
   int retryCount;
   /// auto reconnect

@@ -81,7 +81,7 @@ YDlidarDriver::YDlidarDriver(uint8_t type) :
   headerBuffer          = reinterpret_cast<uint8_t *>(&header_);
   infoBuffer            = reinterpret_cast<uint8_t *>(&info_);
   healthBuffer          = reinterpret_cast<uint8_t *>(&health_);
-  package_Sample_Index  = 0;
+  nodeIndex  = 0;
   globalRecvBuffer      = new uint8_t[sizeof(tri_node_package)];
   scan_node_buf         = new node_info[MAX_SCAN_NODES];
   package_index         = 0;
@@ -1295,7 +1295,7 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout)
   (*node).error = 0;
   (*node).debugInfo = 0xff;
 
-  if (package_Sample_Index == 0) 
+  if (nodeIndex == 0) 
   {
     uint8_t  *packageBuffer = (m_intensities) ? (isTOFLidar(m_LidarType) ?
                               (uint8_t *)&tof_package.head : 
@@ -1305,7 +1305,7 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout)
     if (!IS_OK(ans)) {
       return ans;
     }
-    // printf("index %u\n", package_Sample_Index);
+    // printf("index %u\n", nodeIndex);
 
     ans = parseResponseScanData(packageBuffer, timeout);
     if (!IS_OK(ans)) {
@@ -1357,7 +1357,7 @@ void YDlidarDriver::parseNodeDebugFromBuffer(node_info *node)
         (*node).debugInfo = 0xff;
 
         if (!has_package_error) {
-            if (package_Sample_Index == 0) {
+            if (nodeIndex == 0) {
                 package_index++;
                 (*node).debugInfo = (ct >> 1);
                 (*node).index = package_index;
@@ -1401,38 +1401,38 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
             {
                 if (8 == m_intensityBit)
                 {
-                    (*node).qual = uint16_t(package.nodes[package_Sample_Index].qual);
+                    (*node).qual = uint16_t(package.nodes[nodeIndex].qual);
                 }
                 else
                 {
-                    (*node).qual = ((uint16_t)((package.nodes[package_Sample_Index].dist & 0x03) <<
+                    (*node).qual = ((uint16_t)((package.nodes[nodeIndex].dist & 0x03) <<
                         LIDAR_RESP_ANGLE_SAMPLE_SHIFT) |
-                        (package.nodes[package_Sample_Index].qual));
+                        (package.nodes[nodeIndex].qual));
                 }
 
                 (*node).dist =
-                        package.nodes[package_Sample_Index].dist & 0xfffc;
-                (*node).is = package.nodes[package_Sample_Index].dist & 0x0003;
+                        package.nodes[nodeIndex].dist & 0xfffc;
+                (*node).is = package.nodes[nodeIndex].dist & 0x0003;
 
-                // printf("%d i %u\n", package_Sample_Index, (*node).qual);
+                // printf("%d i %u\n", nodeIndex, (*node).qual);
                 // fflush(stdout);
             }
             else
             {
                 (*node).qual =
-                        tof_package.nodes[package_Sample_Index].qual;
+                        tof_package.nodes[nodeIndex].qual;
                 (*node).dist =
-                        tof_package.nodes[package_Sample_Index].dist;
+                        tof_package.nodes[nodeIndex].dist;
             }
         }
         else //如果不带强度信息
         {
-            (*node).dist = packages.nodes[package_Sample_Index];
+            (*node).dist = packages.nodes[nodeIndex];
 
             if (isTriangleLidar(m_LidarType)) 
             {
                 (*node).qual = ((uint16_t)(0xfc |
-                    packages.nodes[package_Sample_Index] &
+                    packages.nodes[nodeIndex] &
                     0x0003)) << LIDAR_RESP_QUALITY_SHIFT;
             }
         }
@@ -1468,7 +1468,7 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
             correctAngle = 0;
         }
 
-        float sampleAngle = IntervalSampleAngle * package_Sample_Index;
+        float sampleAngle = IntervalSampleAngle * nodeIndex;
 
         if ((FirstSampleAngle + sampleAngle +
              correctAngle) < 0) {
@@ -1494,11 +1494,11 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
         (*node).scanFreq = 0;
     }
 
-    package_Sample_Index ++;
+    nodeIndex ++;
 
-    if (package_Sample_Index >= nowPackageNum) 
+    if (nodeIndex >= nowPackageNum) 
     {
-        package_Sample_Index = 0;
+        nodeIndex = 0;
         CheckSumResult = false;
     }
 }
