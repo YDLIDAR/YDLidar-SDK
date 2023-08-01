@@ -173,7 +173,7 @@ class YDlidarDriver : public DriverInterface {
                                  uint32_t timeout = DEFAULT_TIMEOUT);
   
   //获取设备信息
-  virtual bool getDeviceInfoEx(device_info &info);
+  virtual bool getDeviceInfoEx(device_info &info, int type=EPT_Module);
 
   /**
    * @brief Turn on scanning \n
@@ -392,20 +392,6 @@ class YDlidarDriver : public DriverInterface {
   * @retval RESULT_FAILE    failed
   */
   result_t stopScan(uint32_t timeout = DEFAULT_TIMEOUT);
-
-  /**
-   * @brief check single-channel lidar device information
-   * @param recvBuffer  LiDAR Data buffer
-   * @param byte        current byte
-   * @param recvPos     current recived pos
-   * @param recvSize    Buffer size
-   * @param pos         Device Buffer pos
-   * @return status
-   * @retval RESULT_OK       success
-   * @retval RESULT_FAILE    failed
-   */
-  result_t checkDeviceInfo(uint8_t *recvBuffer, uint8_t byte, int recvPos,
-                           int recvSize, int pos);
 
   /**
    * @brief waiting device information
@@ -641,12 +627,9 @@ class YDlidarDriver : public DriverInterface {
   int         asyncRecvPos;
   uint16_t    async_size;
 
-  //singleChannel
-  device_info info_;
   device_health health_;
   lidar_ans_header header_;
   uint8_t  *headerBuffer;
-  uint8_t  *infoBuffer;
   uint8_t  *healthBuffer;
   bool get_device_health_success;
 

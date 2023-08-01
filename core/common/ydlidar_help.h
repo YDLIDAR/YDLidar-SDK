@@ -286,6 +286,12 @@ inline bool isSCLLidar2(int model)
   return model == DriverInterface::YDLIDAR_SCL;
 }
 
+//根据雷达码判断是否是TEA雷达
+inline bool isTEALidar(int model)
+{
+  return model == DriverInterface::YDLIDAR_TEA;
+}
+
 /*!
  * @brief Supports multiple sampling rate
  * @param model   lidar model
@@ -344,7 +350,9 @@ inline bool hasScanFrequencyCtrl(int model) {
       model == DriverInterface::YDLIDAR_S2 ||
       model == DriverInterface::YDLIDAR_X4 ||
       model == DriverInterface::YDLIDAR_GS1 ||
-      model == DriverInterface::YDLIDAR_GS2) {
+      model == DriverInterface::YDLIDAR_GS2 ||
+      model == DriverInterface::YDLIDAR_Tmini ||
+      model == DriverInterface::YDLIDAR_TminiPRO) {
     ret = false;
   }
 

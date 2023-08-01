@@ -443,7 +443,6 @@ public:
 private:
   serial::Serial *_serial = nullptr; //串口
   std::vector<uint8_t> recvBuff; //一包数据缓存
-  device_info info_;
   device_health health_;
 };
 

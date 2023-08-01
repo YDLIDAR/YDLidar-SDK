@@ -173,7 +173,7 @@ class YDLIDAR_API CYdLidar {
   //设置是否优先获取底板设备信息
   void setBottomPriority(bool yes=true);
   //获取设备信息
-  bool getDeviceInfo(device_info& di);
+  bool getDeviceInfo(device_info& di, int type);
   //获取级联设备信息
   bool getDeviceInfo(std::vector<device_info_ex>& dis);
 

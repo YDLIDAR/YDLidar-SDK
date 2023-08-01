@@ -298,17 +298,24 @@ int main(int argc, char *argv[])
   // }
 
   //获取设备信息
-  // if (ret)
-  // {
-  //   device_info di;
-  //   memset(&di, 0, DEVICEINFOSIZE);
-  //   if (!laser.getDeviceInfo(di)) {
-  //     ydlidar::core::common::printfDeviceInfo(di);
-  //   }
-  //   else {
-  //     printf("Fail to get device info\n");
-  //   }
-  // }
+  if (ret)
+  {
+    device_info di;
+    memset(&di, 0, DEVICEINFOSIZE);
+    if (laser.getDeviceInfo(di, EPT_Module)) {
+      ydlidar::core::common::printfDeviceInfo(di, EPT_Module);
+    }
+    else {
+      printf("Fail to get module device info\n");
+    }
+
+    if (laser.getDeviceInfo(di, EPT_Base)) {
+      ydlidar::core::common::printfDeviceInfo(di, EPT_Base);
+    }
+    else {
+      printf("Fail to get baseplate device info\n");
+    }
+  }
 
   LaserScan scan;
   while (ydlidar::os_isOk())

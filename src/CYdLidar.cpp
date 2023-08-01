@@ -710,12 +710,16 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       {
         scanfrequency = global_nodes[i].scanFreq / 10.0;
 
-        if (isTOFLidar(m_LidarType))
+        if (isTOFLidar(m_LidarType)) //TOF雷达转速偏移3HZ
         {
           if (!isOldVersionTOFLidar(lidar_model, Major, Minjor))
           {
             scanfrequency = global_nodes[i].scanFreq / 10.0 + 3.0;
           }
+        }
+        else if (isTEALidar(lidar_model)) //TEA雷达转速范围10~30，无缩放
+        {
+          scanfrequency = global_nodes[i].scanFreq; 
         }
       }
 
@@ -928,10 +932,10 @@ void CYdLidar::setBottomPriority(bool yes)
   m_Bottom = yes;
 }
 
-bool CYdLidar::getDeviceInfo(device_info& di)
+bool CYdLidar::getDeviceInfo(device_info& di, int type)
 {
   if (lidarPtr)
-    return IS_OK(lidarPtr->getDeviceInfoEx(di));
+    return lidarPtr->getDeviceInfoEx(di, type);
 
   return false;
 }
@@ -1395,7 +1399,7 @@ bool CYdLidar::getDeviceInfo()
   lidarPtr->setIntensityBit(m_IntensityBit);
   ret = true;
 
-  if (printfDeviceInfo(di, EPT_Baseplate))
+  if (printfDeviceInfo(di, EPT_Base))
   {
     Major = (uint8_t)(di.firmware_version >> 8);
     Minjor = (uint8_t)(di.firmware_version & 0xff);
@@ -1430,7 +1434,7 @@ bool CYdLidar::getDeviceInfo()
   }
 
   // printf("LIDAR get device info finished, Elapsed time %u ms\n", getms() - t);
-
+  //检查转速
   if (hasScanFrequencyCtrl(di.model) || 
     ((isTOFLidar(m_LidarType)) && !m_SingleChannel) || 
       isNetTOFLidar(m_LidarType))
