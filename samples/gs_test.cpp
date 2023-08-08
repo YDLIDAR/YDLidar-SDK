@@ -231,20 +231,20 @@ int main(int argc, char *argv[])
   //   return -1;
   // }
   //获取级联雷达设备信息
-  std::vector<device_info_ex> dis;
-  ret = laser.getDeviceInfo(dis);
-  if (!ret)
-  {
-    fprintf(stderr, "Fail to get Device infomations %s\n", laser.DescribeError());
-    fflush(stderr);
-    return -1;
-  }
-  for (int i=0; i<dis.size(); ++i)
-  {
-    const device_info_ex& di = dis.at(i);
-    printf("Device [%u]\n", di.id);
-    ydlidar::core::common::printfDeviceInfo(di.di, EPT_Module);
-  }
+  // std::vector<device_info_ex> dis;
+  // ret = laser.getDeviceInfo(dis);
+  // if (!ret)
+  // {
+  //   fprintf(stderr, "Fail to get Device infomations %s\n", laser.DescribeError());
+  //   fflush(stderr);
+  //   return -1;
+  // }
+  // for (int i=0; i<dis.size(); ++i)
+  // {
+  //   const device_info_ex& di = dis.at(i);
+  //   printf("Device [%u]\n", di.id);
+  //   ydlidar::core::common::printfDeviceInfo(di.di, EPT_Module);
+  // }
 
   //启动扫描
   ret = laser.turnOn();
@@ -256,23 +256,23 @@ int main(int argc, char *argv[])
   }
 
   LaserScan scan;
-  std::map<int, uint32_t> ts;
-  ts[0] = getms();
-  ts[1] = getms();
-  ts[2] = getms();
+  //打印帧间隔
+  // std::map<int, uint32_t> ts;
+  // ts[0] = getms();
+  // ts[1] = getms();
+  // ts[2] = getms();
 
   while (ret && ydlidar::os_isOk())
   {
     if (laser.doProcessSimple(scan))
     {
-      // printf("[%lu] points in [0x%016lX] module num [%d] env flag [0x%04X]\n",
-      //        scan.points.size(),
-      //        scan.stamp,
-      //        scan.moduleNum,
-      //        scan.envFlag);
-      uint32_t t = getms();
-      printf("module[%d] time[%lld]\n", scan.moduleNum, t - ts[scan.moduleNum]);
-      ts[scan.moduleNum] = t;
+      printf("[%llu] points in module num [%d] env flag [0x%04X]\n",
+             scan.points.size(),
+             scan.moduleNum,
+             scan.envFlag);
+      // uint32_t t = getms();
+      // printf("module[%d] time[%lld]\n", scan.moduleNum, t - ts[scan.moduleNum]);
+      // ts[scan.moduleNum] = t;
 
       // for (size_t i = 0; i < scan.points.size(); ++i)
       // {

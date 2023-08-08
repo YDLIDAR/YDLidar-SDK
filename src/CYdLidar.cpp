@@ -1405,11 +1405,19 @@ bool CYdLidar::getDeviceInfo()
     Minjor = (uint8_t)(di.firmware_version & 0xff);
     m_LidarVersion.hardware = di.hardware_version;
     m_LidarVersion.soft_major = Major;
-    m_LidarVersion.soft_minor = Minjor / 10;
-    m_LidarVersion.soft_patch = Minjor % 10;
-    memcpy(&m_LidarVersion.sn[0], &di.serialnum[0], 16);
+    if (isGSLidar(m_LidarType))
+    {
+      m_LidarVersion.soft_minor = Minjor;
+      m_LidarVersion.soft_patch = 0;
+    }
+    else
+    {
+      m_LidarVersion.soft_minor = Minjor / 10;
+      m_LidarVersion.soft_patch = Minjor % 10;
+    }
+    memcpy(&m_LidarVersion.sn[0], &di.serialnum[0], SDK_SNLEN);
 
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < SDK_SNLEN; i++)
     {
       serial_number += std::to_string(di.serialnum[i] & 0xff);
     }

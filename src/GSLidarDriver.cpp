@@ -1619,6 +1619,7 @@ result_t GSLidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
             uint16_t(di.fwVersion >> 8);
         memcpy(info.serialnum, di.sn, SDK_SNLEN);
         // head.address; //雷达序号
+        m_HasDeviceInfo |= EPT_Module | EPT_Base;
     }
 
     return RESULT_OK;
@@ -1733,6 +1734,7 @@ result_t GSLidarDriver::getDeviceInfo2(device_info &info, uint32_t timeout)
     info.firmware_version = uint16_t((di.fwVersion & 0xFF) << 8) +
         uint16_t(di.fwVersion >> 8);
     memcpy(info.serialnum, di.sn, SDK_SNLEN);
+    m_HasDeviceInfo |= EPT_Module | EPT_Base;
 
     return ret;
 }
