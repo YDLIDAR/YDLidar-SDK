@@ -1611,7 +1611,7 @@ bool CYdLidar::checkScanFrequency()
   else
   {
     m_ScanFrequency += frequencyOffset;
-    fprintf(stderr, "current scan frequency[%f] is out of range.",
+    fprintf(stderr, "current scan frequency[%f] is out of range.\n",
             m_ScanFrequency - frequencyOffset);
   }
 
@@ -1788,7 +1788,7 @@ bool CYdLidar::checkCOMMs()
   lidarPtr->setSupportMotorDtrCtrl(m_SupportMotorDtrCtrl);
   lidarPtr->setBottom(m_Bottom);
 
-  printf("[YDLIDAR] Lidar successfully connected %s[%d]\n", 
+  printf("[YDLIDAR] Lidar successfully connected [%s:%d]\n", 
     m_SerialPort.c_str(), m_SerialBaudrate);
   return true;
 }

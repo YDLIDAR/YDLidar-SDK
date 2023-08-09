@@ -149,6 +149,9 @@ inline std::string lidarModelToString(int model)
   case DriverInterface::YDLIDAR_TG50:
     name = "TG50";
     break;
+  case DriverInterface::YDLIDAR_TEA:
+    name = "TEA";
+    break;
   case DriverInterface::YDLIDAR_TSA:
     name = "TSA";
     break;
@@ -434,9 +437,16 @@ inline bool isSupportScanFrequency(int model, double frequency)
       if (10 <= frequency && frequency <= 1800)
         ret = true;
     }
-    if (model >= DriverInterface::YDLIDAR_T15)
+    else if (model >= DriverInterface::YDLIDAR_T15)
     {
       if (1 <= frequency && frequency <= 50)
+      {
+        ret = true;
+      }
+    }
+    else if (model == DriverInterface::YDLIDAR_TEA)
+    {
+      if (10 <= frequency && frequency <= 30)
       {
         ret = true;
       }
