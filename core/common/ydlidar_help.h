@@ -248,6 +248,9 @@ inline std::vector<int> getDefaultSampleRate(int model)
     case DriverInterface::YDLIDAR_TG50:
       srs.push_back(20);
       break;
+    case DriverInterface::YDLIDAR_TEA:
+      srs.push_back(30);
+      break;
     case DriverInterface::YDLIDAR_T15:
       srs.push_back(20);
       break;
@@ -300,7 +303,8 @@ inline bool isTEALidar(int model)
  * @param model   lidar model
  * @return true if THere are multiple sampling rate, otherwise false.
  */
-inline bool hasSampleRate(int model) {
+inline bool hasSampleRate(int model) 
+{
   bool ret = false;
 
   if (model == DriverInterface::YDLIDAR_G4 ||
@@ -311,7 +315,8 @@ inline bool hasSampleRate(int model) {
       model == DriverInterface::YDLIDAR_G7 ||
       model == DriverInterface::YDLIDAR_TG15 ||
       model == DriverInterface::YDLIDAR_TG50 ||
-      model == DriverInterface::YDLIDAR_TG30) {
+      model == DriverInterface::YDLIDAR_TG30 ||
+      model == DriverInterface::YDLIDAR_TEA) {
     ret = true;
   }
 
@@ -333,7 +338,8 @@ inline bool hasZeroAngle(int model) {
       model == DriverInterface::YDLIDAR_G1 ||
       model == DriverInterface::YDLIDAR_TG15 ||
       model == DriverInterface::YDLIDAR_TG30 ||
-      model == DriverInterface::YDLIDAR_TG50) {
+      model == DriverInterface::YDLIDAR_TG50 ||
+      model == DriverInterface::YDLIDAR_TEA) {
     ret = true;
   }
 

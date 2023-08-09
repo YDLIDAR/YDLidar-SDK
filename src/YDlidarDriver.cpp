@@ -1092,7 +1092,7 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout)
 
   if (nodeIndex == 0) 
   {
-    uint8_t  *packageBuffer = (m_intensities) ? (isTOFLidar(m_LidarType) ?
+    uint8_t *packageBuffer = (m_intensities) ? (isTOFLidar(m_LidarType) ?
                               (uint8_t *)&tof_package.head : 
                               (uint8_t *)&package.head) :
                               (uint8_t *)&packages.head;

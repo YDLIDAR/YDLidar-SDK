@@ -1020,8 +1020,10 @@ bool CYdLidar::getDeviceInfoByPackage(const LaserDebug &debug)
 /*-------------------------------------------------------------
                     resample
 -------------------------------------------------------------*/
-void CYdLidar::resample(int frequency, int count, uint64_t tim_scan_end,
-                        uint64_t tim_scan_start)
+void CYdLidar::resample(
+  int frequency, int count, 
+  uint64_t tim_scan_end,
+  uint64_t tim_scan_start)
 {
   //重新校准采样率
   // if( (lidar_model  == DriverInterface::YDLIDAR_TG15)
@@ -1774,8 +1776,8 @@ bool CYdLidar::checkCOMMs()
     else
     {
       fprintf(stderr,
-              "[YDLIDAR] Error, cannot bind to the specified %s[%s] and %s[%d]\n",
-              m_DeviceType != YDLIDAR_TYPE_SERIAL ? "IP Adddress" : "serial port",
+              "[YDLIDAR] Error, cannot bind to the specified [%s:%s] and [%s:%d]\n",
+              m_DeviceType != YDLIDAR_TYPE_SERIAL ? "IP Address" : "serial port",
               m_SerialPort.c_str(), m_DeviceType != YDLIDAR_TYPE_SERIAL ? "network port" : "baudrate", m_SerialBaudrate);
     }
 
