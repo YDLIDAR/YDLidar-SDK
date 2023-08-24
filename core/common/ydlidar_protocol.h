@@ -134,6 +134,13 @@
 #define GS_LIDAR_CMD_SET_BIAS                  0xD9
 #define GS_LIDAR_CMD_SET_DEBUG_MODE            0xF0
 
+//模组地址
+#define LIDAR_MODULE_1 0x01
+#define LIDAR_MODULE_2 0x02
+#define LIDAR_MODULE_3 0x04
+#define LIDAR_MODULE_ALL 0x00
+#define LIDAR_MAXCOUNT 3 //最大模组数
+
 /** @} LIDAR CMD Protocol */
 
 //GS
@@ -151,13 +158,6 @@
 #define MaximumNumberOfPackages 765 //= 255 * 3
 
 #define SDK_SNLEN 16 //序列号长度
-
-/// CT Package Type
-typedef enum {
-  CT_Normal = 0,///< Normal package
-  CT_RingStart  = 1,///< Starting package
-  CT_Tail,
-} CT;
 
 /// Default Node Quality
 #define Node_Default_Quality (10)
@@ -181,6 +181,20 @@ typedef enum {
 #define FREINDEX 0
 #define USERVERSIONNDEX 1
 #define HEALTHINDEX 3
+
+//超时定义
+#define TIMEOUT_100 100
+#define TIMEOUT_300 300
+#define TIMEOUT_500 500 //500ms
+#define TIMEOUT_1S 1000
+#define TIMEOUT_2S 2000
+
+/// CT Package Type
+typedef enum {
+  CT_Normal = 0,///< Normal package
+  CT_RingStart  = 1,///< Starting package
+  CT_Tail,
+} CT;
 
 //雷达协议类型
 typedef enum {
@@ -401,6 +415,7 @@ struct gs_package_head {
     uint8_t type;
     uint16_t size;
 } __attribute__((packed));
+#define GSPACKEGEHEADSIZE sizeof(gs_package_head)
 //GS系列设备信息
 struct gs_device_info {
     uint8_t hwVersion; //硬件版本号

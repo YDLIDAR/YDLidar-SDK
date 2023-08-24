@@ -48,6 +48,10 @@ namespace ydlidar
         PropertyBuilderByName(device_info, BaseDevInfo, protected);
         //模组设备信息
         PropertyBuilderByName(device_info, ModuleDevInfo, protected);
+        //OTA文件
+        PropertyBuilderByName(std::string, OtaName, protected);
+        //OTA文件加密
+        PropertyBuilderByName(bool, OtaEncode, protected);
 
         /**
          * @par Constructor
@@ -462,13 +466,22 @@ namespace ydlidar
          * @param[in] addr 雷达地址
          * @return 成功返回RESULT_OK，否则返回非RESULT_OK
          */
-        virtual result_t setWorkMode(int mode = 0, uint8_t addr = 0x00) { return RESULT_FAIL; }
+        virtual result_t setWorkMode(int mode = 0, uint8_t addr = 0x00) { 
+          return RESULT_FAIL; 
+        }
 
         /**
          * @brief 解析点云数据并判断带不带强度信息（目前只针对三角雷达）
          * @return 成功返回RESULT_OK，否则返回非RESULT_OK
          */
-        virtual result_t getIntensityFlag() { return RESULT_OK; }
+        virtual result_t getIntensityFlag() { 
+          return RESULT_OK; 
+        }
+
+        // 开始OTA升级
+        virtual bool ota() {
+          return false;
+        }
 
       public:
         enum YDLIDAR_MODLES

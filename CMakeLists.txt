@@ -5,7 +5,7 @@ project(ydlidar_sdk C CXX)
 # version
 set(YDLIDAR_SDK_VERSION_MAJOR 1)
 set(YDLIDAR_SDK_VERSION_MINOR 1)
-set(YDLIDAR_SDK_VERSION_PATCH 17)
+set(YDLIDAR_SDK_VERSION_PATCH 18)
 set(YDLIDAR_SDK_VERSION ${YDLIDAR_SDK_VERSION_MAJOR}.${YDLIDAR_SDK_VERSION_MINOR}.${YDLIDAR_SDK_VERSION_PATCH})
 
 ##########################################################
@@ -62,7 +62,7 @@ endif()
 option( BUILD_SHARED_LIBS "Build shared libraries." OFF)
 option( BUILD_EXAMPLES "Build Example." ON)
 option( BUILD_CSHARP "Build CSharp." OFF)
-option( BUILD_TEST "Build Test." ON)
+option( BUILD_TEST "Build Test." OFF)
 
 ############################################################################
 # find package

@@ -947,6 +947,13 @@ bool CYdLidar::getDeviceInfo(std::vector<device_info_ex>& dis)
   return false;
 }
 
+bool CYdLidar::ota()
+{
+  if (lidarPtr)
+    return lidarPtr->ota();
+  return false;
+}
+
 /*-------------------------------------------------------------
                     isRangeValid
 -------------------------------------------------------------*/
@@ -1789,6 +1796,8 @@ bool CYdLidar::checkCOMMs()
   lidarPtr->setScanFreq(m_ScanFrequency);
   lidarPtr->setSupportMotorDtrCtrl(m_SupportMotorDtrCtrl);
   lidarPtr->setBottom(m_Bottom);
+  lidarPtr->setOtaName(otaName);
+  lidarPtr->setOtaEncode(otaEncode);
 
   printf("[YDLIDAR] Lidar successfully connected [%s:%d]\n", 
     m_SerialPort.c_str(), m_SerialBaudrate);

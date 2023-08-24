@@ -435,6 +435,26 @@ namespace ydlidar
      */
     virtual result_t setWorkMode(int mode = 0, uint8_t addr = 0x00);
 
+    // 开始OTA升级
+    virtual bool ota();
+    // 开始OTA
+    bool startOta(uint8_t addr);
+    // OTA升级中
+    bool execOta(uint8_t addr, const std::vector<uint8_t>& data);
+    // 停止OTA
+    bool stopOta(uint8_t addr);
+    //判断响应是否正常
+    bool isOtaRespOk(uint8_t addr,
+                     uint8_t cmd,
+                     uint16_t offset,
+                     const std::vector<uint8_t>& data);
+    bool sendData(uint8_t addr,
+                  uint8_t cmd,
+                  const std::vector<uint8_t> &data,
+                  uint8_t cmdRecv,
+                  std::vector<uint8_t> &dataRecv,
+                  int timeout = 500);
+
     // 未实现的虚函数
     virtual result_t getScanFrequency(scan_frequency &frequency, uint32_t timeout = DEFAULT_TIMEOUT) { return RESULT_OK; }
     virtual result_t setScanFrequencyDis(scan_frequency &frequency,

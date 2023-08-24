@@ -177,6 +177,18 @@ class YDLIDAR_API CYdLidar {
   //获取级联设备信息
   bool getDeviceInfo(std::vector<device_info_ex>& dis);
 
+  //OTA功能相关
+  //设置OTA文件路径
+  void setOtaFile(const std::string& name) {
+    otaName = name;
+  }
+  //设置OTA文件加密
+  void setOtaEncode(bool e) {
+    otaEncode = e;
+  }
+  //开始OTA升级
+  bool ota();
+
  private:
   /**
    * @brief check LiDAR instance and connect to LiDAR,
@@ -352,6 +364,8 @@ class YDLIDAR_API CYdLidar {
 
   bool m_SunNoise = false; //阳光噪点过滤标识
   bool m_GlassNoise = false; //玻璃噪点过滤标识
+  std::string otaName; //OTA文件路径
+  bool otaEncode = true; //OTA是否加密
 };	// End of class
 #endif // CYDLIDAR_H
 

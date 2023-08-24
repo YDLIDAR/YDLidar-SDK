@@ -32,11 +32,22 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 #include <math.h>
+#include <fstream>
 #include "GSLidarDriver.h"
 #include "core/serial/common.h"
 #include <core/serial/serial.h>
 #include <core/network/ActiveSocket.h>
 #include "ydlidar_config.h"
+
+#define GS_CMD_STARTIAP 0x0A //启动IAP
+#define GS_CMD_EXECIAP 0x0B //运行IAP，传输数据包
+#define GS_CMD_STOPIAP 0x0C //停止IAP
+#define GS_CMD_ACKIAP 0x20 //IAP应答
+#define GS_CMD_RESET 0x67 //复位
+#define GS_CMD_ACKOK 0x01 //正常
+#define GS_CMD_ZERO 0x00 //0
+
+#define DATA_LEN_PER_FRAME (81 - 18 + 1) //每帧数据长度
 
 using namespace impl;
 
@@ -1774,6 +1785,278 @@ result_t GSLidarDriver::setWorkMode(int mode, uint8_t addr)
     }
 
     return RESULT_OK;
+}
+
+bool GSLidarDriver::ota()
+{
+    if (m_OtaName.empty())
+    {
+        printf("[YDLIDAR OTA] Not set OTA file\n");
+        return false;
+    }
+    // 读取文件所有内容
+    std::ifstream f;
+    f.open(m_OtaName, ios::in | ios::binary);
+    if (!f.is_open())
+    {
+        printf("[YDLIDAR OTA] Fail to open OTA file[%s]\n", m_OtaName.c_str());
+        return false;
+    }
+    //读数据
+    std::vector<uint8_t> data;
+    while (!f.eof())
+    {
+        std::vector<uint8_t> d(DATA_LEN_PER_FRAME);
+        memset(d.data(), GS_CMD_ZERO, d.size());
+        f.read(reinterpret_cast<char*>(d.data()), d.size());
+        int s = f.gcount(); //获取读取成功的字节数
+        for (int i=0; i<s; ++i)
+            data.push_back(d.at(i));
+    }
+    printf("[YDLIDAR OTA] File size [%.02lf]KB\n", data.size() / 1024.0);
+
+    int count = moduleCount; // 雷达数量
+    for (int i = 0; i < count; ++i)
+    {
+        uint8_t addr = 1 << i;
+        // 开始OTA
+        if (!startOta(addr))
+        {
+            printf("[YDLIDAR 0x%02X] Fail to Start OTA\n", addr);
+            return false;
+        }
+
+        // 下载数据
+        if (!execOta(addr, data))
+        {
+            printf("[YDLIDAR 0x%02X] Fail to download data\n", addr);
+            return false;
+        }
+
+        // 停止OTA
+        if (!stopOta(addr))
+        {
+            printf("[YDLIDAR 0x%02X] Fail to Start OTA\n", addr);
+            return false;
+        }
+
+        // 重启雷达
+        if (!IS_OK(reset(addr, TIMEOUT_1S)))
+        {
+            printf("[YDLIDAR 0x%02X] Fail to restart gs lidar\n", addr);
+            return false;
+        }
+
+        printf("[YDLIDAR 0x%02X] Success to finish OTA\n", addr);
+    }
+
+    return true;
+}
+
+bool GSLidarDriver::startOta(uint8_t addr)
+{
+    //发送启动OTA命令
+    std::vector<uint8_t> d;
+    uint8_t dsr[] = {0x00, 0x00,
+                    0x73, 0x74, 0x61, 0x72, 0x74, 0x20, 0x64, 0x6F,
+                    0x77, 0x6E, 0x6C, 0x6F, 0x61, 0x64, 0x00, 0x00};
+    for (int i = 0; i < sizeof(dsr); ++i)
+        d.push_back(dsr[i]);
+    std::vector<uint8_t> dataRecv;
+    bool ret = sendData(
+        addr,
+        GS_CMD_STARTIAP,
+        d,
+        GS_CMD_ACKIAP,
+        dataRecv,
+        TIMEOUT_500);
+    if (ret)
+    {
+        ret = isOtaRespOk(
+            addr,
+            GS_CMD_STARTIAP,
+            GS_CMD_ZERO,
+            dataRecv);
+    }
+
+    return ret;
+}
+
+bool GSLidarDriver::execOta(uint8_t addr, const std::vector<uint8_t>& data)
+{
+    // 数据中固定部分（字符串“downloading”）
+    uint8_t fix[] = {0x64, 0x6F, 0x77, 0x6E, 0x6C, 0x6F, 0x61, 0x64,
+                     0x69, 0x6E, 0x67, 0x00, 0x00, 0x00, 0x00, 0x00};
+    bool ret = false;
+    // 计算固件分成的数据包数
+    int n = data.size() % DATA_LEN_PER_FRAME;
+    int m = data.size() / DATA_LEN_PER_FRAME + (n ? 1 : 0); 
+
+    int percent = -1;
+    for (int j = 0; j < m; ++j)
+    {
+        // 打印进度
+        int p = int(j * 100.0 / m);
+        if (p != percent)
+        {
+            percent = p;
+            printf("[YDLDIAR OTA] Downloading [%d%%]\n", p);
+        }
+
+        std::vector<uint8_t> d;
+        int offset = j * DATA_LEN_PER_FRAME; // 数据偏移量
+        d.push_back(offset & 0xFF);
+        d.push_back(offset >> 8);
+        for (int i = 0; i < sizeof(fix); ++i)
+            d.push_back(fix[i]);
+        for (int i = offset; i < offset + DATA_LEN_PER_FRAME; ++i)
+        {
+            if (i < data.size())
+                d.push_back(data.at(i));
+            else
+                d.push_back(GS_CMD_ZERO);
+        }
+
+        std::vector<uint8_t> dataRecv;
+        ret = sendData(
+            addr,
+            GS_CMD_EXECIAP,
+            d,
+            GS_CMD_ACKIAP,
+            dataRecv,
+            TIMEOUT_500);
+        if (ret)
+        {
+            ret = isOtaRespOk(
+                addr,
+                GS_CMD_EXECIAP,
+                uint16_t(offset),
+                dataRecv);
+        }
+        if (!ret)
+        {
+            printf("[YDLDIAR OTA] Fail to download [%d] package\n", j + 1);
+            break;
+        }
+    }
+
+    return ret;
+}
+
+bool GSLidarDriver::stopOta(uint8_t addr)
+{
+    std::vector<uint8_t> d;
+
+    uint8_t dsr[] = {0x00, 0x00,
+                     0x63, 0x6F, 0x6D, 0x70, 0x6C, 0x65, 0x74, 0x65,
+                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    for (int i = 0; i < sizeof(dsr); ++i)
+        d.push_back(dsr[i]);
+    // 是否加密标识
+    d.push_back(m_OtaEncode);
+    d.push_back(GS_CMD_ZERO);
+    d.push_back(GS_CMD_ZERO);
+    d.push_back(GS_CMD_ZERO);
+
+    std::vector<uint8_t> dataRecv;
+    bool ret = sendData(
+        addr,
+        GS_CMD_STOPIAP,
+        d,
+        GS_CMD_ACKIAP,
+        dataRecv,
+        TIMEOUT_500);
+    if (ret)
+    {
+        ret = isOtaRespOk(
+            addr,
+            GS_CMD_STOPIAP,
+            GS_CMD_ZERO,
+            dataRecv);
+    }
+
+    return ret;
+}
+
+bool GSLidarDriver::isOtaRespOk(
+    uint8_t addr,
+    uint8_t cmd,
+    uint16_t offset,
+    const std::vector<uint8_t> &data)
+{
+    std::vector<uint8_t> d;
+    d.push_back(LIDAR_CMD_SYNC_BYTE);
+    d.push_back(LIDAR_CMD_SYNC_BYTE);
+    d.push_back(LIDAR_CMD_SYNC_BYTE);
+    d.push_back(LIDAR_CMD_SYNC_BYTE);
+    d.push_back(addr);
+    d.push_back(GS_CMD_ACKIAP);
+    uint16_t len = 4;
+    d.push_back(len & 0xFF);
+    d.push_back(len >> 8);
+    d.push_back(offset & 0xFF);
+    d.push_back(offset >> 8);
+    d.push_back(cmd);
+    d.push_back(GS_CMD_ACKOK);
+    //计算8位校验和
+    uint8_t cs = 0;
+    for (int k=4; k<d.size(); ++k)
+        cs += uint8_t(d.at(k));
+    d.push_back(cs);
+
+    return d == data;
+}
+
+bool GSLidarDriver::sendData(
+    uint8_t addr,
+    uint8_t cmd,
+    const std::vector<uint8_t> &data,
+    uint8_t cmdRecv,
+    std::vector<uint8_t> &dataRecv,
+    int timeout)
+{
+    std::vector<uint8_t> d;
+    d.push_back(LIDAR_CMD_SYNC_BYTE);
+    d.push_back(LIDAR_CMD_SYNC_BYTE);
+    d.push_back(LIDAR_CMD_SYNC_BYTE);
+    d.push_back(LIDAR_CMD_SYNC_BYTE);
+    d.push_back(addr);
+    d.push_back(cmd);
+    uint16_t len = uint16_t(data.size());
+    d.push_back(len & 0xFF);
+    d.push_back(len >> 8);
+    for (size_t i=0; i<data.size(); ++i)
+        d.push_back(data.at(i));
+
+    bool ret = false;
+    std::vector<uint8_t> ds;
+    //计算8位校验和
+    uint8_t cs = 0;
+    for (int k=4; k<d.size(); ++k)
+        cs += uint8_t(d.at(k));
+    d.push_back(cs);
+
+    flushSerial();
+    result_t r = sendData(d.data(), d.size());
+    if (!IS_OK(r))
+        return ret;
+    gs_package_head head;
+    r = waitResponseHeaderEx(&head, cmdRecv, timeout);
+    if (!IS_OK(r))
+        return ret;
+    r = waitForData(head.size + 1, timeout);
+    if (!IS_OK(r))
+        return ret;
+    std::vector<uint8_t> dRecv(GSPACKEGEHEADSIZE + head.size + 1);
+    memcpy(&dRecv[0], &head, GSPACKEGEHEADSIZE);
+    r = getData(&dRecv[GSPACKEGEHEADSIZE], head.size + 1);
+    if (IS_OK(r))
+    {
+        dataRecv = dRecv;
+        ret = true;
+    }
+        
+    return ret;
 }
 
 }
