@@ -432,16 +432,15 @@ result_t GSLidarDriver::waitResponseHeaderEx(
 {
     int recvPos = 0;
     uint32_t startTs = getms();
-    uint8_t  recvBuffer[sizeof(gs_package_head)];
-    uint8_t  *headerBuffer = reinterpret_cast<uint8_t *>(header);
+    uint8_t  recvBuffer[GSPACKEGEHEADSIZE];
+    uint8_t  *headerBuffer = reinterpret_cast<uint8_t*>(header);
     uint32_t waitTime = 0;
 
     while ((waitTime = getms() - startTs) <= timeout)
     {
-        size_t remainSize = sizeof(gs_package_head) - recvPos;
+        size_t remainSize = GSPACKEGEHEADSIZE - recvPos;
         size_t recvSize = 0;
         result_t ans = waitForData(remainSize, timeout - waitTime, &recvSize);
-
         if (!IS_OK(ans)) {
             return ans;
         }
@@ -451,7 +450,6 @@ result_t GSLidarDriver::waitResponseHeaderEx(
         }
 
         ans = getData(recvBuffer, recvSize);
-
         if (IS_FAIL(ans)) {
             return RESULT_FAIL;
         }
@@ -500,7 +498,7 @@ result_t GSLidarDriver::waitResponseHeaderEx(
 
             headerBuffer[recvPos++] = currentByte;
 
-            if (recvPos == sizeof(gs_package_head)) {
+            if (recvPos == GSPACKEGEHEADSIZE) {
                 return RESULT_OK;
             }
         }
@@ -2037,10 +2035,11 @@ bool GSLidarDriver::sendData(
     d.push_back(cs);
 
     flushSerial();
+    ScopedLocker l(_cmd_lock);
     result_t r = sendData(d.data(), d.size());
     if (!IS_OK(r))
         return ret;
-    gs_package_head head;
+    gs_package_head head = {0};
     r = waitResponseHeaderEx(&head, cmdRecv, timeout);
     if (!IS_OK(r))
         return ret;
