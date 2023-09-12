@@ -76,6 +76,7 @@
 #define SDK_CMD_SETBAUDRATE 0x66 //设置串口波特率
 #define SDK_CMD_SETOUTPUT 0x67 //设置输出的数据格式
 #define SDK_CMD_RESET 0x68 //恢复出厂设置
+#define SDK_BUFFER_MAXLEN 100 //缓存长度
 
 //设置1字节对齐
 #pragma pack(1)
@@ -339,9 +340,9 @@ public:
   * @retval RESULT_FAILE    获取失败
   * @note 当timeout = -1 时, 将一直等待
   */
-  result_t waitRes(uint8_t cmd,
+  result_t waitResp(uint8_t cmd,
                    uint32_t timeout = DEFAULT_TIMEOUT);
-  result_t waitRes(uint8_t cmd,
+  result_t waitResp(uint8_t cmd,
                    std::vector<uint8_t> &data,
                    uint32_t timeout = DEFAULT_TIMEOUT);
   /*!

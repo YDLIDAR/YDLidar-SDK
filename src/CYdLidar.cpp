@@ -1575,9 +1575,9 @@ bool CYdLidar::checkScanFrequency()
 
   if (isSupportScanFrequency(lidar_model, m_ScanFrequency))
   {
-    m_ScanFrequency += frequencyOffset;
+    //TODO: 此处为何要加上偏移量，待解释
+    // m_ScanFrequency += frequencyOffset;
     ans = lidarPtr->getScanFrequency(_scan_frequency);
-
     if (IS_OK(ans))
     {
       frequency = _scan_frequency.frequency / 100.f;
@@ -1585,16 +1585,17 @@ bool CYdLidar::checkScanFrequency()
 
       if (hz > 0)
       {
+        //大调速
         while (hz > 0.95)
         {
           lidarPtr->setScanFrequencyAdd(_scan_frequency);
-          hz = hz - 1.0;
+          hz -= 1.0;
         }
-
+        //小调速
         while (hz > 0.09)
         {
           lidarPtr->setScanFrequencyAddMic(_scan_frequency);
-          hz = hz - 0.1;
+          hz -= 0.1;
         }
 
         frequency = _scan_frequency.frequency / 100.0f;
@@ -1619,13 +1620,12 @@ bool CYdLidar::checkScanFrequency()
   }
   else
   {
-    m_ScanFrequency += frequencyOffset;
+    // m_ScanFrequency += frequencyOffset;
     fprintf(stderr, "current scan frequency[%f] is out of range.\n",
-            m_ScanFrequency - frequencyOffset);
+            m_ScanFrequency);
   }
 
   ans = lidarPtr->getScanFrequency(_scan_frequency);
-
   if (IS_OK(ans))
   {
     frequency = _scan_frequency.frequency / 100.0f;
@@ -1639,7 +1639,7 @@ bool CYdLidar::checkScanFrequency()
   //       m_SampleRate = m_SampleRatebyD1;
   //   }
 
-  m_ScanFrequency -= frequencyOffset;
+  // m_ScanFrequency -= frequencyOffset;
   m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
   printf("[YDLIDAR] Current scan frequency: %.02fHz\n", m_ScanFrequency);
   // printf("[YDLIDAR] Fixed size: %d\n", m_FixedSize);

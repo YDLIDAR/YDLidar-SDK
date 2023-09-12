@@ -351,7 +351,8 @@ inline bool hasZeroAngle(int model) {
  * @param model   lidar model
  * @return true if supported, otherwise false.
  */
-inline bool hasScanFrequencyCtrl(int model) {
+inline bool hasScanFrequencyCtrl(int model) 
+{
   bool ret = true;
 
   if (model == DriverInterface::YDLIDAR_S4 ||
@@ -359,9 +360,8 @@ inline bool hasScanFrequencyCtrl(int model) {
       model == DriverInterface::YDLIDAR_S2 ||
       model == DriverInterface::YDLIDAR_X4 ||
       model == DriverInterface::YDLIDAR_GS1 ||
-      model == DriverInterface::YDLIDAR_GS2 ||
-      model == DriverInterface::YDLIDAR_Tmini ||
-      model == DriverInterface::YDLIDAR_TminiPRO) {
+      model == DriverInterface::YDLIDAR_GS2) 
+  {
     ret = false;
   }
 
@@ -453,6 +453,13 @@ inline bool isSupportScanFrequency(int model, double frequency)
     else if (model == DriverInterface::YDLIDAR_TEA)
     {
       if (10 <= frequency && frequency <= 30)
+      {
+        ret = true;
+      }
+    }
+    else if (model == DriverInterface::YDLIDAR_Tmini)
+    {
+      if (5 <= frequency && frequency <= 12)
       {
         ret = true;
       }

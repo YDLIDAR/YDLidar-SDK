@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
 
   std::string input_frequency;
 
-  float frequency = 4.0;
+  float frequency = 10.0;
 
   // while (ydlidar::os_isOk() && !isSingleChannel) {
   //   printf("Please enter the lidar scan frequency[5-12]:");
@@ -269,9 +269,9 @@ int main(int argc, char *argv[]) {
   {
       if (laser.doProcessSimple(scan))
       {
-        printf("Scan received at [%lu] %u points is [%f]Hz\n",
-               scan.stamp / 1000000,
+        printf("[%u] points [%.02f(%.02f)]Hz\n",
                (unsigned int)scan.points.size(),
+               scan.scanFreq,
                1.0 / scan.config.scan_time);
         // for (size_t i = 0; i < scan.points.size(); ++i)
         // {
