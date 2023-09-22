@@ -1,6 +1,6 @@
 # How to Build and Install
 
-* [1. Install CMake](#install-camke)
+* [1. Install CMake](#install-cmake)
 * [2. Build YDLidar-SDK](#build-ydlidar-sdk)
 * [3. Run Samples](#run-ydlidar-sdk-sample)
 * [4. Build in VSCode](#build-in-visual-studio-code)
