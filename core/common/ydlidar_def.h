@@ -88,7 +88,7 @@ typedef struct {
   void *lidar;///< CYdLidar instance
 } YDLidar;
 
-typedef enum  {
+typedef enum {
   NoError = 0,
   DeviceNotFoundError,
   PermissionError,

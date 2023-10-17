@@ -318,16 +318,15 @@ result_t YDlidarDriver::sendData(const uint8_t *data, size_t size) {
   return RESULT_OK;
 }
 
-result_t YDlidarDriver::getData(uint8_t *data, size_t size) {
-  if (!m_isConnected) {
+result_t YDlidarDriver::getData(uint8_t *data, size_t size) 
+{
+  if (!m_isConnected)
     return RESULT_FAIL;
-  }
 
   size_t r = 0;
-
-  while (size) {
+  while (size) 
+  {
     r = _serial->readData(data, size);
-
     if (r < 1) {
       return RESULT_FAIL;
     }
@@ -983,13 +982,11 @@ result_t YDlidarDriver::parseResponseHeader(
             IntervalSampleAngle_LastPackage = IntervalSampleAngle;
           }
         }
-
         break;
 
       case 8:
         CheckSum = currentByte;
         break;
-
       case 9:
         CheckSum += (currentByte * 0x100);
         break;
@@ -1083,6 +1080,58 @@ result_t YDlidarDriver::parseResponseScanData(
   return ans;
 }
 
+//解析时间戳数据（云鲸雷达）
+bool YDlidarDriver::parseStampData(uint32_t timeout)
+{
+  //如果无时间戳数据，则直接返回
+  if (!hasStamp)
+    return true;
+
+  //云鲸雷达零位包后边附加8字节时间戳数据，单位纳秒
+  result_t ans = RESULT_TIMEOUT;
+  int size = sizeof(uint64_t);
+  size_t ws = size;
+  size_t rs = 0;
+  ans = waitForData(ws, timeout, &rs);
+    if (!IS_OK(ans))
+  return false;
+  if (rs > ws)
+    rs = ws;
+  getData(globalRecvBuffer, rs);
+  //判断8个字节数据是否存在AA55，如果有则说明当前无时间戳数据
+  int pos = 0;
+  for (int i=0; i<rs; ++i)
+  {
+    uint8_t c = globalRecvBuffer[i];
+    switch (pos)
+    {
+      case 0:
+      {
+        if (c != PH1)
+          continue;
+        break;
+      }
+      case 1:
+      {
+        if (c != PH2)
+        {
+          pos = 0;
+          continue;
+        }
+        hasStamp = false;
+        break;
+      }
+    }
+  }
+  if (hasStamp)
+  {
+    memcpy(&stamp, globalRecvBuffer, size);
+    printf("SCL stamp: %llu 0x%"PRIx64"\n", stamp, stamp);
+  }
+
+  return hasStamp;
+}
+
 result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout) 
 {
   (*node).index = 255;
@@ -1109,6 +1158,9 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout)
 
     calcuteCheckSum(node);
     calcutePackageCT();
+
+    if ((ct & 0x01) == CT_RingStart)
+      parseStampData(); //解析时间戳
   }
 
   parseNodeDebugFromBuffer(node);
@@ -1730,6 +1782,7 @@ result_t YDlidarDriver::startScan(bool force, uint32_t timeout)
     return RESULT_OK;
   }
 
+  hasStamp = true;
   stop();
   checkTransDelay();
   flushSerial();
@@ -1764,7 +1817,7 @@ result_t YDlidarDriver::startScan(bool force, uint32_t timeout)
       waitDevicePackage(1000);
     }
     //非Tmini系列雷达才自动获取强度标识
-    if (!isTminiLidar(model))
+    if (!isTminiLidar(model) && !isSCLLidar(m_LidarType))
     {
       // 获取强度标识
       getIntensityFlag();

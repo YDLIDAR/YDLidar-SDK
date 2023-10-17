@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
   optval = YDLIDAR_TYPE_TCP;
   laser.setlidaropt(LidarPropDeviceType, &optval, sizeof(int));
   /// sample rate
-  optval = 30;
+  optval = 20;
   laser.setlidaropt(LidarPropSampleRate, &optval, sizeof(int));
   /// abnormal count
   optval = 4;
@@ -156,9 +156,10 @@ int main(int argc, char *argv[])
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
-  bool b_optvalue = false;
+  bool b_optvalue = true;
   laser.setlidaropt(LidarPropFixedResolution, &b_optvalue, sizeof(bool));
   /// rotate 180
+  b_optvalue = false;
   laser.setlidaropt(LidarPropReversion, &b_optvalue, sizeof(bool));
   /// Counterclockwise
   laser.setlidaropt(LidarPropInverted, &b_optvalue, sizeof(bool));

@@ -408,7 +408,7 @@ class YDlidarDriver : public DriverInterface {
    * @param timeout
    * @return
    */
-  result_t parseResponseHeader(uint8_t  *packageBuffer,
+  result_t parseResponseHeader(uint8_t *packageBuffer,
                                uint32_t timeout = DEFAULT_TIMEOUT);
 
   /**
@@ -417,8 +417,12 @@ class YDlidarDriver : public DriverInterface {
    * @param timeout
    * @return
    */
-  result_t parseResponseScanData(uint8_t  *packageBuffer,
+  result_t parseResponseScanData(uint8_t *packageBuffer,
                                  uint32_t timeout = DEFAULT_TIMEOUT);
+
+  //解析时间戳数据（云鲸雷达）
+  bool parseStampData(uint32_t timeout = DEFAULT_TIMEOUT / 10);
+
   /**
   * @brief Unpacking \n
   * @param[in] node lidar point information
@@ -640,6 +644,7 @@ class YDlidarDriver : public DriverInterface {
 
   uint32_t m_dataPos = 0; //记录当前解析到的数据的位置（解析是否带强度信息专用）
   uint64_t stamp = 0; //时间戳
+  bool hasStamp = true; //是否有时间戳数据
 };
 
 }// namespace ydlidar

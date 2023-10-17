@@ -453,6 +453,9 @@ void CYdLidar::GetLidarVersion(LidarVersion &version)
 -------------------------------------------------------------*/
 bool CYdLidar::turnOn()
 {
+  //重置错误
+  lidarPtr->setDriverError(NoError);
+
   if (scanning && lidarPtr->isscanning())
   {
     return true;
