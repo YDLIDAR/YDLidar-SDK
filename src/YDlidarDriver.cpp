@@ -1126,7 +1126,7 @@ bool YDlidarDriver::parseStampData(uint32_t timeout)
   if (hasStamp)
   {
     memcpy(&stamp, globalRecvBuffer, size);
-    printf("SCL stamp: %llu 0x%"PRIx64"\n", stamp, stamp);
+    //printf("SCL stamp: %llu 0x%"PRIx64"\n", stamp, stamp);
   }
 
   return hasStamp;

@@ -13,7 +13,7 @@ struct FilterBlock
     int end_index;
 };
 
-class NoiseFilter : public FilterInterface
+class YDLIDAR_API NoiseFilter : public FilterInterface
 {
 public:
     enum FilterStrategy

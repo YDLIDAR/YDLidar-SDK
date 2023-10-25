@@ -3,7 +3,7 @@
 #include "FilterInterface.h"
 
 //强光滤波器
-class StrongLightFilter : public FilterInterface
+class YDLIDAR_API StrongLightFilter : public FilterInterface
 {
 public:
     StrongLightFilter();

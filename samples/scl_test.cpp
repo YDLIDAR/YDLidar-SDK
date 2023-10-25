@@ -330,7 +330,7 @@ int main(int argc, char *argv[])
   {
     if (laser.doProcessSimple(scan))
     {
-      printf("Scan received [%llu] points stamp [0x%"PRIx64"]\n",
+      printf("Scan received [%llu] points stamp [%llu]\n",
              scan.points.size(),
              scan.stamp);
       // for (size_t i = 0; i < scan.points.size(); ++i)

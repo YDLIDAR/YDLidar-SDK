@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <time.h>
 #include <inttypes.h>
+#include "utils.h"
 
 
 #define BEGIN_STATIC_CODE( _blockname_ ) \
@@ -42,8 +43,8 @@ namespace impl {
 #if defined(_WIN32)
 void HPtimer_reset();
 #endif
-uint32_t getHDTimer();
-uint64_t getCurrentTime();
+YDLIDAR_API uint32_t getHDTimer();
+YDLIDAR_API uint64_t getCurrentTime();
 } // namespace impl
 
 
