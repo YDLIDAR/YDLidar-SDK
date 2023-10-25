@@ -1159,8 +1159,8 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout)
     calcuteCheckSum(node);
     calcutePackageCT();
 
-    if ((ct & 0x01) == CT_RingStart)
-      parseStampData(); //解析时间戳
+    // if ((ct & 0x01) == CT_RingStart)
+    //   parseStampData(); //解析时间戳
   }
 
   parseNodeDebugFromBuffer(node);
@@ -1817,7 +1817,7 @@ result_t YDlidarDriver::startScan(bool force, uint32_t timeout)
       waitDevicePackage(1000);
     }
     //非Tmini系列雷达才自动获取强度标识
-    if (!isTminiLidar(model) && !isSCLLidar(m_LidarType))
+    if (!isTminiLidar(model))
     {
       // 获取强度标识
       getIntensityFlag();
