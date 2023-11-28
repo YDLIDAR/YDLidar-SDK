@@ -311,7 +311,7 @@ inline bool hasSampleRate(int model)
       model == DriverInterface::YDLIDAR_G5 ||
       model == DriverInterface::YDLIDAR_G4PRO ||
       model == DriverInterface::YDLIDAR_F4PRO ||
-      model == DriverInterface::YDLIDAR_G6 ||
+      // model == DriverInterface::YDLIDAR_G6 ||
       model == DriverInterface::YDLIDAR_G7 ||
       model == DriverInterface::YDLIDAR_TG15 ||
       model == DriverInterface::YDLIDAR_TG50 ||
@@ -661,11 +661,11 @@ inline bool isValidSampleRate(std::map<int, int> smap)
  * @return  LiDAR sampling rate code
  */
 inline int ConvertUserToLidarSmaple(int model,
-                                    int m_SampleRate,
+                                    int sampleRate,
                                     int defaultRate)
 {
   int _samp_rate = 9;
-  switch (m_SampleRate) 
+  switch (sampleRate) 
   {
     case 10:
       _samp_rate = DriverInterface::YDLIDAR_RATE_4K;
@@ -687,7 +687,7 @@ inline int ConvertUserToLidarSmaple(int model,
   if (!isOctaveLidar(model)) 
   {
     _samp_rate = 2;
-    switch (m_SampleRate) 
+    switch (sampleRate) 
     {
       case 4:
         _samp_rate = DriverInterface::YDLIDAR_RATE_4K;
@@ -704,7 +704,7 @@ inline int ConvertUserToLidarSmaple(int model,
     if (model == DriverInterface::YDLIDAR_F4PRO) 
     {
       _samp_rate = 0;
-      switch (m_SampleRate) 
+      switch (sampleRate) 
       {
         case 4:
           _samp_rate = DriverInterface::YDLIDAR_RATE_4K;
