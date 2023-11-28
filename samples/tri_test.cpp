@@ -217,6 +217,7 @@ int main(int argc, char *argv[])
   laser.setlidaropt(LidarPropDeviceType, &optval, sizeof(int));
   /// sample rate
   optval = isSingleChannel ? 3 : 4;
+  optval = 5;
   laser.setlidaropt(LidarPropSampleRate, &optval, sizeof(int));
   /// abnormal count
   optval = 4;
@@ -227,21 +228,24 @@ int main(int argc, char *argv[])
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
-  bool b_optvalue = true;
+  bool b_optvalue = false;
   laser.setlidaropt(LidarPropFixedResolution, &b_optvalue, sizeof(bool));
   /// rotate 180
+  b_optvalue = false;
   laser.setlidaropt(LidarPropReversion, &b_optvalue, sizeof(bool));
   /// Counterclockwise
+  b_optvalue = false;
   laser.setlidaropt(LidarPropInverted, &b_optvalue, sizeof(bool));
   b_optvalue = true;
   laser.setlidaropt(LidarPropAutoReconnect, &b_optvalue, sizeof(bool));
   /// one-way communication
+  b_optvalue = false;
   laser.setlidaropt(LidarPropSingleChannel, &isSingleChannel, sizeof(bool));
   /// intensity
   b_optvalue = false;
   laser.setlidaropt(LidarPropIntenstiy, &b_optvalue, sizeof(bool));
   /// Motor DTR
-  b_optvalue = false;
+  b_optvalue = true;
   laser.setlidaropt(LidarPropSupportMotorDtrCtrl, &b_optvalue, sizeof(bool));
   /// HeartBeat
   b_optvalue = false;

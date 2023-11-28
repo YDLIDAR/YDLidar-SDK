@@ -1294,8 +1294,9 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
             else if (isSCLLidar(m_LidarType) || 
                 isSCLLidar2(model))
             {
-                //SCL雷达角度二级解析公式（α = asind（17.8/dist））
-                correctAngle = int32_t(asin(17.8 / node->dist) * 180.0 / M_PI * 64.0);
+                //SCL雷达角度二级解析公式
+                //correctAngle = int32_t(asin(17.8 / node->dist) * 180.0 / M_PI * 64.0);
+                correctAngle = int32_t(atan(17.8 / (node->dist / 4.0)) * 180.0 / M_PI * 64.0);
                 // printf("SCL correct angle [%d]\n", correctAngle);
             }
             else if (isTriangleLidar(m_LidarType) &&

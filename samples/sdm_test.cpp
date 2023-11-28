@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
   f_optvalue = 0.025f;
   laser.setlidaropt(LidarPropMinRange, &f_optvalue, sizeof(float));
   /// unit: Hz
-  float frequency = 100.0;
+  float frequency = 250.0;
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
   // 雷达初始化
