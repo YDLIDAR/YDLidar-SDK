@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
       //   const LaserPoint &p = scan.points.at(i);
       //   printf("%lu a %.01f r %.01f\n", i, p.angle * 180.0f / M_PI, p.range * 1000.0f);
       // }
-      fflush(stdout);
+      // fflush(stdout);
     }
     else
     {
