@@ -66,9 +66,9 @@ option( BUILD_TEST "Build Test." OFF)
 
 ############################################################################
 # find package
-FIND_PACKAGE(SWIG)
+find_package(SWIG)
 find_package(PythonInterp)
-FIND_PACKAGE(PythonLibs)
+find_package(PythonLibs)
 find_package(GTest)
 
 ############################################################################

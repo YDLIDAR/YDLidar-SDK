@@ -889,11 +889,11 @@ PARSEHEAD:
             if (YDLIDAR_GS1 == model)
                 angTransform2((*node).dist, nodeIndex, 
                     &sampleAngle, &(*node).dist);
-            else if (YDLIDAR_GS2 == model)
-                angTransform((*node).dist, nodeIndex, 
+            else if (YDLIDAR_GS6 == model)
+                angTransform2((*node).dist, nodeCount - nodeIndex, 
                     &sampleAngle, &(*node).dist);
             else
-                angTransform2((*node).dist, nodeCount - nodeIndex, 
+                angTransform((*node).dist, nodeIndex, 
                     &sampleAngle, &(*node).dist);
         }
 

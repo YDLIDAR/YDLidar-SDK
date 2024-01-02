@@ -155,11 +155,17 @@ inline std::string lidarModelToString(int model)
   case DriverInterface::YDLIDAR_TSA:
     name = "TSA";
     break;
-  case DriverInterface::YDLIDAR_Tmini:
-    name = "T-mini";
+  case DriverInterface::YDLIDAR_TSAPro:
+    name = "TSA Pro";
     break;
-  case DriverInterface::YDLIDAR_TminiPRO:
-    name = "T-mini Pro";
+  case DriverInterface::YDLIDAR_Tmini:
+    name = "Tmini";
+    break;
+  case DriverInterface::YDLIDAR_TminiPro:
+    name = "Tmini Pro";
+    break;
+  case DriverInterface::YDLIDAR_TminiPlus:
+    name = "Tmini Plus";
     break;
   case DriverInterface::YDLIDAR_T15:
     name = "T15";
@@ -279,11 +285,13 @@ inline bool isOctaveLidar(int model)
   return ret;
 }
 
-//根据雷达码判断是否是Tmini雷达
+//根据雷达码判断是否是Tmini系列雷达
 inline bool isTminiLidar(int model)
 {
   return (model == DriverInterface::YDLIDAR_Tmini ||
-          model == DriverInterface::YDLIDAR_TminiPRO);
+          model == DriverInterface::YDLIDAR_TminiPro ||
+          model == DriverInterface::YDLIDAR_TminiPlus ||
+          model == DriverInterface::YDLIDAR_TSAPro);
 }
 
 //根据雷达码判断是否是SCL雷达

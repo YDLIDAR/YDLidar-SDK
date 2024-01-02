@@ -522,9 +522,11 @@ namespace ydlidar
 
           YDLIDAR_TEA = 110, //TEA雷达
 
-          YDLIDAR_TSA = 130,      /**< TSA LiDAR Model. */
-          YDLIDAR_Tmini = 140,    /**< Tmini LiDAR Model. */
-          YDLIDAR_TminiPRO = 150, /**< Tmini PRO LiDAR Model. */
+          YDLIDAR_TSA = 130, /**< TSA LiDAR Model. */
+          YDLIDAR_TSAPro = 131, /**< TSA Pro LiDAR Model. */
+          YDLIDAR_Tmini = 140, /**< Tmini LiDAR Model. */
+          YDLIDAR_TminiPro = 150, /**< Tmini Pro LiDAR Model. */
+          YDLIDAR_TminiPlus = 151, /**< Tmini Plus LiDAR Model. */
 
           YDLIDAR_SDM15 = 160, // SDM15单点雷达
 
