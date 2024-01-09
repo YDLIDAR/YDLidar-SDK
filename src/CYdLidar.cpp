@@ -31,6 +31,7 @@
 #include "core/serial/common.h"
 #include "core/common/DriverInterface.h"
 #include "core/common/ydlidar_help.h"
+#include "core/common/ydlidar_protocol.h"
 #include "YDlidarDriver.h"
 #include "ETLidarDriver.h"
 #include "GSLidarDriver.h"
@@ -631,10 +632,15 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     outscan.config.min_angle = math::from_degrees(m_MinAngle);
     outscan.config.max_angle = math::from_degrees(m_MaxAngle);
     //将首末点采集时间差作为采集时长
-    //        printf("stamp [%llu]-[%llu]\n", global_nodes[0].stamp, global_nodes[count - 1].stamp);
-    outscan.config.scan_time = static_cast<float>((global_nodes[count - 1].stamp - global_nodes[0].stamp)) / 1e9;
-    //        outscan.config.scan_time = static_cast<float>(scan_time * 1.0 / 1e9);
-    outscan.config.time_increment = outscan.config.scan_time / (double)(count - 1);
+    outscan.config.scan_time = static_cast<float>((global_nodes[count - 1].stamp - 
+      global_nodes[0].stamp)) / 1e9;
+    //outscan.config.scan_time = static_cast<float>(scan_time * 1.0 / 1e9);
+    // if (outscan.config.scan_time > 1)
+    //   printf("stamp [%llu]-[%llu]\n", global_nodes[0].stamp, global_nodes[count - 1].stamp);
+    if (!ISZERO(outscan.config.scan_time))
+      outscan.config.time_increment = outscan.config.scan_time / (count - 1);
+    else
+      outscan.config.time_increment = .0f;
     outscan.config.min_range = m_MinRange;
     outscan.config.max_range = m_MaxRange;
     //模组编号

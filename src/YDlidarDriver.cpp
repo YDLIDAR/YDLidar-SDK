@@ -692,8 +692,9 @@ int YDlidarDriver::cacheScanData()
                 if (local_scan[0].sync & LIDAR_RESP_SYNCBIT)
                 {
                     ScopedLocker l(_lock);
-                    //将下一圈的第一个点的采集时间作为当前圈数据的采集时间
                     local_scan[0].delayTime = local_buf[pos].delayTime;
+                    //将下一圈的第一个点的采集时间作为当前圈数据的采集时间
+
                     memcpy(scan_node_buf, local_scan, scan_count * sizeof(node_info));
                     scan_node_count = scan_count;
                     _dataEvent.set();
@@ -1321,17 +1322,17 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
         if ((FirstSampleAngle + sampleAngle +
              correctAngle) < 0) {
             (*node).angle = (((uint16_t)(FirstSampleAngle + sampleAngle +
-                                                     correctAngle + 23040)) << LIDAR_RESP_ANGLE_SHIFT) +
-                    LIDAR_RESP_CHECKBIT;
+                correctAngle + 23040)) << LIDAR_RESP_ANGLE_SHIFT) +
+                LIDAR_RESP_CHECKBIT;
         } else {
             if ((FirstSampleAngle + sampleAngle + correctAngle) > 23040) {
                 (*node).angle = (((uint16_t)(FirstSampleAngle + sampleAngle +
-                                                         correctAngle - 23040)) << LIDAR_RESP_ANGLE_SHIFT) +
-                        LIDAR_RESP_CHECKBIT;
+                  correctAngle - 23040)) << LIDAR_RESP_ANGLE_SHIFT) +
+                  LIDAR_RESP_CHECKBIT;
             } else {
                 (*node).angle = (((uint16_t)(FirstSampleAngle + sampleAngle +
-                                                         correctAngle)) << LIDAR_RESP_ANGLE_SHIFT) +
-                        LIDAR_RESP_CHECKBIT;
+                  correctAngle)) << LIDAR_RESP_ANGLE_SHIFT) +
+                  LIDAR_RESP_CHECKBIT;
             }
         }
     } else {
@@ -1398,8 +1399,6 @@ result_t YDlidarDriver::waitScanData(
             }
             nodebuffer[recvNodeCount - 1].delayTime = size * trans_delay + delayTime;
 
-//            nodebuffer[recvNodeCount - 1].scanFreq = node.scanFreq;
-//            nodebuffer[recvNodeCount - 1].stamp = getTime();
             count = recvNodeCount;
             CheckLaserStatus();
             return RESULT_OK;
@@ -1710,18 +1709,20 @@ void YDlidarDriver::setIntensities(const bool &isintensities)
     PackageSampleBytes = 2;
   }
 }
+
 /**
 * @brief 设置雷达异常自动重新连接 \n
 * @param[in] enable    是否开启自动重连:
 *     true	开启
 *	  false 关闭
 */
-void YDlidarDriver::setAutoReconnect(const bool &enable) {
+void YDlidarDriver::setAutoReconnect(const bool &enable) 
+{
   isAutoReconnect = enable;
 }
 
-
-void YDlidarDriver::checkTransDelay() {
+void YDlidarDriver::checkTransDelay() 
+{
   //calc stamp
   trans_delay = _serial->getByteTime();
   sample_rate = getDefaultSampleRate(model).front() * 1000;

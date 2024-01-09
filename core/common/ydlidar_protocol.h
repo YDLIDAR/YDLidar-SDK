@@ -41,15 +41,12 @@
 #define _countof(_Array) (int)(sizeof(_Array) / sizeof(_Array[0]))
 #endif
 
-/**
- * @name PI constant
- * @{
- */
 #ifndef M_PI
 #define M_PI 3.1415926
 #endif
-/** @}
-*/
+
+//浮点型判断是否为0
+#define ISZERO(v) (abs(v) < 1e-6)
 
 /**
  * @name sun noise flag constant
@@ -140,8 +137,7 @@
 #define LIDAR_MODULE_3 0x04
 #define LIDAR_MODULE_ALL 0x00
 #define LIDAR_MAXCOUNT 3 //最大模组数
-
-/** @} LIDAR CMD Protocol */
+#define GSMAXPOINTCOUNT 160 //GS数据包中最大点云数
 
 //GS
 #define Angle_Px   1.22

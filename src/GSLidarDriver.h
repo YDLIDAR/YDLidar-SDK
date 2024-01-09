@@ -493,7 +493,6 @@ namespace ydlidar
     gs_node_package package; ///< 带信号质量协议包
 
     uint8_t CheckSum;       ///< 校验和
-    uint8_t scan_frequence; ///< 协议中雷达转速
 
     uint8_t CheckSumCal;
     bool CheckSumResult;
@@ -513,6 +512,7 @@ namespace ydlidar
     uint8_t moduleCount = 1;      // 当前模组数量
     std::vector<gs_packages> packages;
     int nodeCount = 0; //当前包点数
+    uint64_t stamp = 0; //时间戳
   };
 
 } // namespace ydlidar

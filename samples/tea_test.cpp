@@ -208,9 +208,10 @@ int main(int argc, char *argv[])
     /// Turn On success and loop
     if (laser.doProcessSimple(scan))
     {
-      fprintf(stdout, "Scan received [%llu] points is [%f]s\n",
+      fprintf(stdout, "Scan received [%llu] points is [%f]s [%f]\n",
               scan.points.size(),
-              scan.config.scan_time);
+              scan.config.scan_time,
+              scan.config.time_increment);
       fflush(stdout);
     }
     else

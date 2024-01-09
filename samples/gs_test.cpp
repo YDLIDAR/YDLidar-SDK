@@ -266,10 +266,10 @@ int main(int argc, char *argv[])
   {
     if (laser.doProcessSimple(scan))
     {
-      printf("[%llu] points in module num [%d] env flag [0x%04X]\n",
+      printf("[%llu] points in module num [%d] env flag [%f]\n",
              scan.points.size(),
              scan.moduleNum,
-             scan.envFlag);
+             scan.config.time_increment);
       // uint32_t t = getms();
       // printf("module[%d] time[%lld]\n", scan.moduleNum, t - ts[scan.moduleNum]);
       // ts[scan.moduleNum] = t;
