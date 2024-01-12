@@ -85,7 +85,7 @@ add_subdirectory(src)
 ##############################
 #build examples
 if(BUILD_EXAMPLES)
-add_subdirectory(samples)
+add_subdirectory(examples)
 endif()
 
 #############################################################################
