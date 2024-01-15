@@ -2,7 +2,8 @@
 #define STRONGLIGHTFILTER_H
 #include "FilterInterface.h"
 
-//强光滤波器
+
+//强光滤波器（拖尾滤波器）
 class YDLIDAR_API StrongLightFilter : public FilterInterface
 {
 public:
@@ -13,6 +14,8 @@ public:
                 int lidarType,
                 int version,
                 LaserScan &out);
+    void setMaxDist(float dist) {maxDist = dist;}
+    void setMinNoise(int noise) {minNoise = noise;}
 
 protected:
     struct Point
@@ -30,6 +33,9 @@ protected:
             const Point &p1,
             const Point &p2);
     };
+
+    float maxDist = 0.05; //最大距离阈值，单位米（此值可根据需要自己修改）
+    int minNoise = 2; //最小连续噪点数（此值可根据需要自己修改）
 };
 
 #endif // STRONGLIGHTFILTER_H

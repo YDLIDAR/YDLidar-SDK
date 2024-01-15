@@ -338,8 +338,6 @@ int main(int argc, char *argv[])
       //   const LaserPoint &p = scan.points.at(i);
       //   printf("%d d %.05f a %.02f\n", i, p.range, p.angle * 180.0 / M_PI);
       // }
-      //使用强光滤波器
-      filter.filter(scan, 0, 0, outScan);
 
       fflush(stdout);
     }

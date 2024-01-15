@@ -1,42 +1,43 @@
 ﻿/*********************************************************************
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2018, EAIBOT, Inc.
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   * Redistributions in binary form must reproduce the above
-*     copyright notice, this list of conditions and the following
-*     disclaimer in the documentation and/or other materials provided
-*     with the distribution.
-*   * Neither the name of the Willow Garage nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*********************************************************************/
+ * Software License Agreement (BSD License)
+ *
+ *  Copyright (c) 2018, EAIBOT, Inc.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of the Willow Garage nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *********************************************************************/
 #include <iostream>
 #include <string>
 #include <algorithm>
 #include <cctype>
 #include "CYdLidar.h"
 #include "filters/NoiseFilter.h"
+#include "filters/StrongLightFilter.h"
 
 using namespace std;
 using namespace ydlidar;
@@ -45,8 +46,7 @@ using namespace ydlidar;
 #pragma comment(lib, "ydlidar_sdk.lib")
 #endif
 
-
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
   printf("__   ______  _     ___ ____    _    ____  \n");
   printf("\\ \\ / /  _ \\| |   |_ _|  _ \\  / \\  |  _ \\ \n");
@@ -103,7 +103,8 @@ int main(int argc, char *argv[])
 
   int baudrate = 8090;
 
-  if (!ydlidar::os_isOk()) {
+  if (!ydlidar::os_isOk())
+  {
     return 0;
   }
 
@@ -113,12 +114,13 @@ int main(int argc, char *argv[])
 
   float frequency = 20.0f;
 
-  while (ydlidar::os_isOk() && !isSingleChannel) 
+  while (ydlidar::os_isOk() && !isSingleChannel)
   {
     printf("Please input the lidar scan frequency[10-30]: ");
     std::cin >> input_frequency;
     frequency = atof(input_frequency.c_str());
-    if (frequency <= 30.0 && frequency >= 10.0) {
+    if (frequency <= 30.0 && frequency >= 10.0)
+    {
       break;
     }
 
@@ -151,8 +153,8 @@ int main(int argc, char *argv[])
   /// abnormal count
   optval = 4;
   laser.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
-//  optval = 16;
-//  laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
+  //  optval = 16;
+  //  laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
@@ -192,20 +194,26 @@ int main(int argc, char *argv[])
   /// initialize SDK and LiDAR.
   bool ret = laser.initialize();
 
-  if (ret) {//success
+  if (ret)
+  { // success
     /// Start the device scanning routine which runs on a separate thread and enable motor.
     ret = laser.turnOn();
-  } else {//failed
+  }
+  else
+  { // failed
     fprintf(stderr, "%s\n", laser.DescribeError());
     fflush(stderr);
   }
 
   LaserScan scan;
   LaserScan outScan;
+  StrongLightFilter filter; //拖尾滤波器
+  filter.setMaxDist(0.1); //最大距离阈值
+  filter.setMinNoise(2); //最小连续噪点数
 
   while (ret && ydlidar::os_isOk())
   {
-    /// Turn On success and loop
+    //循环获取点云数据
     if (laser.doProcessSimple(scan))
     {
       fprintf(stdout, "Scan received [%llu] points is [%f]s [%f]\n",
@@ -213,6 +221,8 @@ int main(int argc, char *argv[])
               scan.config.scan_time,
               scan.config.time_increment);
       fflush(stdout);
+      // 使用强光滤波器
+      filter.filter(scan, 0, 0, outScan);
     }
     else
     {

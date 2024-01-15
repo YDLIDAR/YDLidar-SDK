@@ -3,8 +3,6 @@
 #include "core/math/angles.h"
 #include "StrongLightFilter.h"
 
-#define MAX_DIST 0.1f
-#define MIN_NOISE 1
 #define MIN_VALUE 1e-8
 #define IS_ZERO(d) (abs(d) < MIN_VALUE)
 #define IS_EQUAL(d1, d2) IS_ZERO(d1 - d2)
@@ -71,7 +69,7 @@ void StrongLightFilter::filter(
 
             // printf("点[%d]距离[%.03f]\n", i % size, d);
             //如果当前距离小于标准则认为是拖尾点
-            if (d < MAX_DIST)
+            if (d < maxDist)
             {
                 //如果起始点无效则标记
                 if (-1 == startI)
@@ -80,7 +78,7 @@ void StrongLightFilter::filter(
             //如果点的距离是在增加的，则当前距离小于2倍标准也认为是拖尾点
             else if (-1 != startI &&
                 p.range > lastP.range &&
-                d < MAX_DIST * 2)
+                d < maxDist * 2)
             {
                 //无处理
             }
@@ -88,7 +86,7 @@ void StrongLightFilter::filter(
             {
                 //判断统计位置是否有效，如果有效需要标记
                 if (-1 != startI &&
-                    i - startI >= MIN_NOISE)
+                    i - startI >= minNoise)
                 {
                     for (int j=startI; j<=i; ++j)
                     {
