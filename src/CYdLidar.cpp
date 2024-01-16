@@ -167,13 +167,11 @@ bool CYdLidar::setlidaropt(int optname, const void *optval, int optlen)
   case LidarPropIgnoreArray:
     m_IgnoreString = (const char *)optval;
     m_IgnoreArray = ydlidar::split(m_IgnoreString, ',');
-
     if (m_IgnoreArray.size() % 2 != 0)
     {
       m_IgnoreArray.clear();
       ret = false;
     }
-
     break;
 
   case LidarPropFixedResolution:
@@ -555,7 +553,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
   uint64_t tim_scan_start = getTime();
   uint64_t startTs = tim_scan_start;
   //从缓存中获取已采集的一圈扫描数据
-  result_t op_result = lidarPtr->grabScanData(global_nodes, count);
+  result_t op_result = lidarPtr->grabScanData(global_nodes, count, 500);
   uint64_t tim_scan_end = getTime();
   uint64_t endTs = tim_scan_end;
   uint64_t sys_scan_time = tim_scan_end - tim_scan_start; //获取一圈数据所花费的时间
@@ -1805,6 +1803,7 @@ bool CYdLidar::checkCOMMs()
   lidarPtr->setScanFreq(m_ScanFrequency);
   lidarPtr->setSupportMotorDtrCtrl(m_SupportMotorDtrCtrl);
   lidarPtr->setBottom(m_Bottom);
+  lidarPtr->setDebug(m_Debug);
   lidarPtr->setOtaName(otaName);
   lidarPtr->setOtaEncode(otaEncode);
 

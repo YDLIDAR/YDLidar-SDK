@@ -78,9 +78,6 @@ GSLidarDriver::GSLidarDriver(uint8_t type)
     CheckSumCal         = 0;
     CheckSumResult      = false;
     moduleNum           = 0;
-    frameNum            = 0;
-    isPrepareToSend     = false;
-    packages.resize(MaximumNumberOfPackages);
 
     nodeIndex = 0;
     globalRecvBuffer = new uint8_t[GSPACKSIZE];
@@ -311,13 +308,16 @@ result_t GSLidarDriver::sendData(const uint8_t *data, size_t size) {
     while (size) 
     {
         r = _comm->writeData(data, size);
-
-        if (!r) {
+        if (!r) 
+        {
             return RESULT_FAIL;
         }
 
-        // printf("send: ");
-        // printHex(data, r);
+        if (m_Debug)
+        {
+            printf("send: ");
+            printHex(data, r);
+        }
 
         size -= r;
         data += r;
@@ -340,8 +340,11 @@ result_t GSLidarDriver::getData(uint8_t *data, size_t size) {
             return RESULT_FAIL;
         }
 
-        // printf("recv: ");
-        // printHex(data, r);
+        if (m_Debug)
+        {
+            printf("recv: ");
+            printHex(data, r);
+        }
 
         size -= r;
         data += r;
@@ -600,7 +603,7 @@ int GSLidarDriver::cacheScanData()
     {
         count = GSMAXPOINTCOUNT;
         ans = waitScanData(local_buf, count);
-        Thread::needExit();
+        // Thread::needExit();
         if (!IS_OK(ans))
         {
             if (IS_FAIL(ans))
@@ -643,27 +646,19 @@ int GSLidarDriver::cacheScanData()
             retryCount = 0;
         }
 
-        if (!isPrepareToSend)
-            continue;
-
-        // printf("[YDLIDAR] GS2 points stored %lu\n", count);
-        ScopedLocker l(_lock);
-        size_t size = packages.size();
-        for (size_t i = 0;i < size; i++) 
         {
-            if (packages[i].frameNum == frameNum && 
-                packages[i].moduleNum == moduleNum) 
-            {
-                memcpy(scan_node_buf, packages[i].points, 
-                    sizeof(node_info) * GSMAXPOINTCOUNT);
-                break;
-            }
+            //数据存入数组
+            ScopedLocker l(_lock);
+            gs_module_nodes nodes;
+            nodes.moduleNum = moduleNum;
+            nodes.pointCount = count;
+            memcpy(nodes.points, local_buf, count * SDKNODESIZE);
+            datas.push_back(nodes);
+            scan_count = 0;
+            // if (datas.size() >= 2)
+            //     printf("[YDLIDAR] GS[%d] store array %d\n", 
+            //         moduleNum, int(datas.size()));
         }
-        
-        scan_node_count = count; //包点数
-        _dataEvent.set();
-        scan_count = 0;
-        isPrepareToSend = false;
     }
 
     m_isScanning = false;
@@ -688,7 +683,7 @@ result_t GSLidarDriver::waitPackage(node_info *node, uint32_t timeout)
     if (nodeIndex == 0)
     {
         pos = 0;
-        while ((waitTime = getms() - startTs) <= timeout)
+        while ((waitTime = getms() - startTs) < timeout)
         {
             //解析协议头部分
             remainSize = PackagePaidBytes_GS - pos;
@@ -846,7 +841,6 @@ PARSEHEAD:
 
     (*node).stamp = getTime();
     
-
     if (CheckSumResult)
     {
         //第1个点时间戳使用上一帧的最后1个点的时间戳
@@ -1049,44 +1043,6 @@ void GSLidarDriver::angTransform2(
     *dstDist = Dist;
 }
 
-void GSLidarDriver::addPointsToVec(node_info *nodebuffer, size_t &count)
-{
-    size_t size = packages.size();
-    bool isFound = false;
-    for (size_t i =0;i < size; i++)
-    {
-        if (packages[i].frameNum == frameNum && 
-            packages[i].moduleNum == moduleNum)
-        {
-            isFound = true;
-		    memcpy(packages[i].points, nodebuffer, sizeof (node_info) * count);
-            isPrepareToSend = true;
-            if (frameNum > 0)
-            {
-                int lastFrame = frameNum - 1;
-                for (size_t j =0;j < size; j++) 
-                {
-                    if (packages[j].frameNum == lastFrame && 
-                        packages[j].moduleNum == moduleNum)
-                    {
-                        break;
-                    }
-                }
-            }
-            break;
-        }
-    }
-    if (!isFound)
-    {
-        gs_packages package;
-        package.frameNum = frameNum;
-        package.moduleNum = moduleNum;
-        packages.push_back(package);
-    }
-    //   printf("add points, [sync:%d] [%u]\n",package_type,frameNum);
-    //   fflush(stdout);
-}
-
 result_t GSLidarDriver::waitScanData(
     node_info *nodebuffer,
     size_t &count,
@@ -1103,7 +1059,8 @@ result_t GSLidarDriver::waitScanData(
     uint32_t waitTime = 0;
     result_t ans = RESULT_FAIL;
 
-    while ((waitTime = getms() - startTs) <= timeout && recvNodeCount < count)
+    while ((waitTime = getms() - startTs) < timeout && 
+        recvNodeCount < count)
     {
         node_info node;
         memset(&node, 0, sizeof(node_info));
@@ -1118,30 +1075,6 @@ result_t GSLidarDriver::waitScanData(
 
         if (!nodeIndex)
         {
-            size_t size = _comm->available();
-            uint64_t delayTime = 0;
-            size_t PackageSize = NORMAL_PACKAGE_SIZE;
-
-            if (size > PackagePaidBytes_GS)
-            {
-                size_t packageNum = size / PackageSize;
-                size_t Number = size % PackageSize;
-                delayTime = packageNum * m_PointTime * PackageSize / 2;
-
-                if (Number > PackagePaidBytes_GS)
-                {
-                    delayTime += m_PointTime * ((Number - PackagePaidBytes_GS) / 2);
-                }
-
-                size = Number;
-
-                if (packageNum > 0 && Number == 0)
-                {
-                    size = PackageSize;
-                }
-            }
-            addPointsToVec(nodebuffer, recvNodeCount);
-
             count = recvNodeCount;
             return RESULT_OK;
         }
@@ -1156,29 +1089,32 @@ result_t GSLidarDriver::waitScanData(
     return RESULT_FAIL;
 }
 
-result_t GSLidarDriver::grabScanData(node_info *nodebuffer, size_t &count,
-                                     uint32_t timeout) {
-    switch (_dataEvent.wait(timeout)) {
-    case Event::EVENT_TIMEOUT:
-        count = 0;
-        return RESULT_TIMEOUT;
-
-    case Event::EVENT_OK: 
+result_t GSLidarDriver::grabScanData(
+    node_info *nodebuffer,
+    size_t &count,
+    uint32_t timeout)
+{
+    uint32_t st = getms();
+    uint32_t wt = 0;
+    while ((wt = getms() - st) < timeout)
     {
-        ScopedLocker l(_lock);
-        size_t size_to_copy = min(count, scan_node_count);
-        memcpy(nodebuffer, scan_node_buf, size_to_copy * sizeof(node_info));
-        count = size_to_copy;
-        scan_node_count = 0;
+        {
+            ScopedLocker l(_lock);
+            if (datas.size())
+            {
+                //从数组中取出点云数据
+                gs_module_nodes nodes = datas.front();
+                datas.pop_front();
+                size_t size = min(int(count), nodes.pointCount);
+                memcpy(nodebuffer, nodes.points, size * SDKNODESIZE);
+                count = size;
+                return RESULT_OK;
+            }
+        }
+        delay(1); //延时
     }
-        return RESULT_OK;
-
-    default:
-        count = 0;
-        return RESULT_FAIL;
-    }
+    return RESULT_TIMEOUT;
 }
-
 
 result_t GSLidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
     float inc_origin_angle = (float)360.0 / count;
@@ -1492,12 +1428,11 @@ result_t GSLidarDriver::createThread()
         _thread.join();
     }
     _thread = CLASS_THREAD(GSLidarDriver, cacheScanData);
-
     if (!_thread.getHandle()) {
         return RESULT_FAIL;
     }
 
-    printf("[GS2Lidar] Create GS2 thread 0x%X\n", _thread.getHandle());
+    printf("[GS2Lidar] Create GS thread 0x%X\n", _thread.getHandle());
     fflush(stdout);
 
     return RESULT_OK;

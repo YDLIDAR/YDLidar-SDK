@@ -212,6 +212,8 @@ int main(int argc, char *argv[])
   /// unit: Hz
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
+  laser.setEnableDebug(false);
+
   //雷达初始化
   bool ret = laser.initialize();
   if (!ret)
@@ -266,10 +268,10 @@ int main(int argc, char *argv[])
   {
     if (laser.doProcessSimple(scan))
     {
-      printf("[%llu] points in module num [%d] env flag [%f]\n",
-             scan.points.size(),
-             scan.moduleNum,
-             scan.config.time_increment);
+      // printf("[%llu] points in module num [%d] env flag [%f]\n",
+      //        scan.points.size(),
+      //        scan.moduleNum,
+      //        scan.config.time_increment);
       // uint32_t t = getms();
       // printf("module[%d] time[%lld]\n", scan.moduleNum, t - ts[scan.moduleNum]);
       // ts[scan.moduleNum] = t;

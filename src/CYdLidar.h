@@ -177,6 +177,9 @@ class YDLIDAR_API CYdLidar {
   //获取级联设备信息
   bool getDeviceInfo(std::vector<device_info_ex>& dis);
 
+  //启用调试
+  void setEnableDebug(bool yes) {m_Debug = yes;}
+
   //OTA功能相关
   //设置OTA文件路径
   void setOtaFile(const std::string& name) {
@@ -196,13 +199,13 @@ class YDLIDAR_API CYdLidar {
    * @return true if communication has been established with the device.
    *  If it's not false on error.
    */
-  bool  checkCOMMs();
+  bool checkCOMMs();
   /**
    * @brief check LiDAR health state and device information
    * @return true if health status and device information has been obtained with the device.
    * If it's not, false on error
    */
-  bool  checkStatus();
+  bool checkStatus();
 
   /**
    * @brief check LiDAR scan state
@@ -361,6 +364,7 @@ class YDLIDAR_API CYdLidar {
   float m_MinRange;                 ///< LiDAR minimum range
   float m_ScanFrequency;            ///< LiDAR scanning frequency
   bool m_Bottom = true; //是否底板优先
+  bool m_Debug = false; //是否启用调试
 
   bool m_SunNoise = false; //阳光噪点过滤标识
   bool m_GlassNoise = false; //玻璃噪点过滤标识

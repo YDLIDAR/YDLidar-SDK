@@ -52,6 +52,7 @@
 #include <stdlib.h>
 #include <atomic>
 #include <map>
+#include <list>
 #include "core/serial/serial.h"
 #include "core/base/locker.h"
 #include "core/base/thread.h"
@@ -398,8 +399,6 @@ namespace ydlidar
     void angTransform(uint16_t dist, int n, double *dstTheta, uint16_t *dstDist);
     void angTransform2(uint16_t dist, int n, double *dstTheta, uint16_t *dstDist);
 
-    void addPointsToVec(node_info *nodebuffer, size_t &count);
-
     /**
      * @brief 串口错误信息
      * @param isTCP   TCP or UDP
@@ -479,25 +478,23 @@ namespace ydlidar
     {
       DEFAULT_TIMEOUT = 2000,    /**< 默认超时时间. */
       DEFAULT_HEART_BEAT = 1000, /**< 默认检测掉电功能时间. */
-      MAX_SCAN_NODES = 3600,     /**< 最大扫描点数. */
+      MAX_SCAN_NODES = 160 * 3,     /**< 最大扫描点数. */
       DEFAULT_TIMEOUT_COUNT = 3, // 错误数
     };
 
   private:
-    int PackageSampleBytes;  ///< 一个包包含的激光点数
+    int PackageSampleBytes; //一个包包含的激光点数
     ChannelDevice *_comm = nullptr; //通讯对象
-    uint32_t trans_delay;    ///< 串口传输一个byte时间
-    int model;               ///< 雷达型号
+    uint32_t trans_delay; //串口传输一个byte时间
+    int model; //雷达型号
     int sample_rate; //采样频率
 
-    gs_node_package package; ///< 带信号质量协议包
+    gs_node_package package; //带信号质量协议包
 
-    uint8_t CheckSum;       ///< 校验和
-
+    uint8_t CheckSum; //校验和
     uint8_t CheckSumCal;
     bool CheckSumResult;
 
-    // std::string serial_port;///< 雷达端口
     uint8_t *globalRecvBuffer = nullptr;
 
     double k0[PackageMaxModuleNums];
@@ -506,13 +503,11 @@ namespace ydlidar
     double b1[PackageMaxModuleNums];
     double bias[PackageMaxModuleNums];
 
-    uint8_t frameNum = 0;         // 帧序号
-    uint8_t moduleNum = 0;        // 模块编号
-    bool isPrepareToSend = false; // 是否准备好发送
-    uint8_t moduleCount = 1;      // 当前模组数量
-    std::vector<gs_packages> packages;
+    uint8_t moduleNum = 0; // 模块编号
+    uint8_t moduleCount = 1; // 当前模组数量
     int nodeCount = 0; //当前包点数
     uint64_t stamp = 0; //时间戳
+    std::list<gs_module_nodes> datas; //各模组数据
   };
 
 } // namespace ydlidar

@@ -371,6 +371,11 @@ struct gs_packages {
     bool right = false;
     node_info points[GS_MAXPOINTS];
 } __attribute__((packed));
+struct gs_module_nodes {
+  int moduleNum = 0;
+  int pointCount = 0;
+  node_info points[GS_MAXPOINTS];
+} __attribute__((packed));
 
 //GS点数据结构
 struct gs_node {
