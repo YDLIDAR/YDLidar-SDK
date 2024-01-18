@@ -221,8 +221,14 @@ int main(int argc, char *argv[])
               scan.config.scan_time,
               scan.config.time_increment);
       fflush(stdout);
+      for (size_t i = 0; i < scan.points.size(); ++i)
+      {
+        const LaserPoint &p = scan.points.at(i);
+        printf("%d d %.0f a %.02f i %.0f\n", i, p.range, p.angle * 180.0 / M_PI, p.intensity);
+      }
+
       // 使用强光滤波器
-      filter.filter(scan, 0, 0, outScan);
+      // filter.filter(scan, 0, 0, outScan);
     }
     else
     {

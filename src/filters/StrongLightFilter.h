@@ -15,6 +15,7 @@ public:
                 int version,
                 LaserScan &out);
     void setMaxDist(float dist) {maxDist = dist;}
+    void setMaxAngle(float angle) {maxAngle = angle;}
     void setMinNoise(int noise) {minNoise = noise;}
 
 protected:
@@ -32,9 +33,23 @@ protected:
             const Point &p,
             const Point &p1,
             const Point &p2);
+        //计算向量的长度
+        static float calcLen(
+            const Point &v);
+        //计算向量的乘积
+        static float calcDot(
+            const Point &v1,
+            const Point &v2);
+        //计算直角坐标系中两线段组成直线的夹角
+        static float calcAngle(
+            const Point &p1,
+            const Point &p2,
+            const Point &p3,
+            const Point &p4);
     };
 
     float maxDist = 0.05; //最大距离阈值，单位米（此值可根据需要自己修改）
+    float maxAngle = 12.0; //最大角度阈值，单位°（此值可根据需要自己修改）
     int minNoise = 2; //最小连续噪点数（此值可根据需要自己修改）
 };
 
