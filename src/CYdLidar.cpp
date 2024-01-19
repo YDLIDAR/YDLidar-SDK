@@ -1570,9 +1570,6 @@ void CYdLidar::checkSampleRate()
   }
 }
 
-/*-------------------------------------------------------------
-                        checkScanFrequency
--------------------------------------------------------------*/
 bool CYdLidar::checkScanFrequency()
 {
   float frequency = 7.4f;

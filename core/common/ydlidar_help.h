@@ -140,6 +140,9 @@ inline std::string lidarModelToString(int model)
   case DriverInterface::YDLIDAR_GS2:
     name = "GS2";
     break;
+  case DriverInterface::YDLIDAR_GS5:
+    name = "GS5";
+    break;
   case DriverInterface::YDLIDAR_TG15:
     name = "TG15";
     break;
@@ -368,7 +371,8 @@ inline bool hasScanFrequencyCtrl(int model)
       model == DriverInterface::YDLIDAR_S2 ||
       model == DriverInterface::YDLIDAR_X4 ||
       model == DriverInterface::YDLIDAR_GS1 ||
-      model == DriverInterface::YDLIDAR_GS2) 
+      model == DriverInterface::YDLIDAR_GS2 ||
+      model == DriverInterface::YDLIDAR_GS5) 
   {
     ret = false;
   }
