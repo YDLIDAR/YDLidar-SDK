@@ -43,6 +43,7 @@
 #include "DriverInterface.h"
 #include <sstream>
 #include <iomanip>
+#include <stdarg.h>
 
 /**
  * @brief ydlidar
@@ -1024,11 +1025,80 @@ inline bool isV1Protocol(uint8_t protocol) {
 //以16进制打印数据
 inline void printHex(const uint8_t *data, int size)
 {
-    if (!data)
+    if (!data || !size)
         return;
     for (int i=0; i<size; ++i)
         printf("%02X", data[i]);
     printf("\n");
+}
+
+//打印系统时间
+#define UNIX_PRINT_TIME  \
+  time_t currentTime = time(NULL); \
+  struct tm *localTime = localtime(&currentTime); \
+  printf("[%04d-%02d-%02d %02d:%02d:%02d]", \
+    (1900 + localTime->tm_year), \
+    (1 + localTime->tm_mon), \
+    localTime->tm_mday, \
+    localTime->tm_hour, \
+    localTime->tm_min, \
+    localTime->tm_sec);
+//格式化字符串
+#define FORMAT_STDOUT \
+  char buff[1024] = {0}; \
+  va_list ap; \
+  va_start(ap, fmt); \
+  vsprintf(buff, fmt, ap); \
+  va_end(ap); \
+  printf(buff); \
+  printf("\n");
+
+//调试
+inline void debug(char* fmt, ...)
+{
+#ifdef _WIN32
+#else
+  UNIX_PRINT_TIME
+#endif
+  printf("[debug] ");
+  FORMAT_STDOUT
+  fflush(stdout);
+}
+
+//常规
+inline void info(char* fmt, ...)
+{
+#ifdef _WIN32
+#else
+  UNIX_PRINT_TIME
+#endif
+  printf("[info] ");
+  FORMAT_STDOUT
+  fflush(stdout);
+}
+
+//警告
+inline void warn(char* fmt, ...)
+{
+#ifdef _WIN32
+#else
+  UNIX_PRINT_TIME
+#endif
+  printf("[warn] ");
+  FORMAT_STDOUT
+  fflush(stdout);
+}
+
+//错误
+inline void error(char* fmt, ...)
+{
+#ifdef _WIN32
+#else
+  UNIX_PRINT_TIME
+#endif
+  printf("[error] ");
+  FORMAT_STDOUT
+  fflush(stdout);
 }
 
 }//common

@@ -589,8 +589,8 @@ result_t GSLidarDriver::checkAutoConnecting()
 
 int GSLidarDriver::cacheScanData()
 {
-    node_info      local_buf[GSMAXPOINTCOUNT];
-    size_t         count = GSMAXPOINTCOUNT;
+    node_info      local_buf[GS_MAXPOINTSIZE];
+    size_t         count = GS_MAXPOINTSIZE;
     size_t         scan_count = 0;
     result_t       ans = RESULT_FAIL;
 
@@ -601,7 +601,7 @@ int GSLidarDriver::cacheScanData()
 
     while (m_isScanning)
     {
-        count = GSMAXPOINTCOUNT;
+        count = GS_MAXPOINTSIZE;
         ans = waitScanData(local_buf, count);
         // Thread::needExit();
         if (!IS_OK(ans))
@@ -621,11 +621,9 @@ int GSLidarDriver::cacheScanData()
             // 重连雷达
             if (!isAutoReconnect)
             {
-                fprintf(stderr, "exit scanning thread!!\n");
+                fprintf(stderr, "[YDLIDAR] Exit scanning thread!!\n");
                 fflush(stderr);
-                {
-                    m_isScanning = false;
-                }
+                m_isScanning = false;
                 return RESULT_FAIL;
             }
             else if (timeout_count > DEFAULT_TIMEOUT_COUNT)
@@ -641,12 +639,13 @@ int GSLidarDriver::cacheScanData()
                     return RESULT_FAIL;
                 }
             }
-        } else {
+        } 
+        else 
+        {
             timeout_count = 0;
             retryCount = 0;
-        }
 
-        {
+            {
             //数据存入数组
             ScopedLocker l(_lock);
             gs_module_nodes nodes;
@@ -655,9 +654,7 @@ int GSLidarDriver::cacheScanData()
             memcpy(nodes.points, local_buf, count * SDKNODESIZE);
             datas.push_back(nodes);
             scan_count = 0;
-            // if (datas.size() >= 2)
-            //     printf("[YDLIDAR] GS[%d] store array %d\n", 
-            //         moduleNum, int(datas.size()));
+            }
         }
     }
 
@@ -686,7 +683,7 @@ result_t GSLidarDriver::waitPackage(node_info *node, uint32_t timeout)
         while ((waitTime = getms() - startTs) < timeout)
         {
             //解析协议头部分
-            remainSize = PackagePaidBytes_GS - pos;
+            remainSize = GS_PACKHEADSIZE - pos;
             recvSize = 0;
             ret = waitForData(remainSize, timeout - waitTime, &recvSize);
             if (!IS_OK(ret))
@@ -760,7 +757,7 @@ PARSEHEAD:
                 packageBuffer[pos++] = c;
 
                 // 如果解析到协议头
-                if (pos == PackagePaidBytes_GS)
+                if (pos == GS_PACKHEADSIZE)
                 {
                     // 如果协议数据长度不对则跳过，继续解析协议头
                     if (!sample_lens || sample_lens >= GSPACKSIZE)
@@ -779,7 +776,7 @@ PARSEHEAD:
                     {
                         int offset = 0; // 缓存偏移量
                         // 如果解析协议头时接收数据长度超过定义的长度则认为是从校验和错误处跳转过来的
-                        if (recvSize > PackagePaidBytes_GS)
+                        if (recvSize > GS_PACKHEADSIZE)
                         {
                             offset = i + 1;
                         }
@@ -817,7 +814,7 @@ PARSEHEAD:
                             if (CheckSumCal != CheckSum)
                             {
                                 CheckSumResult = false;
-                                printf("[YDLIDAR] GS2 cs 0x%02X != 0x%02X\n", CheckSumCal, CheckSum);
+                                error("GS cs 0x%02X != 0x%02X", CheckSumCal, CheckSum);
                                 // 如果校验和不一致，则需要跳转去当前缓存中查找协议头，
                                 // 以免因当前数据包有缺失导致下一包数据解析失败
                                 goto PARSEHEAD;
@@ -832,7 +829,7 @@ PARSEHEAD:
                     }
 
                     break;
-                } // end if (pos == PackagePaidBytes_GS)
+                } // end if (pos == GS_PACKHEADSIZE)
             } //end for (size_t i = 0; i < recvSize; ++i)
             if (CheckSumResult)
                 break;
@@ -1242,7 +1239,7 @@ result_t GSLidarDriver::getDevicePara(gs_device_para &info, uint32_t timeout) {
       return ans;
     }
     gs_package_head h;
-    for (int i = 0; i < PackageMaxModuleNums && i < moduleCount; i++)
+    for (int i = 0; i < LIDAR_MAXCOUNT && i < moduleCount; i++)
     {
         if ((ans = waitResponseHeaderEx(&h, GS_LIDAR_CMD_GET_PARAMETER, timeout)) != RESULT_OK) {
           return ans;

@@ -370,6 +370,7 @@ class YDLIDAR_API CYdLidar {
   bool m_GlassNoise = false; //玻璃噪点过滤标识
   std::string otaName; //OTA文件路径
   bool otaEncode = true; //OTA是否加密
+  uint64_t lastStamp = 0; //时间戳
 };	// End of class
 #endif // CYDLIDAR_H
 

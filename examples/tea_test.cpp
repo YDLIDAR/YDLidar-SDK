@@ -36,6 +36,7 @@
 #include <algorithm>
 #include <cctype>
 #include "CYdLidar.h"
+#include "core/common/ydlidar_help.h"
 #include "filters/NoiseFilter.h"
 #include "filters/StrongLightFilter.h"
 
@@ -45,6 +46,7 @@ using namespace ydlidar;
 #if defined(_MSC_VER)
 #pragma comment(lib, "ydlidar_sdk.lib")
 #endif
+
 
 int main(int argc, char *argv[])
 {
@@ -99,33 +101,77 @@ int main(int argc, char *argv[])
       printf("Please enter the lidar IP: ");
       std::cin >> port;
     }
+
+  //串口
+  // ports = ydlidar::lidarPortList();
+  // if (ports.size() == 1)
+  // {
+  //   port = ports.begin()->second;
+  // }
+  // else
+  // {
+  //   int id = 0;
+
+  //   for (it = ports.begin(); it != ports.end(); it++)
+  //   {
+  //     printf("[%d] %s %s\n", id, it->first.c_str(), it->second.c_str());
+  //     id++;
+  //   }
+
+  //   if (ports.empty())
+  //   {
+  //     printf("Not Lidar was detected. Please enter the lidar serial port:");
+  //     std::cin >> port;
+  //   }
+  //   else
+  //   {
+  //     while (ydlidar::os_isOk())
+  //     {
+  //       printf("Please select the lidar port:");
+  //       std::string number;
+  //       std::cin >> number;
+
+  //       if ((size_t)atoi(number.c_str()) >= ports.size())
+  //       {
+  //         continue;
+  //       }
+
+  //       it = ports.begin();
+  //       id = atoi(number.c_str());
+
+  //       while (id)
+  //       {
+  //         id--;
+  //         it++;
+  //       }
+
+  //       port = it->second;
+  //       break;
+  //     }
+  //   }
+  // }
+
   }
 
+  // int baudrate = 512000; //8090
   int baudrate = 8090;
-
-  if (!ydlidar::os_isOk())
-  {
-    return 0;
-  }
 
   bool isSingleChannel = false;
 
-  std::string input_frequency;
-
   float frequency = 20.0f;
 
-  while (ydlidar::os_isOk() && !isSingleChannel)
-  {
-    printf("Please input the lidar scan frequency[10-30]: ");
-    std::cin >> input_frequency;
-    frequency = atof(input_frequency.c_str());
-    if (frequency <= 30.0 && frequency >= 10.0)
-    {
-      break;
-    }
-
-    fprintf(stderr, "Invalid scan frequency Please re-input.\n");
-  }
+  // std::string input_frequency;
+  // while (ydlidar::os_isOk() && !isSingleChannel)
+  // {
+  //   printf("Please input the lidar scan frequency[10-30]: ");
+  //   std::cin >> input_frequency;
+  //   frequency = atof(input_frequency.c_str());
+  //   if (frequency <= 30.0 && frequency >= 10.0)
+  //   {
+  //     break;
+  //   }
+  //   fprintf(stderr, "Invalid scan frequency Please re-input.\n");
+  // }
 
   /// instance
   CYdLidar laser;
@@ -145,6 +191,7 @@ int main(int argc, char *argv[])
   int optval = TYPE_TOF;
   laser.setlidaropt(LidarPropLidarType, &optval, sizeof(int));
   /// device type
+  // optval = YDLIDAR_TYPE_SERIAL;
   optval = YDLIDAR_TYPE_TCP;
   laser.setlidaropt(LidarPropDeviceType, &optval, sizeof(int));
   /// sample rate
@@ -158,7 +205,7 @@ int main(int argc, char *argv[])
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
-  bool b_optvalue = true;
+  bool b_optvalue = false;
   laser.setlidaropt(LidarPropFixedResolution, &b_optvalue, sizeof(bool));
   /// rotate 180
   b_optvalue = false;
@@ -191,6 +238,8 @@ int main(int argc, char *argv[])
   /// unit: Hz
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
+  // laser.setEnableDebug(true); //启用调试
+
   /// initialize SDK and LiDAR.
   bool ret = laser.initialize();
 
@@ -209,23 +258,35 @@ int main(int argc, char *argv[])
   LaserScan outScan;
   StrongLightFilter filter; //拖尾滤波器
   filter.setMaxDist(0.1); //最大距离阈值
+  filter.setMaxAngle(12.0); //最大角度阈值
   filter.setMinNoise(2); //最小连续噪点数
 
+  float minScanTime = 1.0f / (frequency + 2.5);
+  float maxScanTime = 1.0f / (frequency - 2.5);
   while (ret && ydlidar::os_isOk())
   {
     //循环获取点云数据
     if (laser.doProcessSimple(scan))
     {
-      fprintf(stdout, "Scan received [%llu] points is [%f]s [%f]\n",
-              scan.points.size(),
-              scan.config.scan_time,
-              scan.config.time_increment);
-      fflush(stdout);
-      for (size_t i = 0; i < scan.points.size(); ++i)
-      {
-        const LaserPoint &p = scan.points.at(i);
-        printf("%d d %.0f a %.02f i %.0f\n", i, p.range, p.angle * 180.0 / M_PI, p.intensity);
-      }
+      // if (scan.config.scan_time < minScanTime ||
+      //   scan.config.scan_time > maxScanTime)
+      // {
+      //   core::common::error("[%u] points ScanTime [%f]s IncrTime [%f]s",
+      //     uint32_t(scan.points.size()),
+      //     scan.config.scan_time,
+      //     scan.config.time_increment);
+      // }
+      
+      // core::common::info("[%u] points Stamp [%u]ms",
+      //   uint32_t(scan.points.size()),
+      //   uint32_t(scan.stamp / 1000000));
+
+      // for (size_t i = 0; i < scan.points.size(); ++i)
+      // {
+      //   const LaserPoint &p = scan.points.at(i);
+      //   printf("%d d %.0f a %.02f i %.0f\n", i, p.range, p.angle * 180.0 / M_PI, p.intensity);
+      // }
+      // fflush(stdout);
 
       // 使用强光滤波器
       // filter.filter(scan, 0, 0, outScan);

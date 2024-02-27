@@ -40,6 +40,7 @@
 using namespace std;
 using namespace impl;
 using namespace ydlidar::core;
+using namespace ydlidar::core::common;
 using namespace ydlidar::core::math;
 
 /*-------------------------------------------------------------
@@ -524,9 +525,9 @@ bool CYdLidar::turnOn()
   m_AllNode = 0;
   m_PointTime = lidarPtr->getPointTime();
   lidarPtr->setAutoReconnect(m_AutoReconnect);
-  printf("[YDLIDAR] Now lidar is scanning...\n");
-  fflush(stdout);
+  info("[YDLIDAR] Now lidar is scanning...");
 
+  lastStamp = 0;
   scanning = true;
   return true;
 }
@@ -553,7 +554,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
   uint64_t tim_scan_start = getTime();
   uint64_t startTs = tim_scan_start;
   //从缓存中获取已采集的一圈扫描数据
-  result_t op_result = lidarPtr->grabScanData(global_nodes, count, 500);
+  result_t op_result = lidarPtr->grabScanData(global_nodes, count, 1000);
   uint64_t tim_scan_end = getTime();
   uint64_t endTs = tim_scan_end;
   uint64_t sys_scan_time = tim_scan_end - tim_scan_start; //获取一圈数据所花费的时间
@@ -630,11 +631,15 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     outscan.config.min_angle = math::from_degrees(m_MinAngle);
     outscan.config.max_angle = math::from_degrees(m_MaxAngle);
     //将首末点采集时间差作为采集时长
-    outscan.config.scan_time = static_cast<float>((global_nodes[count - 1].stamp - 
-      global_nodes[0].stamp)) / 1e9;
-    //outscan.config.scan_time = static_cast<float>(scan_time * 1.0 / 1e9);
-    // if (outscan.config.scan_time > 1)
-    //   printf("stamp [%llu]-[%llu]\n", global_nodes[0].stamp, global_nodes[count - 1].stamp);
+    // outscan.config.scan_time = static_cast<float>((global_nodes[count - 1].stamp - 
+    //   global_nodes[0].stamp)) / 1e9;
+    // outscan.config.scan_time = sys_scan_time / 1e9;
+    if (lastStamp > 0 && global_nodes[0].stamp > 0)
+      outscan.config.scan_time = double(global_nodes[0].stamp - lastStamp) / 1e9;
+    else
+      outscan.config.scan_time = 0;
+    lastStamp = global_nodes[0].stamp;
+    //计算时间增量
     if (!ISZERO(outscan.config.scan_time))
       outscan.config.time_increment = outscan.config.scan_time / (count - 1);
     else

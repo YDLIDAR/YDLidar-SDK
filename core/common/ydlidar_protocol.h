@@ -137,21 +137,14 @@
 #define LIDAR_MODULE_3 0x04
 #define LIDAR_MODULE_ALL 0x00
 #define LIDAR_MAXCOUNT 3 //最大模组数
-#define GSMAXPOINTCOUNT 160 //GS数据包中最大点云数
+#define LIDAR_PACKMAXPOINTSIZE 160 //单包最大点数
 
 //GS
-#define Angle_Px   1.22
-#define Angle_Py   5.315
-#define Angle_PAngle   22.5
-#define PackageMaxModuleNums  0x03
-#define GS_MAXPOINTS 160  //GS2固定160个点
-#define MaxPointsPerPackge_GS1 216  //GS1固定216个点
-#define PackagePaidBytes_GS 8
-#define NORMAL_PACKAGE_SIZE 331
-
-/// Maximuum number of samples in a packet
-#define PackageSampleMaxLngth 0x100
-#define MaximumNumberOfPackages 765 //= 255 * 3
+#define Angle_Px 1.22
+#define Angle_Py 5.315
+#define Angle_PAngle 22.5
+#define GS_PACKHEADSIZE 8
+#define GS_MAXPOINTSIZE 160 //GS数据包中最大点云数
 
 #define SDK_SNLEN 16 //序列号长度
 
@@ -161,18 +154,16 @@
 #define Node_Sync 1
 /// Normal Node
 #define Node_NotSync 2
-/// Package Header Size
-#define PackagePaidBytes 10
 /// Package Header
 #define PH 0x55AA
 #define PH1 0xAA
 #define PH2 0x55 //AA55是点云数据
 #define PH3 0x66 //AA66是时间戳数据
 
+/// Package Header Size
+#define TRI_PACKHEADSIZE 10
 /// Normal Package size
-#define TrianglePackageDataSize 40
-/// TOF Normal package size
-#define TOFPackageDataSize 80
+#define TRI_PACKDATASIZE 40
 
 #define FREINDEX 0
 #define USERVERSIONNDEX 1
@@ -252,7 +243,7 @@ struct tri_node_package {
   uint16_t  firstAngle;///< first sample angle
   uint16_t  lastAngle;///< last sample angle
   uint16_t  cs;///< checksum
-  uint16_t  nodes[PackageSampleMaxLngth];
+  uint16_t  nodes[LIDAR_PACKMAXPOINTSIZE];
 } __attribute__((packed));
 
 //LiDAR Intensity Nodes Package
@@ -263,7 +254,7 @@ struct tri_node_package2 {
   uint16_t  firstAngle;///< first sample angle
   uint16_t  lastAngle;///< last sample angle
   uint16_t  cs;///< checksum
-  tri_node2  nodes[PackageSampleMaxLngth];
+  tri_node2  nodes[LIDAR_PACKMAXPOINTSIZE];
 } __attribute__((packed));
 
 // TOF LiDAR Intensity Nodes Package
@@ -274,7 +265,7 @@ struct tof_node_package {
   uint16_t  firstAngle;
   uint16_t  lastAngle;
   uint16_t  cs;
-  tof_node  nodes[PackageSampleMaxLngth];
+  tof_node  nodes[LIDAR_PACKMAXPOINTSIZE];
 } __attribute__((packed));
 
 //时间戳结构体
@@ -369,12 +360,12 @@ struct gs_packages {
     int moduleNum;
     bool left = false;
     bool right = false;
-    node_info points[GS_MAXPOINTS];
+    node_info points[GS_MAXPOINTSIZE];
 } __attribute__((packed));
 struct gs_module_nodes {
   int moduleNum = 0;
   int pointCount = 0;
-  node_info points[GS_MAXPOINTS];
+  node_info points[GS_MAXPOINTSIZE];
 } __attribute__((packed));
 
 //GS点数据结构
@@ -392,7 +383,7 @@ struct gs_node_package {
   uint8_t ct;
   uint16_t size;
   uint16_t env;
-  gs_node nodes[GS_MAXPOINTS];
+  gs_node nodes[GS_MAXPOINTSIZE];
   uint8_t cs;
 } __attribute__((packed));
 #define GSPACKSIZE sizeof(gs_node_package) //定义GS点大小

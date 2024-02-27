@@ -497,11 +497,11 @@ namespace ydlidar
 
     uint8_t *globalRecvBuffer = nullptr;
 
-    double k0[PackageMaxModuleNums];
-    double k1[PackageMaxModuleNums];
-    double b0[PackageMaxModuleNums];
-    double b1[PackageMaxModuleNums];
-    double bias[PackageMaxModuleNums];
+    double k0[LIDAR_MAXCOUNT];
+    double k1[LIDAR_MAXCOUNT];
+    double b0[LIDAR_MAXCOUNT];
+    double b1[LIDAR_MAXCOUNT];
+    double bias[LIDAR_MAXCOUNT];
 
     uint8_t moduleNum = 0; // 模块编号
     uint8_t moduleCount = 1; // 当前模组数量

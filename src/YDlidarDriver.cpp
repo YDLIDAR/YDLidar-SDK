@@ -308,8 +308,11 @@ result_t YDlidarDriver::sendData(const uint8_t *data, size_t size) {
       return RESULT_FAIL;
     }
 
-    // printf("send: ");
-    // printHex(data, r);
+    if (m_Debug)
+    {
+      printf("send: ");
+      printHex(data, r);
+    }
 
     size -= r;
     data += r;
@@ -331,8 +334,11 @@ result_t YDlidarDriver::getData(uint8_t *data, size_t size)
       return RESULT_FAIL;
     }
 
-    // printf("recv: ");
-    // printHex(data, r);
+    if (m_Debug)
+    {
+      printf("recv: ");
+      printHex(data, r);
+    }
 
     size -= r;
     data += r;
@@ -790,7 +796,7 @@ result_t YDlidarDriver::parseResponseHeader(
 
   while ((waitTime = getms() - startTs) <= timeout)
   {
-    size_t remainSize = PackagePaidBytes - recvPos;
+    size_t remainSize = TRI_PACKHEADSIZE - recvPos;
     size_t recvSize = 0;
     ans = waitForData(remainSize, timeout - waitTime, &recvSize);
     if (!IS_OK(ans))
@@ -850,14 +856,13 @@ result_t YDlidarDriver::parseResponseHeader(
               recvSize = remainSize;
             getData(&globalRecvBuffer[lastSize], recvSize);
             recvSize += lastSize;
-            pos = PackagePaidBytes;
+            pos = TRI_PACKHEADSIZE;
           }
           else
           {
             pos += 6;
           }
-
-          //校验和检测
+          //时间戳校验和检测
           uint8_t csc = 0; //计算校验和
           uint8_t csr = 0; //实际校验和
           for (int i=0; i<SIZE_STAMPPACKAGE; ++i)
@@ -870,6 +875,7 @@ result_t YDlidarDriver::parseResponseHeader(
           if (csc != csr)
           {
             printf("[YDLIDAR] Checksum error c[0x%02X] != r[0x%02X]\n", csc, csr);
+            fflush(stdout);
           }
           else
           {
@@ -877,9 +883,20 @@ result_t YDlidarDriver::parseResponseHeader(
             memcpy(&sp, &globalRecvBuffer[lastPos], SIZE_STAMPPACKAGE);
             stamp = uint64_t(sp.stamp) * 1000000; //毫秒转纳秒需要×1000000
             // printf("stamp: 0x%"PRIx64" -> 0x%"PRIx64"\n", sp.stamp, stamp);
-            fflush(stdout);
+            // fflush(stdout);
+            //测试扫描时长
+            // static uint32_t s_scanTime = 0;
+            // if (s_scanTime > 0)
+            // {
+            //     uint32_t dt = sp.stamp - s_scanTime;
+            //     if (dt < 44 || dt > 57)
+            //     {
+            //         error("单帧时长[%u]ms超出标准[%u~%u]",
+            //             dt, 44, 57);
+            //     }
+            // }
+            // s_scanTime = sp.stamp;
           }
-
           continue;
         }
         else
@@ -893,20 +910,9 @@ result_t YDlidarDriver::parseResponseHeader(
       case 2:
         SampleNumlAndCTCal = currentByte;
         package_type = currentByte & 0x01; //是否是零位包标识
-
-        if ((package_type == CT_Normal) || 
-          (package_type == CT_RingStart))
+        if (package_type == CT_RingStart)
         {
-          if (package_type == CT_RingStart)
-          {
-            scan_frequence = (currentByte & 0xFE) >> 1;
-          }
-        }
-        else
-        {
-          has_package_error = true;
-          recvPos = 0;
-          continue;
+          scan_frequence = (currentByte & 0xFE) >> 1;
         }
         break;
 
@@ -996,7 +1002,7 @@ result_t YDlidarDriver::parseResponseHeader(
       packageBuffer[recvPos++] = currentByte;
     }
 
-    if (recvPos == PackagePaidBytes)
+    if (recvPos == TRI_PACKHEADSIZE)
     {
       ans = RESULT_OK;
       break;
@@ -1062,7 +1068,7 @@ result_t YDlidarDriver::parseResponseScanData(
         }
       }
 
-      packageBuffer[PackagePaidBytes + recvPos] = globalRecvBuffer[pos];
+      packageBuffer[TRI_PACKHEADSIZE + recvPos] = globalRecvBuffer[pos];
       recvPos++;
     }
 
@@ -1140,7 +1146,7 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout)
   (*node).error = 0;
   (*node).debugInfo = 0xff;
 
-  if (nodeIndex == 0) 
+  if (nodeIndex == 0)
   {
     uint8_t *packageBuffer = (m_intensities) ? (isTOFLidar(m_LidarType) ?
                               (uint8_t *)&tof_package.head : 
@@ -1150,13 +1156,10 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout)
     if (!IS_OK(ans)) {
       return ans;
     }
-    // printf("index %u\n", nodeIndex);
-
     ans = parseResponseScanData(packageBuffer, timeout);
     if (!IS_OK(ans)) {
       return ans;
     }
-
     calcuteCheckSum(node);
     calcutePackageCT();
 
@@ -1164,20 +1167,25 @@ result_t YDlidarDriver::waitPackage(node_info *node, uint32_t timeout)
     //   parseStampData(); //解析时间戳
   }
 
-  parseNodeDebugFromBuffer(node);
-  parseNodeFromeBuffer(node);
+  parseNodeDebugFromBuffer(node); //解析调试信息
+  parseNodeFromeBuffer(node); //解析点数据
   return RESULT_OK;
 }
 
-void YDlidarDriver::calcuteCheckSum(node_info *node) {
+void YDlidarDriver::calcuteCheckSum(node_info *node) 
+{
   CheckSumCal ^= SampleNumlAndCTCal;
   CheckSumCal ^= LastSampleAngleCal;
 
-  if (CheckSumCal != CheckSum) {
+  if (CheckSumCal != CheckSum) 
+  {
     CheckSumResult = false;
     has_package_error = true;
     (*node).error = 1;
-  } else {
+    error("Check Sum 0x%04X != 0x%04X", CheckSumCal, CheckSum);
+  }
+  else
+  {
     CheckSumResult = true;
   }
 }
@@ -1385,16 +1393,16 @@ result_t YDlidarDriver::waitScanData(
             //计算延时时间
             size_t size = _serial->available();
             uint64_t delayTime = 0;
-            if (size > PackagePaidBytes) {
+            if (size > TRI_PACKHEADSIZE) {
                 size_t packageNum = 0;
                 size_t Number = 0;
-                size_t PackageSize = TrianglePackageDataSize;
+                size_t PackageSize = TRI_PACKDATASIZE;
                 packageNum = size / PackageSize;
                 Number = size % PackageSize;
-                delayTime = packageNum * (PackageSize - PackagePaidBytes) * m_PointTime / 2;
+                delayTime = packageNum * (PackageSize - TRI_PACKHEADSIZE) * m_PointTime / 2;
 
-                if (Number > PackagePaidBytes) {
-                    delayTime += m_PointTime * ((Number - PackagePaidBytes) / 2);
+                if (Number > TRI_PACKHEADSIZE) {
+                    delayTime += m_PointTime * ((Number - TRI_PACKHEADSIZE) / 2);
                 }
             }
             nodebuffer[recvNodeCount - 1].delayTime = size * trans_delay + delayTime;
@@ -1413,35 +1421,73 @@ result_t YDlidarDriver::waitScanData(
     return RESULT_FAIL;
 }
 
-result_t YDlidarDriver::grabScanData(node_info *nodebuffer,
-                                     size_t &count,
-                                     uint32_t timeout)
+result_t YDlidarDriver::grabScanData(
+  node_info *nodes,
+  size_t &count,
+  uint32_t timeout)
 {
-    switch (_dataEvent.wait(timeout))
+    // switch (_dataEvent.wait(timeout))
+    // {
+    // case Event::EVENT_TIMEOUT:
+    //     count = 0;
+    //     return RESULT_TIMEOUT;
+    // case Event::EVENT_OK:
+    // {
+    //     ScopedLocker l(_lock);
+    //     size_t size_to_copy = min(count, scan_node_count);
+    //     memcpy(nodes, scan_node_buf, size_to_copy * sizeof(node_info));
+    //     count = size_to_copy;
+    //     scan_node_count = 0;
+    //     return RESULT_OK;
+    // }
+    // default:
+    //     count = 0;
+    //     return RESULT_FAIL;
+    // }
+
+    node_info packNodes[LIDAR_PACKMAXPOINTSIZE];
+    size_t packCount = 0; //单包点数
+    size_t currCount = 0; //当前点数
+    result_t ans = RESULT_FAIL;
+    uint32_t st = getms();
+    uint32_t wt = 0;
+    while ((wt = getms() - st) < timeout)
     {
-    case Event::EVENT_TIMEOUT:
-        count = 0;
-        return RESULT_TIMEOUT;
+      packCount = LIDAR_PACKMAXPOINTSIZE;
+      ans = waitScanData(packNodes, packCount, timeout - wt);
+      if (!IS_OK(ans))
+      {
+        return ans; //失败时直接返回
+      } 
+      else 
+      {
+        bool hasZero = false; //当前包中是否有零位标记
+        for (size_t i = 0; i < packCount; ++i)
+        {
+          if (packNodes[i].sync & LIDAR_RESP_SYNCBIT)
+          {
+            hasZero = true;
+          }
 
-    case Event::EVENT_OK:
-    {
-        ScopedLocker l(_lock);
-        // if (scan_node_count == 0)
-        // {
-        //     return RESULT_FAIL;
-        // }
-
-        size_t size_to_copy = min(count, scan_node_count);
-        memcpy(nodebuffer, scan_node_buf, size_to_copy * sizeof(node_info));
-        count = size_to_copy;
-        scan_node_count = 0;
+          nodes[currCount ++] = packNodes[i];
+          if (currCount >= count)
+          {
+            hasZero = true;
+            printf("[YDLIDAR] Current points count %d > buffer size %d\n", 
+              currCount, count);
+            fflush(stdout);
+            break;
+          }
+        }
+        if (hasZero)
+        {
+          count = currCount;
+          return RESULT_OK;
+        }
+      }
     }
-        return RESULT_OK;
 
-    default:
-        count = 0;
-        return RESULT_FAIL;
-    }
+    return RESULT_TIMEOUT;
 }
 
 result_t YDlidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
@@ -1815,7 +1861,6 @@ result_t YDlidarDriver::startScan(bool force, uint32_t timeout)
 
     //此处仅获取模组设备信息
     {
-      // printf("waitDevicePackage\n");
       waitDevicePackage(1000);
     }
     //非Tmini系列雷达才自动获取强度标识
@@ -1826,11 +1871,13 @@ result_t YDlidarDriver::startScan(bool force, uint32_t timeout)
     }
 
     //创建数据解析线程
-    ret = createThread();
+    // ret = createThread();
   }
 
   if (isSupportMotorCtrl(model))
     startMotor();
+
+  m_isScanning = true;
 
   return ret;
 }
@@ -2441,11 +2488,11 @@ result_t YDlidarDriver::parseHeader(
   uint32_t waitTime = 0;
   uint8_t package_type = 0;
   result_t ans = RESULT_TIMEOUT;
-  static uint8_t s_buff[PackagePaidBytes * 2] = {0};
+  static uint8_t s_buff[TRI_PACKHEADSIZE * 2] = {0};
 
   while ((waitTime = getms() - startTime) <= timeout)
   {
-    size_t remainSize = PackagePaidBytes - recvPos;
+    size_t remainSize = TRI_PACKHEADSIZE - recvPos;
     size_t recvSize = 0;
     ans = waitForData(remainSize, timeout - waitTime, &recvSize);
     if (!IS_OK(ans))
@@ -2533,7 +2580,7 @@ result_t YDlidarDriver::parseHeader(
       recvPos ++;
     }
 
-    if (recvPos == PackagePaidBytes)
+    if (recvPos == TRI_PACKHEADSIZE)
     {
       ans = RESULT_OK;
       break;
