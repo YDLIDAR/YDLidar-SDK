@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     int id = 0;
 
     for (it = ports.begin(); it != ports.end(); it++) {
-      printf("%d. %s %s\n", id, it->first.c_str(), it->second.c_str());
+      printf("[%d] %s %s\n", id, it->first.c_str(), it->second.c_str());
       id++;
     }
 
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
 
   std::string input_frequency;
 
-  float frequency = 10.0;
+  float frequency = 6.0;
 
   // while (ydlidar::os_isOk() && !isSingleChannel) {
   //   printf("Please enter the lidar scan frequency[5-12]:");
@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
-  bool b_optvalue = true;
+  bool b_optvalue = false;
   laser.setlidaropt(LidarPropFixedResolution, &b_optvalue, sizeof(bool));
   b_optvalue = false;
   /// rotate 180

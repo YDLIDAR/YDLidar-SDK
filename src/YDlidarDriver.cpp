@@ -2037,9 +2037,11 @@ result_t YDlidarDriver::stopMotor() {
 /************************************************************************/
 /* get the current scan frequency of lidar                              */
 /************************************************************************/
-result_t YDlidarDriver::getScanFrequency(scan_frequency &frequency,
-    uint32_t timeout) {
-  result_t  ans;
+result_t YDlidarDriver::getScanFrequency(
+  scan_frequency &frequency,
+  uint32_t timeout) 
+{
+  result_t ans;
 
   if (!m_isConnected) {
     return RESULT_FAIL;

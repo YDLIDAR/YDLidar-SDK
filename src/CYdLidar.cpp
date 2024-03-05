@@ -848,8 +848,6 @@ void CYdLidar::disconnecting()
   if (lidarPtr)
   {
     lidarPtr->disconnect();
-    delete lidarPtr;
-    lidarPtr = nullptr;
   }
 
   scanning = false;
@@ -1735,6 +1733,14 @@ bool CYdLidar::checkCalibrationAngle(const std::string &serialNumber)
 -------------------------------------------------------------*/
 bool CYdLidar::checkCOMMs()
 {
+  //如果雷达类型有变化则需要先删除旧对象
+  if (lidarPtr && 
+    lidarPtr->getLidarType() != m_LidarType)
+  {
+    delete lidarPtr;
+    lidarPtr = nullptr;
+  }
+  //如果未创建对象
   if (!lidarPtr)
   {
     printf("[YDLIDAR] SDK initializing\n");
