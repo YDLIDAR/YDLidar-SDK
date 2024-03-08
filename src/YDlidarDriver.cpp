@@ -1426,68 +1426,68 @@ result_t YDlidarDriver::grabScanData(
   size_t &count,
   uint32_t timeout)
 {
-    // switch (_dataEvent.wait(timeout))
-    // {
-    // case Event::EVENT_TIMEOUT:
-    //     count = 0;
-    //     return RESULT_TIMEOUT;
-    // case Event::EVENT_OK:
-    // {
-    //     ScopedLocker l(_lock);
-    //     size_t size_to_copy = min(count, scan_node_count);
-    //     memcpy(nodes, scan_node_buf, size_to_copy * sizeof(node_info));
-    //     count = size_to_copy;
-    //     scan_node_count = 0;
-    //     return RESULT_OK;
-    // }
-    // default:
-    //     count = 0;
-    //     return RESULT_FAIL;
-    // }
-
-    node_info packNodes[LIDAR_PACKMAXPOINTSIZE];
-    size_t packCount = 0; //单包点数
-    size_t currCount = 0; //当前点数
-    result_t ans = RESULT_FAIL;
-    uint32_t st = getms();
-    uint32_t wt = 0;
-    while ((wt = getms() - st) < timeout)
+    switch (_dataEvent.wait(timeout))
     {
-      packCount = LIDAR_PACKMAXPOINTSIZE;
-      ans = waitScanData(packNodes, packCount, timeout - wt);
-      if (!IS_OK(ans))
-      {
-        return ans; //失败时直接返回
-      } 
-      else 
-      {
-        bool hasZero = false; //当前包中是否有零位标记
-        for (size_t i = 0; i < packCount; ++i)
-        {
-          if (packNodes[i].sync & LIDAR_RESP_SYNCBIT)
-          {
-            hasZero = true;
-          }
-
-          nodes[currCount ++] = packNodes[i];
-          if (currCount >= count)
-          {
-            hasZero = true;
-            printf("[YDLIDAR] Current points count %d > buffer size %d\n", 
-              currCount, count);
-            fflush(stdout);
-            break;
-          }
-        }
-        if (hasZero)
-        {
-          count = currCount;
-          return RESULT_OK;
-        }
-      }
+    case Event::EVENT_TIMEOUT:
+        count = 0;
+        return RESULT_TIMEOUT;
+    case Event::EVENT_OK:
+    {
+        ScopedLocker l(_lock);
+        size_t size_to_copy = min(count, scan_node_count);
+        memcpy(nodes, scan_node_buf, size_to_copy * sizeof(node_info));
+        count = size_to_copy;
+        scan_node_count = 0;
+        return RESULT_OK;
+    }
+    default:
+        count = 0;
+        return RESULT_FAIL;
     }
 
-    return RESULT_TIMEOUT;
+    // node_info packNodes[LIDAR_PACKMAXPOINTSIZE];
+    // size_t packCount = 0; //单包点数
+    // size_t currCount = 0; //当前点数
+    // result_t ans = RESULT_FAIL;
+    // uint32_t st = getms();
+    // uint32_t wt = 0;
+    // while ((wt = getms() - st) < timeout)
+    // {
+    //   packCount = LIDAR_PACKMAXPOINTSIZE;
+    //   ans = waitScanData(packNodes, packCount, timeout - wt);
+    //   if (!IS_OK(ans))
+    //   {
+    //     return ans; //失败时直接返回
+    //   } 
+    //   else 
+    //   {
+    //     bool hasZero = false; //当前包中是否有零位标记
+    //     for (size_t i = 0; i < packCount; ++i)
+    //     {
+    //       if (packNodes[i].sync & LIDAR_RESP_SYNCBIT)
+    //       {
+    //         hasZero = true;
+    //       }
+
+    //       nodes[currCount ++] = packNodes[i];
+    //       if (currCount >= count)
+    //       {
+    //         hasZero = true;
+    //         printf("[YDLIDAR] Current points count %d > buffer size %d\n", 
+    //           currCount, count);
+    //         fflush(stdout);
+    //         break;
+    //       }
+    //     }
+    //     if (hasZero)
+    //     {
+    //       count = currCount;
+    //       return RESULT_OK;
+    //     }
+    //   }
+    // }
+
+    // return RESULT_TIMEOUT;
 }
 
 result_t YDlidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
@@ -1871,7 +1871,7 @@ result_t YDlidarDriver::startScan(bool force, uint32_t timeout)
     }
 
     //创建数据解析线程
-    // ret = createThread();
+    ret = createThread();
   }
 
   if (isSupportMotorCtrl(model))

@@ -980,10 +980,10 @@ void GSLidarDriver::angTransform(
       }
       tempDist = (dist - Angle_Px) / cos(((Angle_PAngle + bias[mdNum]) - (tempTheta)) * M_PI / 180);
       tempTheta = tempTheta * M_PI / 180;
-      tempX = cos((Angle_PAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + sin((Angle_PAngle + bias[mdNum]) * M_PI / 180) * (tempDist *
-                                                                                             sin(tempTheta));
-      tempY = -sin((Angle_PAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + cos((Angle_PAngle + bias[mdNum]) * M_PI / 180) * (tempDist *
-                                                                                              sin(tempTheta));
+      tempX = cos((Angle_PAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + 
+        sin((Angle_PAngle + bias[mdNum]) * M_PI / 180) * (tempDist * sin(tempTheta));
+      tempY = -sin((Angle_PAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + 
+        cos((Angle_PAngle + bias[mdNum]) * M_PI / 180) * (tempDist * sin(tempTheta));
       tempX = tempX + Angle_Px;
       tempY = tempY - Angle_Py; //5.315
       Dist = sqrt(tempX * tempX + tempY * tempY);
@@ -1002,10 +1002,10 @@ void GSLidarDriver::angTransform(
       }
       tempDist = (dist - Angle_Px) / cos(((Angle_PAngle + bias[mdNum]) + (tempTheta)) * M_PI / 180);
       tempTheta = tempTheta * M_PI / 180;
-      tempX = cos(-(Angle_PAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + sin(-(Angle_PAngle + bias[mdNum]) * M_PI / 180) * (tempDist *
-                                                                                               sin(tempTheta));
-      tempY = -sin(-(Angle_PAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + cos(-(Angle_PAngle + bias[mdNum]) * M_PI / 180) * (tempDist *
-                                                                                                sin(tempTheta));
+      tempX = cos(-(Angle_PAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + 
+        sin(-(Angle_PAngle + bias[mdNum]) * M_PI / 180) * (tempDist * sin(tempTheta));
+      tempY = -sin(-(Angle_PAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + 
+        cos(-(Angle_PAngle + bias[mdNum]) * M_PI / 180) * (tempDist * sin(tempTheta));
       tempX = tempX + Angle_Px;
       tempY = tempY + Angle_Py; //5.315
       Dist = sqrt(tempX * tempX + tempY * tempY);
@@ -1017,6 +1017,8 @@ void GSLidarDriver::angTransform(
     }
     *dstTheta = theta;
     *dstDist = Dist;
+
+    // printf("%d %d %f %d\n", n, dist, (float)theta, (int)Dist);
 }
 
 void GSLidarDriver::angTransform2(
@@ -1273,6 +1275,9 @@ result_t GSLidarDriver::getDevicePara(gs_device_para &info, uint32_t timeout) {
         b0[mdNum] = info.b0 / 10000.00;
         b1[mdNum] = info.b1 / 10000.00;
         bias[mdNum] = double(info.bias) * 0.1;
+
+        // debug("k0 %lf k1 %lf b0 %lf b1 %lf bias %lf", 
+            // k0[mdNum], k1[mdNum], b0[mdNum], b1[mdNum], bias[mdNum]);
         delay(5);
     }
   }

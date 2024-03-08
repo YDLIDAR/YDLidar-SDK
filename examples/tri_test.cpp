@@ -270,7 +270,9 @@ int main(int argc, char *argv[])
   laser.enableSunNoise(false);
 
   //设置是否获取底板设备信息（默认仅尝试获取模组设备信息）
-  laser.setBottomPriority(true);
+  laser.setBottomPriority(false);
+  //启用调试
+  laser.setEnableDebug(true);
 
   uint32_t t = getms(); //时间
   int c = 0; //计数

@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
 
   std::string input_frequency;
 
-  float frequency = 6.0;
+  float frequency = 10.0;
 
   // while (ydlidar::os_isOk() && !isSingleChannel) {
   //   printf("Please enter the lidar scan frequency[5-12]:");
@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
-  bool b_optvalue = false;
+  bool b_optvalue = true;
   laser.setlidaropt(LidarPropFixedResolution, &b_optvalue, sizeof(bool));
   b_optvalue = false;
   /// rotate 180
