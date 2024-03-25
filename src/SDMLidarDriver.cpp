@@ -92,7 +92,7 @@ SDMLidarDriver::~SDMLidarDriver()
 result_t SDMLidarDriver::connect(const char *port, uint32_t baudrate)
 {
     m_baudrate = baudrate;
-    serial_port = string(port);
+    m_port = string(port);
     {
         ScopedLocker l(_cmd_lock);
         if (!_serial)
@@ -265,8 +265,11 @@ result_t SDMLidarDriver::getData(uint8_t *data, size_t size)
         if (!r)
             return RESULT_FAIL;
 
-        // printf("recv: ");
-        // printHex(data, r);
+        if (m_Debug)
+        {
+            printf("recv: ");
+            printHex(data, r);
+        }
 
         size -= r;
         data += r;
@@ -422,7 +425,7 @@ result_t SDMLidarDriver::checkAutoConnecting()
         int retryConnect = 0;
 
         while (isAutoReconnect &&
-            connect(serial_port.c_str(), m_baudrate) != RESULT_OK)
+            connect(m_port.c_str(), m_baudrate) != RESULT_OK)
         {
             retryConnect++;
             if (retryConnect > 10)

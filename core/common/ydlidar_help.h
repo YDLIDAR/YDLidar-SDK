@@ -176,6 +176,8 @@ inline std::string lidarModelToString(int model)
     break;
   case DriverInterface::YDLIDAR_SDM15:
     return "SDM15";
+  case DriverInterface::YDLIDAR_SDM18:
+    return "SDM18";
   default:
     name = "unkown(YD-" + std::to_string(model) + ")";
     break;
@@ -589,6 +591,11 @@ inline bool isSCLLidar(int type)
 inline bool isSDMLidar(int type)
 {
   return (type == TYPE_SDM);
+}
+
+inline bool isDTSLidar(int type)
+{
+  return (type == TYPE_DTS);
 }
 
 /**

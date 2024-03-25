@@ -508,6 +508,7 @@ namespace ydlidar
     int nodeCount = 0; //当前包点数
     uint64_t stamp = 0; //时间戳
     std::list<gs_module_nodes> datas; //各模组数据
+    double m_pitchAngle = Angle_PAngle;
   };
 
 } // namespace ydlidar

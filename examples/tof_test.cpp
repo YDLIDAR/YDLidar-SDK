@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     int id = 0;//
 
     for (it = ports.begin(); it != ports.end(); it++) {
-      printf("%d. %s\n", id, it->first.c_str());
+      printf("[%d] %s %s\n", id, it->first.c_str(), it->second.c_str());
       id++;
     }
 

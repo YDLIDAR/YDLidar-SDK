@@ -50,7 +50,7 @@ using namespace ydlidar::core::base;
 // port defaults to 9000 if not provided.
 ETLidarDriver::ETLidarDriver() :
   offset_len(0),
-  m_port(9000),
+  port(9000),
   m_sampleRate(20000),
   m_force_update(false) {
 
@@ -72,7 +72,7 @@ ETLidarDriver::ETLidarDriver() :
 
   m_isScanning = false;
   m_isConnected = false;
-  serial_port = "192.168.0.11";
+  m_port = "192.168.0.11";
   m_baudrate = 8000;
   m_config.motor_rpm = 1200;
   m_config.laserScanFrequency = 50;
@@ -120,11 +120,11 @@ void ETLidarDriver::updateScanCfg(const lidarConfig &config) {
 }
 
 result_t ETLidarDriver::connect(const char *port_path, uint32_t baudrate) {
-  serial_port = port_path;
+  m_port = port_path;
   m_baudrate = baudrate;
   m_isConnected = false;
 
-  if (!configPortConnect(serial_port.c_str(), m_port)) {
+  if (!configPortConnect(m_port.c_str(), port)) {
     setDriverError(NotOpenError);
     m_isValidDevice = false;
     return RESULT_FAIL;
@@ -369,7 +369,7 @@ char *ETLidarDriver::configMessage(const char *descriptor, char *value) {
 bool ETLidarDriver::startMeasure() {
   bool ret;
 
-  if (!configPortConnect(serial_port.c_str(), m_port)) {
+  if (!configPortConnect(m_port.c_str(), port)) {
     return  false;
   }
 
@@ -381,7 +381,7 @@ bool ETLidarDriver::startMeasure() {
 }
 
 bool ETLidarDriver::stopMeasure() {
-  if (!configPortConnect(serial_port.c_str(), m_port)) {
+  if (!configPortConnect(m_port.c_str(), port)) {
     return  false;
   }
 
@@ -402,12 +402,12 @@ bool ETLidarDriver::getScanCfg(lidarConfig &config,
   bool ret = true;
 
   if (!ip_address.empty()) {
-    serial_port = ip_address;
+    m_port = ip_address;
   }
 
   lidarConfig cfg;
 
-  if (!configPortConnect(serial_port.c_str(), m_port)) {
+  if (!configPortConnect(m_port.c_str(), port)) {
     config = m_config;
     ret = false;
     return  ret;
@@ -552,7 +552,7 @@ bool ETLidarDriver::getScanCfg(lidarConfig &config,
 void ETLidarDriver::setScanCfg(const lidarConfig &config) {
   char str[32];
 
-  if (!configPortConnect(serial_port.c_str(), m_port)) {
+  if (!configPortConnect(m_port.c_str(), port)) {
     return ;
   }
 
@@ -678,7 +678,7 @@ result_t ETLidarDriver::getScanFrequency(scan_frequency &frequency,
   lidarConfig cfg;
   result_t  ans = RESULT_FAIL;
 
-  if (!configPortConnect(serial_port.c_str(), m_port)) {
+  if (!configPortConnect(m_port.c_str(), port)) {
     return  RESULT_FAIL;
   }
 
@@ -700,7 +700,7 @@ result_t ETLidarDriver::setScanFrequencyAdd(scan_frequency &frequency,
   result_t  ans = RESULT_FAIL;
   char str[32];
 
-  if (!configPortConnect(serial_port.c_str(), m_port)) {
+  if (!configPortConnect(m_port.c_str(), port)) {
     return ans;
   }
 
@@ -736,7 +736,7 @@ result_t ETLidarDriver::setScanFrequencyDis(scan_frequency &frequency,
   result_t  ans = RESULT_FAIL;
   char str[32];
 
-  if (!configPortConnect(serial_port.c_str(), m_port)) {
+  if (!configPortConnect(m_port.c_str(), port)) {
     return ans;
   }
 
@@ -771,7 +771,7 @@ result_t ETLidarDriver::setScanFrequencyAddMic(scan_frequency &frequency,
   result_t  ans = RESULT_FAIL;
   char str[32];
 
-  if (!configPortConnect(serial_port.c_str(), m_port)) {
+  if (!configPortConnect(m_port.c_str(), port)) {
     return ans;
   }
 
@@ -808,7 +808,7 @@ result_t ETLidarDriver::setScanFrequencyDisMic(scan_frequency &frequency,
   result_t  ans = RESULT_FAIL;
   char str[32];
 
-  if (!configPortConnect(serial_port.c_str(), m_port)) {
+  if (!configPortConnect(m_port.c_str(), port)) {
     return ans;
   }
 
@@ -842,7 +842,7 @@ result_t ETLidarDriver::getSamplingRate(sampling_rate &rate, uint32_t timeout) {
   lidarConfig cfg;
   result_t  ans = RESULT_FAIL;
 
-  if (!configPortConnect(serial_port.c_str(), m_port)) {
+  if (!configPortConnect(m_port.c_str(), port)) {
     return ans;
   }
 
@@ -944,7 +944,7 @@ result_t ETLidarDriver::checkAutoConnecting() {
     int retryConnect = 0;
 
     while (isAutoReconnect &&
-           connect(serial_port.c_str(), m_baudrate) != RESULT_OK) {
+           connect(m_port.c_str(), m_baudrate) != RESULT_OK) {
       retryConnect++;
 
       if (retryConnect > 25) {

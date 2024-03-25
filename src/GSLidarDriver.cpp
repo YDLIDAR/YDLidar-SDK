@@ -116,7 +116,7 @@ GSLidarDriver::~GSLidarDriver()
 result_t GSLidarDriver::connect(const char *port_path, uint32_t baudrate) 
 {
     m_baudrate = baudrate;
-    serial_port = string(port_path);
+    m_port = string(port_path);
     {
         ScopedLocker l(_cmd_lock);
         if (!_comm)
@@ -549,7 +549,7 @@ result_t GSLidarDriver::checkAutoConnecting()
 
         int retryConnect = 0;
         while (isAutoReconnect &&
-               connect(serial_port.c_str(), m_baudrate) != RESULT_OK)
+               connect(m_port.c_str(), m_baudrate) != RESULT_OK)
         {
             setDriverError(NotOpenError);
             retryConnect ++;
@@ -978,12 +978,12 @@ void GSLidarDriver::angTransform(
       {
           tempTheta = atan(k0[mdNum] * pixelU - b0[mdNum]) * 180 / M_PI;
       }
-      tempDist = (dist - Angle_Px) / cos(((Angle_PAngle + bias[mdNum]) - (tempTheta)) * M_PI / 180);
+      tempDist = (dist - Angle_Px) / cos(((m_pitchAngle + bias[mdNum]) - (tempTheta)) * M_PI / 180);
       tempTheta = tempTheta * M_PI / 180;
-      tempX = cos((Angle_PAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + 
-        sin((Angle_PAngle + bias[mdNum]) * M_PI / 180) * (tempDist * sin(tempTheta));
-      tempY = -sin((Angle_PAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + 
-        cos((Angle_PAngle + bias[mdNum]) * M_PI / 180) * (tempDist * sin(tempTheta));
+      tempX = cos((m_pitchAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + 
+        sin((m_pitchAngle + bias[mdNum]) * M_PI / 180) * (tempDist * sin(tempTheta));
+      tempY = -sin((m_pitchAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + 
+        cos((m_pitchAngle + bias[mdNum]) * M_PI / 180) * (tempDist * sin(tempTheta));
       tempX = tempX + Angle_Px;
       tempY = tempY - Angle_Py; //5.315
       Dist = sqrt(tempX * tempX + tempY * tempY);
@@ -1000,12 +1000,12 @@ void GSLidarDriver::angTransform(
       {
           tempTheta = atan(k1[mdNum] * pixelU - b1[mdNum]) * 180 / M_PI;
       }
-      tempDist = (dist - Angle_Px) / cos(((Angle_PAngle + bias[mdNum]) + (tempTheta)) * M_PI / 180);
+      tempDist = (dist - Angle_Px) / cos(((m_pitchAngle + bias[mdNum]) + (tempTheta)) * M_PI / 180);
       tempTheta = tempTheta * M_PI / 180;
-      tempX = cos(-(Angle_PAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + 
-        sin(-(Angle_PAngle + bias[mdNum]) * M_PI / 180) * (tempDist * sin(tempTheta));
-      tempY = -sin(-(Angle_PAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + 
-        cos(-(Angle_PAngle + bias[mdNum]) * M_PI / 180) * (tempDist * sin(tempTheta));
+      tempX = cos(-(m_pitchAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + 
+        sin(-(m_pitchAngle + bias[mdNum]) * M_PI / 180) * (tempDist * sin(tempTheta));
+      tempY = -sin(-(m_pitchAngle + bias[mdNum]) * M_PI / 180) * tempDist * cos(tempTheta) + 
+        cos(-(m_pitchAngle + bias[mdNum]) * M_PI / 180) * (tempDist * sin(tempTheta));
       tempX = tempX + Angle_Px;
       tempY = tempY + Angle_Py; //5.315
       Dist = sqrt(tempX * tempX + tempY * tempY);
@@ -1687,6 +1687,8 @@ result_t GSLidarDriver::getDeviceInfo2(device_info &info, uint32_t timeout)
     getData(reinterpret_cast<uint8_t*>(&di), GSDEVINFO2SIZE);
 
     model = di.model; //雷达型号
+    if (YDLIDAR_GS5 == model)
+        m_pitchAngle = Angle_PAngle2;
     info.model = uint8_t(di.model);
     info.hardware_version = di.hwVersion;
     info.firmware_version = uint16_t((di.fwVersion & 0xFF) << 8) +

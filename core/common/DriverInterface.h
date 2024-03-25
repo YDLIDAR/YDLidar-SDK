@@ -2,16 +2,18 @@
 #include <core/base/v8stdint.h>
 #include <core/base/thread.h>
 #include <core/base/locker.h>
+#include <core/base/datatype.h>
 #include <map>
 #include "ydlidar_protocol.h"
 #include "ydlidar_def.h"
-#include <core/base/datatype.h>
+
 
 namespace ydlidar
 {
   namespace core
   {
     using namespace base;
+
     namespace common
     {
 
@@ -57,7 +59,7 @@ namespace ydlidar
          * @par Constructor
          *
          */
-        DriverInterface() : serial_port(""),
+        DriverInterface() : m_port(""),
                             m_baudrate(8000),
                             m_intensities(false),
                             m_intensityBit(10),
@@ -528,7 +530,8 @@ namespace ydlidar
           YDLIDAR_TminiPro = 150, /**< Tmini Pro LiDAR Model. */
           YDLIDAR_TminiPlus = 151, /**< Tmini Plus LiDAR Model. */
 
-          YDLIDAR_SDM15 = 160, // SDM15单点雷达
+          YDLIDAR_SDM15 = 160, //SDM15单点雷达
+          YDLIDAR_SDM18, //DTS单点雷达
 
           YDLIDAR_T15 = 200, /**< T15 LiDAR Model. */
 
@@ -570,7 +573,7 @@ namespace ydlidar
         Locker _error_lock;
 
         /// LiDAR com port or IP Address
-        std::string serial_port;
+        std::string m_port;
         /// baudrate or IP port
         uint32_t m_baudrate;
         /// LiDAR intensity

@@ -36,6 +36,7 @@
 #include "ETLidarDriver.h"
 #include "GSLidarDriver.h"
 #include "SDMLidarDriver.h"
+#include "DTSLidarDriver.h"
 
 using namespace std;
 using namespace impl;
@@ -1752,6 +1753,8 @@ bool CYdLidar::checkCOMMs()
       lidarPtr = new ydlidar::GSLidarDriver(m_DeviceType);
     else if (isSDMLidar(m_LidarType)) //SDM
       lidarPtr = new ydlidar::SDMLidarDriver();
+    else if (isDTSLidar(m_LidarType)) //SDM
+      lidarPtr = new ydlidar::DTSLidarDriver();
     else //通用雷达
       lidarPtr = new ydlidar::YDlidarDriver(m_DeviceType);
 

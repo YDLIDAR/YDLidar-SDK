@@ -440,7 +440,7 @@ class ETLidarDriver : public DriverInterface {
   float           m_currentAngle;
   /* ETLidar specific Variables */
   std::string               m_deviceIp;
-  int                       m_port;
+  int                       port;
   int                       m_sampleRate;
   /* Sockets for ydlidar */
   core::network::CActiveSocket             *socket_cmd;

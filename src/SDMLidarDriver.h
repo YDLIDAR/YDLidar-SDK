@@ -117,7 +117,8 @@ struct SdkSdmDeviceInfo {
 
 using namespace std;
 
-namespace ydlidar {
+namespace ydlidar 
+{
 
 using namespace core;
 using namespace core::serial;

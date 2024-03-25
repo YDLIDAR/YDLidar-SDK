@@ -136,7 +136,7 @@ YDlidarDriver::~YDlidarDriver()
 result_t YDlidarDriver::connect(const char *port_path, uint32_t baudrate)
 {
   m_baudrate = baudrate;
-  serial_port = string(port_path);
+  m_port = string(port_path);
 
   {
     ScopedLocker l(_cmd_lock);
@@ -483,7 +483,7 @@ result_t YDlidarDriver::checkAutoConnecting(bool serialError)
 
     if (!m_isConnected && ((retryCount % 2 == 1) || serialError))
     {
-      if (!IS_OK(connect(serial_port.c_str(), m_baudrate)))
+      if (!IS_OK(connect(m_port.c_str(), m_baudrate)))
       {
         setDriverError(NotOpenError);
       }
@@ -508,7 +508,7 @@ result_t YDlidarDriver::checkAutoConnecting(bool serialError)
     int retryConnect = 0;
 
     while (isAutoReconnect &&
-           connect(serial_port.c_str(), m_baudrate) != RESULT_OK)
+           connect(m_port.c_str(), m_baudrate) != RESULT_OK)
     {
       retryConnect++;
 
