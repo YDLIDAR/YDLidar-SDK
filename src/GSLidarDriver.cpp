@@ -127,7 +127,7 @@ result_t GSLidarDriver::connect(const char *port_path, uint32_t baudrate)
             }
             else
             {
-                _comm = new serial::Serial(port_path, m_baudrate,
+                _comm = new serial::Serial(m_port, m_baudrate,
                     serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT));
             }
             _comm->bindport(port_path, baudrate);
@@ -1089,7 +1089,7 @@ result_t GSLidarDriver::waitScanData(
 }
 
 result_t GSLidarDriver::grabScanData(
-    node_info *nodebuffer,
+    node_info *nodes,
     size_t &count,
     uint32_t timeout)
 {
@@ -1102,10 +1102,10 @@ result_t GSLidarDriver::grabScanData(
             if (datas.size())
             {
                 //从数组中取出点云数据
-                gs_module_nodes nodes = datas.front();
+                gs_module_nodes ns = datas.front();
                 datas.pop_front();
-                size_t size = min(int(count), nodes.pointCount);
-                memcpy(nodebuffer, nodes.points, size * SDKNODESIZE);
+                size_t size = min(int(count), ns.pointCount);
+                memcpy(nodes, ns.points, size * SDKNODESIZE);
                 count = size;
                 return RESULT_OK;
             }
@@ -1113,6 +1113,30 @@ result_t GSLidarDriver::grabScanData(
         delay(1); //延时
     }
     return RESULT_TIMEOUT;
+
+    // node_info packNodes[LIDAR_PACKMAXPOINTSIZE];
+    // size_t packCount = 0; //单包点数
+    // size_t currCount = 0; //当前点数
+    // result_t ans = RESULT_FAIL;
+    // uint32_t st = getms();
+    // uint32_t wt = 0;
+    // while ((wt = getms() - st) < timeout)
+    // {
+    //   packCount = LIDAR_PACKMAXPOINTSIZE;
+    //   ans = waitScanData(packNodes, packCount, timeout - wt);
+    //   if (!IS_OK(ans))
+    //   {
+    //     return ans; //失败时直接返回
+    //   } 
+    //   else 
+    //   {
+    //     count = packCount;
+    //     memcpy(nodes, packNodes, count * SDKNODESIZE);
+    //     return RESULT_OK;
+    //   }
+    // }
+
+    // return RESULT_TIMEOUT;
 }
 
 result_t GSLidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
@@ -1395,12 +1419,14 @@ result_t GSLidarDriver::startScan(bool force, uint32_t timeout)
         }
         //启动线程
         ans = createThread();
+        m_isScanning = true;
     }
 
     return ans;
 }
 
-result_t GSLidarDriver::stopScan(uint32_t timeout) {
+result_t GSLidarDriver::stopScan(uint32_t timeout) 
+{
     UNUSED(timeout);
     result_t  ans;
 

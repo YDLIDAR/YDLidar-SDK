@@ -199,20 +199,21 @@ int main(int argc, char *argv[])
   laser.setlidaropt(LidarPropSupportHeartBeat, &b_optvalue, sizeof(bool));
 
   //////////////////////float property/////////////////
-  /// unit: °
+  // unit: °
   float f_optvalue = 180.0f;
   laser.setlidaropt(LidarPropMaxAngle, &f_optvalue, sizeof(float));
   f_optvalue = -180.0f;
   laser.setlidaropt(LidarPropMinAngle, &f_optvalue, sizeof(float));
-  /// unit: m
+  // unit: m
   f_optvalue = 1.f;
   laser.setlidaropt(LidarPropMaxRange, &f_optvalue, sizeof(float));
   f_optvalue = 0.025f;
   laser.setlidaropt(LidarPropMinRange, &f_optvalue, sizeof(float));
-  /// unit: Hz
+  // unit: Hz
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
-  laser.setEnableDebug(false);
+  //是否启用调试
+  laser.setEnableDebug(false); 
 
   //雷达初始化
   bool ret = laser.initialize();
@@ -223,15 +224,15 @@ int main(int argc, char *argv[])
     return -1;
   }
   //设置雷达工作模式（0表示避障模式，1表示沿边模式）
-  // ret &= laser.setWorkMode(0, 0x01);
+  ret &= laser.setWorkMode(1, 0x01);
   // ret &= laser.setWorkMode(0, 0x02);
   // ret &= laser.setWorkMode(1, 0x04);
-  // if (!ret)
-  // {
-  //   fprintf(stderr, "Fail to set work mode %s\n", laser.DescribeError());
-  //   fflush(stderr);
-  //   return -1;
-  // }
+  if (!ret)
+  {
+    fprintf(stderr, "Fail to set work mode %s\n", laser.DescribeError());
+    fflush(stderr);
+    return -1;
+  }
   //获取级联雷达设备信息
   // std::vector<device_info_ex> dis;
   // ret = laser.getDeviceInfo(dis);
@@ -258,11 +259,11 @@ int main(int argc, char *argv[])
   }
 
   LaserScan scan;
-  //打印帧间隔
-  // std::map<int, uint32_t> ts;
-  // ts[0] = getms();
-  // ts[1] = getms();
-  // ts[2] = getms();
+  //打印帧间隔相关
+  std::map<int, uint32_t> ts;
+  ts[0] = getms();
+  ts[1] = getms();
+  ts[2] = getms();
 
   while (ret && ydlidar::os_isOk())
   {
@@ -271,15 +272,18 @@ int main(int argc, char *argv[])
       printf("Module [%d] [%d] points\n",
         scan.moduleNum,
         int(scan.points.size()));
+      
+      //打印帧间隔
       // uint32_t t = getms();
       // printf("module[%d] time[%lld]\n", scan.moduleNum, t - ts[scan.moduleNum]);
       // ts[scan.moduleNum] = t;
-
-      for (size_t i = 0; i < scan.points.size(); ++i)
-      {
-        const LaserPoint &p = scan.points.at(i);
-        printf("%d a %.01f r %.01f\n", int(i), p.angle * 180.0f / M_PI, p.range * 1000.0f);
-      }
+      
+      //打印点云
+      // for (size_t i = 0; i < scan.points.size(); ++i)
+      // {
+      //   const LaserPoint &p = scan.points.at(i);
+      //   printf("%d a %.01f r %.01f\n", int(i), p.angle * 180.0f / M_PI, p.range * 1000.0f);
+      // }
       // fflush(stdout);
     }
     else

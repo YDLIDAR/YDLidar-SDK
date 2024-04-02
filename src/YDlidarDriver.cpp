@@ -148,7 +148,7 @@ result_t YDlidarDriver::connect(const char *port_path, uint32_t baudrate)
       }
       else
       {
-        _serial = new serial::Serial(port_path, m_baudrate,
+        _serial = new serial::Serial(m_port, m_baudrate,
           serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT));
       }
       _serial->bindport(port_path, baudrate);

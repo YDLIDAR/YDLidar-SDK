@@ -98,7 +98,7 @@ result_t SDMLidarDriver::connect(const char *port, uint32_t baudrate)
         if (!_serial)
         {
             _serial = new serial::Serial(
-                port,
+                m_port,
                 m_baudrate,
                 serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT));
         }
