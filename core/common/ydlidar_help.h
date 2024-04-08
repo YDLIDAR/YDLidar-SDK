@@ -595,7 +595,7 @@ inline bool isSDMLidar(int type)
 
 inline bool isDTSLidar(int type)
 {
-  return (type == TYPE_DTS);
+  return (type == TYPE_SDM18);
 }
 
 /**

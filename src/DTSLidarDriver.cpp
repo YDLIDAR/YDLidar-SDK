@@ -18,7 +18,7 @@ DTSLidarDriver::DTSLidarDriver()
     m_PointTime = 1e9 / 5000;
     retryCount = 0;
     m_SingleChannel = false;
-    m_LidarType = TYPE_DTS;
+    m_LidarType = TYPE_SDM18;
 
     nodeIndex = 0;
     recvBuff = std::vector<uint8_t>(SDKDTSPCSSIZE, 0);
@@ -163,18 +163,11 @@ result_t DTSLidarDriver::grabScanData(
     case Event::EVENT_OK:
     {
         ScopedLocker l(_lock);
-        if (scan_node_count == 0)
-        {
-            ret = RESULT_FAIL;
-        }
-        else
-        {
-            size_t size_to_copy = min(count, scan_node_count);
-            memcpy(nodebuffer, scan_node_buf, size_to_copy * SDKNODESIZE);
-            count = size_to_copy;
-            scan_node_count = 0;
-            ret = RESULT_OK;
-        }
+        count = min(count, scan_node_count);
+        memcpy(nodebuffer, scan_node_buf, count * SDKNODESIZE);
+        scan_node_count = 0;
+        ret = RESULT_OK;
+        _dataEvent.set(false); //重置状态
         break;
     }
     default:
@@ -210,8 +203,9 @@ result_t DTSLidarDriver::waitScanData(
     uint32_t st = getms();
     uint32_t wt = 0;
 
-    // 循环等待接收节点数据
-    while ((wt = getms() - st) <= timeout && recvCount < count)
+    //循环等待接收节点数据
+    while ((wt = getms() - st) < timeout && 
+        recvCount < count)
     {
         node_info node;
         memset(&node, 0, SDKNODESIZE);
@@ -284,8 +278,8 @@ int DTSLidarDriver::cacheScanData()
             retryCount = 0;
 
             ScopedLocker l(_lock);
-            memcpy(scan_node_buf, local_buf, sizeof(node_info) * SDK_DTS_POINT_COUNT);
-            scan_node_count = SDK_DTS_POINT_COUNT;
+            memcpy(scan_node_buf, local_buf, sizeof(node_info) * count);
+            scan_node_count = count;
             _dataEvent.set();
         }
     }

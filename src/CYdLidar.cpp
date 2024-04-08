@@ -562,7 +562,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
   outscan.points.clear();
 
   // Fill in scan data:
-  if (IS_OK(op_result))
+  if (IS_OK(op_result) && count)
   {
     int offsetSize = 0;
 
@@ -705,7 +705,8 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
         if (isTOFLidar(m_LidarType) || 
           isNetTOFLidar(m_LidarType) ||
           isGSLidar(m_LidarType) ||
-          isSDMLidar(m_LidarType))
+          isSDMLidar(m_LidarType) ||
+          isDTSLidar(m_LidarType))
         {
           range = static_cast<float>(global_nodes[i].dist / 1000.f);
         }
@@ -802,15 +803,11 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
   }
   else
   {
-    if (IS_FAIL(op_result))
+    // if (lidarPtr->getDriverError() != NoError)
     {
-      // Error? Retry connection
-    }
-
-    if (lidarPtr->getDriverError() != NoError)
-    {
-      fprintf(stderr, "[YDLIDAR ERROR]: %s\n",
-              DriverInterface::DescribeDriverError(lidarPtr->getDriverError()));
+      fprintf(stderr, "[YDLIDAR ERROR]: %d %s\n",
+        op_result,
+        DriverInterface::DescribeDriverError(lidarPtr->getDriverError()));
       fflush(stderr);
     }
 
