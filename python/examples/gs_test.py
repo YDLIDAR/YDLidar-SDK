@@ -31,7 +31,7 @@ if __name__ == "__main__":
         while ret and ydlidar.os_isOk() :
             r = laser.doProcessSimple(scan);
             if r:
-                print("Scan received[",scan.stamp,"]:",scan.points.size(),"ranges is [",1.0/scan.config.scan_time,"]Hz");
+                print("Scan received[",scan.stamp,"]:",scan.points.size());
             else :
                 print("Failed to get Lidar Data.")
             time.sleep(0.05);
