@@ -269,9 +269,10 @@ int main(int argc, char *argv[])
   {
     if (laser.doProcessSimple(scan))
     {
-      printf("Module [%d] [%d] points\n",
+      printf("Module [%d] [%d] points in [%.02f]Hz\n",
         scan.moduleNum,
-        int(scan.points.size()));
+        int(scan.points.size()),
+        scan.scanFreq);
       
       //打印帧间隔
       // uint32_t t = getms();

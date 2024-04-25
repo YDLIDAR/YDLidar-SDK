@@ -509,6 +509,7 @@ namespace ydlidar
     uint64_t stamp = 0; //时间戳
     std::list<gs_module_nodes> datas; //各模组数据
     double m_pitchAngle = Angle_PAngle;
+    uint32_t lastStamp = 0; //上一次时间
   };
 
 } // namespace ydlidar

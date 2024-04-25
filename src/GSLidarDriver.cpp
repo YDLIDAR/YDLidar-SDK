@@ -596,6 +596,7 @@ int GSLidarDriver::cacheScanData()
 
     int timeout_count = 0;
     retryCount = 0;
+    lastStamp = 0;
 
     m_isScanning = true;
 
@@ -822,6 +823,11 @@ PARSEHEAD:
                             else
                             {
                                 CheckSumResult = true;
+                                if (lastStamp > 0)
+                                {
+                                    m_ScanFreq = 1000.0 / (getms() - lastStamp);
+                                }
+                                lastStamp = getms();
                             }
                             break;
                         }
@@ -848,7 +854,7 @@ PARSEHEAD:
         stamp = (*node).stamp;
 
         (*node).index = 0x03 & (moduleNum >> 1); //模组地址转编号: 1, 2, 4
-        (*node).scanFreq = 0;
+        (*node).scanFreq = m_ScanFreq;
         (*node).qual = 0;
         (*node).sync = Node_NotSync;
 

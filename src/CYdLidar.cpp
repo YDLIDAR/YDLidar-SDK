@@ -731,7 +731,8 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
             scanfrequency = global_nodes[i].scanFreq / 10.0 + 3.0;
           }
         }
-        else if (isTEALidar(lidar_model)) //TEA雷达转速范围10~30，无缩放
+        else if (isTEALidar(lidar_model) ||
+          isGSLidar(m_LidarType)) //TEA雷达转速范围10~30，无缩放
         {
           scanfrequency = global_nodes[i].scanFreq; 
         }
