@@ -39,7 +39,7 @@ if you want to use python API, you need to install python and swig:
 In the YDLidar SDK directory, run the following commands to compile the project:
 ```
 git clone https://github.com/YDLIDAR/YDLidar-SDK.git
-cd YDLidar-SDK/build
+mkdir YDLidar-SDK/build && cd YDLidar-SDK/build
 cmake ..
 make
 sudo make install
@@ -95,11 +95,16 @@ Three samples are provided in samples, which demonstrate how to configure YDLida
 
 ![](images/sequence.png)
 
-### Ubuntu 18.04/16.04 /14.04 LTS
-For Ubuntun 18.04/16.04/14.04 LTS, run the *tri_test* if connect with the Triangle LiDAR unit(s) or TOF LiDAR unit(s):
+### Ubuntu 20.04/18.04/16.04/14.04 LTS
+For Ubuntun 20.04/18.04/16.04/14.04 LTS, run the *tri_test* if connect with the Triangle LiDAR unit(s) or TOF LiDAR unit(s):
 ```
 ./tri_test
 ```
+* If you have connection(binding) issue, try to set permission of USB port
+```
+sudo chmod 666 /dev/ttyUSB0
+```
+
 ### Windows 7/10
 After compiling the YDLidar SDK as shown in section 4.1.2, you can find `tri_test.exe` in the {YDLidar-SDK}\build\Debug or {YDLidar-SDK}\build\Release folder, respectively, which can be run directly.
 
@@ -155,6 +160,7 @@ python tof_test.py
 # If it's a drawing
 pip install numpy
 pip install matplotlib
+sudo apt-get install python-gi-cairo
 python plot_tof_test.py
 ```
 ![](images/ydlidar_lidar_monitor.png)
