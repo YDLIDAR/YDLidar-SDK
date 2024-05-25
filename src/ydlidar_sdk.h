@@ -95,7 +95,7 @@ YDLIDAR_API void lidarDestroy(YDLidar **lidar);
  * - @ref LidarPropInverted
  * - @ref LidarPropAutoReconnect
  * - @ref LidarPropSingleChannel
- * - @ref LidarPropIntenstiy
+ * - @ref LidarPropIntensity
  * @note set bool property example
  * @code
  * CYdLidar laser;
@@ -157,7 +157,7 @@ YDLIDAR_API bool setlidaropt(YDLidar *lidar, int optname, const void *optval,
  * - @ref LidarPropInverted
  * - @ref LidarPropAutoReconnect
  * - @ref LidarPropSingleChannel
- * - @ref LidarPropIntenstiy
+ * - @ref LidarPropIntensity
  * @note get bool property example
  * @code
  * CYdLidar laser;

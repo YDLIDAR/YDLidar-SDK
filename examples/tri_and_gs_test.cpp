@@ -48,9 +48,9 @@ int main(int argc, char *argv[])
     /// abnormal count
     optval = 4;
     lidarGs.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
-    /// Intenstiy bit count
+    /// Intensity bit count
     optval = 8;
-    lidarGs.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
+    lidarGs.setlidaropt(LidarPropIntensityBit, &optval, sizeof(int));
     //////////////////////bool property/////////////////
     /// fixed angle resolution
     bool b_optvalue = false;
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     lidarGs.setlidaropt(LidarPropSingleChannel, &isSingleChannel, sizeof(bool));
     /// intensity
     b_optvalue = true;
-    lidarGs.setlidaropt(LidarPropIntenstiy, &b_optvalue, sizeof(bool));
+    lidarGs.setlidaropt(LidarPropIntensity, &b_optvalue, sizeof(bool));
     /// Motor DTR
     b_optvalue = true;
     lidarGs.setlidaropt(LidarPropSupportMotorDtrCtrl, &b_optvalue, sizeof(bool));
@@ -120,9 +120,9 @@ int main(int argc, char *argv[])
     /// abnormal count
     optval = 4;
     lidarS2.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
-    /// Intenstiy bit count
+    /// Intensity bit count
     optval = 10;
-    lidarS2.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
+    lidarS2.setlidaropt(LidarPropIntensityBit, &optval, sizeof(int));
     //////////////////////bool property/////////////////
     /// fixed angle resolution
     bool b_optvalue = true;
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
     lidarS2.setlidaropt(LidarPropSingleChannel, &isSingleChannel, sizeof(bool));
     /// intensity
     b_optvalue = true;
-    lidarS2.setlidaropt(LidarPropIntenstiy, &b_optvalue, sizeof(bool));
+    lidarS2.setlidaropt(LidarPropIntensity, &b_optvalue, sizeof(bool));
     /// Motor DTR
     b_optvalue = false;
     lidarS2.setlidaropt(LidarPropSupportMotorDtrCtrl, &b_optvalue, sizeof(bool));

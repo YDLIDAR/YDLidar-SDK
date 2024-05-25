@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
   ydlidar::os_init();
 
   bool ret = false;
- 
+
   CYdLidar lidarS2; //S2雷达
   {
     bool isSingleChannel = false;
@@ -50,9 +50,9 @@ int main(int argc, char *argv[])
     /// abnormal count
     optval = 4;
     lidarS2.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
-    /// Intenstiy bit count
+    /// Intensity bit count
     optval = 10;
-    lidarS2.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
+    lidarS2.setlidaropt(LidarPropIntensityBit, &optval, sizeof(int));
     //////////////////////bool property/////////////////
     /// fixed angle resolution
     bool b_optvalue = false;
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     lidarS2.setlidaropt(LidarPropSingleChannel, &isSingleChannel, sizeof(bool));
     /// intensity
     b_optvalue = true;
-    lidarS2.setlidaropt(LidarPropIntenstiy, &b_optvalue, sizeof(bool));
+    lidarS2.setlidaropt(LidarPropIntensity, &b_optvalue, sizeof(bool));
     /// Motor DTR
     b_optvalue = false;
     lidarS2.setlidaropt(LidarPropSupportMotorDtrCtrl, &b_optvalue, sizeof(bool));

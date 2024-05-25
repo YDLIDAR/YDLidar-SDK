@@ -12,7 +12,7 @@ if __name__ == "__main__":
     laser.setlidaropt(ydlidar.LidarPropScanFrequency, 20.0);
     laser.setlidaropt(ydlidar.LidarPropSampleRate, 20);
     laser.setlidaropt(ydlidar.LidarPropSingleChannel, False);
-    laser.setlidaropt(ydlidar.LidarPropIntenstiy, True);
+    laser.setlidaropt(ydlidar.LidarPropIntensity, True);
 
     ret = laser.initialize();
     if ret:

@@ -1,4 +1,6 @@
 import unittest
+
+
 import ydlidar
 
 
@@ -30,8 +32,8 @@ class PyTestTestCase(unittest.TestCase):
     self.assertTrue(ret);
     self.assertEqual(maxRange, mRange);
     intensity = False;
-    laser.setlidaropt(ydlidar.LidarPropIntenstiy, intensity);
-    ret, quality = laser.getlidaropt_toBool(ydlidar.LidarPropIntenstiy);
+    laser.setlidaropt(ydlidar.LidarPropIntensity, intensity);
+    ret, quality = laser.getlidaropt_toBool(ydlidar.LidarPropIntensity);
     self.assertTrue(ret);
     self.assertEqual(intensity, quality);
 
