@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     int id = 0;
     for (it = ports.begin(); it != ports.end(); it++)
     {
-      printf("[%d] %s %s\n", 
+      printf("[%d] %s %s\n",
         id, it->first.c_str(), it->second.c_str());
       id++;
     }
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
   int baudrate = 460800; //默认串口号
 
   bool isSingleChannel = false;
-  
+
   CYdLidar laser;
   //////////////////////string property/////////////////
   /// lidar port
@@ -149,9 +149,9 @@ int main(int argc, char *argv[])
   /// abnormal count
   optval = 3;
   laser.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
-  /// Intenstiy bit count
+  /// Intensity bit count
   optval = 4;
-  laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
+  laser.setlidaropt(LidarPropIntensityBit, &optval, sizeof(int));
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
   laser.setlidaropt(LidarPropSingleChannel, &isSingleChannel, sizeof(bool));
   /// intensity
   b_optvalue = true;
-  laser.setlidaropt(LidarPropIntenstiy, &b_optvalue, sizeof(bool));
+  laser.setlidaropt(LidarPropIntensity, &b_optvalue, sizeof(bool));
   /// Motor DTR
   b_optvalue = true;
   laser.setlidaropt(LidarPropSupportMotorDtrCtrl, &b_optvalue, sizeof(bool));
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
       for (size_t i = 0; i < scan.points.size(); ++i)
       {
         const LaserPoint &p = scan.points.at(i);
-        printf("%lu R %.01f I %.01f\n", i, 
+        printf("%lu R %.01f I %.01f\n", i,
           p.range * 1000.0f, p.intensity);
       }
       fflush(stdout);

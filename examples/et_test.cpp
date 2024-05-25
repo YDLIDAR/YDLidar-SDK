@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
   laser.setlidaropt(LidarPropSingleChannel, &b_optvalue, sizeof(bool));
   /// intensity
   b_optvalue = true;
-  laser.setlidaropt(LidarPropIntenstiy, &b_optvalue, sizeof(bool));
+  laser.setlidaropt(LidarPropIntensity, &b_optvalue, sizeof(bool));
   /// Motor DTR
   b_optvalue = false;
   laser.setlidaropt(LidarPropSupportMotorDtrCtrl, &b_optvalue, sizeof(bool));

@@ -205,9 +205,9 @@ int main(int argc, char *argv[]) {
   /// abnormal count
   optval = 4;
   laser.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
-  /// Intenstiy bit count
+  /// Intensity bit count
   optval = 8;
-  laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
+  laser.setlidaropt(LidarPropIntensityBit, &optval, sizeof(int));
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
@@ -224,7 +224,7 @@ int main(int argc, char *argv[]) {
   laser.setlidaropt(LidarPropSingleChannel, &isSingleChannel, sizeof(bool));
   /// intensity
   b_optvalue = true;
-  laser.setlidaropt(LidarPropIntenstiy, &b_optvalue, sizeof(bool));
+  laser.setlidaropt(LidarPropIntensity, &b_optvalue, sizeof(bool));
   /// Motor DTR
   b_optvalue = false;
   laser.setlidaropt(LidarPropSupportMotorDtrCtrl, &b_optvalue, sizeof(bool));
@@ -276,7 +276,7 @@ int main(int argc, char *argv[]) {
         for (size_t i = 0; i < scan.points.size(); ++i)
         {
           const LaserPoint &p = scan.points.at(i);
-          printf("%d a %.01f r %.04f i %.0f\n", 
+          printf("%d a %.01f r %.04f i %.0f\n",
             i, p.angle * 180.0 / M_PI, p.range, p.intensity);
         }
         fflush(stdout);

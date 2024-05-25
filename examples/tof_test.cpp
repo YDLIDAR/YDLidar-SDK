@@ -209,7 +209,7 @@ int main(int argc, char *argv[]) {
   optval = 4;
   laser.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
 //  optval = 16;
-//  laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
+//  laser.setlidaropt(LidarPropIntensityBit, &optval, sizeof(int));
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
   laser.setlidaropt(LidarPropSingleChannel, &b_optvalue, sizeof(bool));
   /// intensity
   b_optvalue = false;
-  laser.setlidaropt(LidarPropIntenstiy, &b_optvalue, sizeof(bool));
+  laser.setlidaropt(LidarPropIntensity, &b_optvalue, sizeof(bool));
   /// Motor DTR
   laser.setlidaropt(LidarPropSupportMotorDtrCtrl, &b_optvalue, sizeof(bool));
 

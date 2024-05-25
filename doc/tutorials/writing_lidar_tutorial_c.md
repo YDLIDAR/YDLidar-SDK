@@ -19,7 +19,7 @@ Tutorial Level: BEGINNER
 mkdir beginner_tutorials
 cd beginner_tutorials
 ```
-### Create the lidar_tutorial.cpp file within the beginner_tutorials project and paste the following inside it: 
+### Create the lidar_tutorial.cpp file within the beginner_tutorials project and paste the following inside it:
 [https://github.com/YDLIDAR/ydlidar_tutorials/blob/master/c_tutorials/lidar_tutorial/lidar_tutorial.c](https://github.com/YDLIDAR/ydlidar_tutorials/blob/master/c_tutorials/lidar_tutorial/lidar_tutorial.c)
 
 ```c
@@ -94,7 +94,7 @@ int main(int argc, const char *argv[]) {
     setlidaropt(laser, LidarPropAutoReconnect, &b_optval, sizeof(bool));
     b_optval = false;
     setlidaropt(laser, LidarPropSingleChannel, &b_optval, sizeof(bool));
-    setlidaropt(laser, LidarPropIntenstiy, &b_optval, sizeof(bool));
+    setlidaropt(laser, LidarPropIntensity, &b_optval, sizeof(bool));
     setlidaropt(laser, LidarPropInverted, &b_optval, sizeof(bool));
     setlidaropt(laser, LidarPropReversion, &b_optval, sizeof(bool));
     setlidaropt(laser, LidarPropSupportMotorDtrCtrl, &b_optval, sizeof(bool));
@@ -143,11 +143,11 @@ int main(int argc, const char *argv[]) {
 ```
 
 ### The Code Explained
-Now, let's break the code down. 
+Now, let's break the code down.
 ```c++
 #include "ydlidar_sdk.h"
 ```
-ydlidar_sdk.h is a convenience include that includes all the headers necessary to use the most common public pieces of the YDLIDAR SDK. 
+ydlidar_sdk.h is a convenience include that includes all the headers necessary to use the most common public pieces of the YDLIDAR SDK.
 
 ```c
   os_init();
@@ -157,7 +157,7 @@ Initialize system signal. install a SIGINT handler which provides Ctrl-C handlin
 ```c
   YDLidar *laser = lidarCreate();
 ```
-Create a handle to this Lidar. 
+Create a handle to this Lidar.
 
 ```c
   //string prop
@@ -201,7 +201,7 @@ Set Lidar string int paramters.
   setlidaropt(laser, LidarPropAutoReconnect, &b_optval, sizeof(bool));
   b_optval = false;
   setlidaropt(laser, LidarPropSingleChannel, &b_optval, sizeof(bool));
-  setlidaropt(laser, LidarPropIntenstiy, &b_optval, sizeof(bool));
+  setlidaropt(laser, LidarPropIntensity, &b_optval, sizeof(bool));
   setlidaropt(laser, LidarPropInverted, &b_optval, sizeof(bool));
   setlidaropt(laser, LidarPropReversion, &b_optval, sizeof(bool));
   setlidaropt(laser, LidarPropSupportMotorDtrCtrl, &b_optval, sizeof(bool));
@@ -250,7 +250,7 @@ Start the device scanning routine which runs on a separate thread and enable mot
 
 
 ```c
-  // Turn On success and loop  
+  // Turn On success and loop
   LaserFan scan;
   LaserFanInit(&scan);
   while (ret && os_isOk()) {
@@ -262,7 +262,7 @@ By `os_init()` will install a SIGINT handler which provides Ctrl-C handling whic
 + ydlidar::os_shutdown() has been called by another part of the application.
 
 Once `os_isOk()` returns false, Loop exit.
-Note: 
+Note:
 + `LaserFan` need to be initialized with `LaserFanInit`
 - After `LaserFan` leaves the Scope, it need to be destroyed with `LaserFanDestroy`, otherwisw it will leak memory.
 
@@ -342,17 +342,17 @@ ydlidar_sdk dependent libraries
 Note:
 * GCC CCLDFLAGS requires "-lstdc++ -lm".
 
-you can use the following variable to depend on all necessary targets: 
+you can use the following variable to depend on all necessary targets:
 
 ```cmake
 target_link_libraries(${PROJECT_NAME} ${YDLIDAR_SDK_LIBRARIES} -lstdc++ -lm)
 ```
-Now run cmake: 
+Now run cmake:
 ```cmake
 # In your project directory
 mkdir build
 cd build
 cmake ..
-make j4  
+make j4
 ```
-Now that you have written a simple lidar tutorial, let's [examine the simple lidar tutorial](examine_the_simple_lidar_tutorial.md). 
+Now that you have written a simple lidar tutorial, let's [examine the simple lidar tutorial](examine_the_simple_lidar_tutorial.md).

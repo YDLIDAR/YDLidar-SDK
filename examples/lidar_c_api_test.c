@@ -69,7 +69,7 @@ int main(int argc, const char *argv[]) {
     setlidaropt(laser, LidarPropAutoReconnect, &b_optval, sizeof(bool));
     b_optval = false;
     setlidaropt(laser, LidarPropSingleChannel, &b_optval, sizeof(bool));
-    setlidaropt(laser, LidarPropIntenstiy, &b_optval, sizeof(bool));
+    setlidaropt(laser, LidarPropIntensity, &b_optval, sizeof(bool));
     setlidaropt(laser, LidarPropInverted, &b_optval, sizeof(bool));
     setlidaropt(laser, LidarPropReversion, &b_optval, sizeof(bool));
     setlidaropt(laser, LidarPropSupportMotorDtrCtrl, &b_optval, sizeof(bool));

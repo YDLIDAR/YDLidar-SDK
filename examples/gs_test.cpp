@@ -63,7 +63,7 @@ using namespace ydlidar;
  * Step7: Uninitialize the SDK and Disconnect the LiDAR.(::CYdLidar::disconnecting)\n
  */
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
   printf("__   ______  _     ___ ____    _    ____  \n");
   printf("\\ \\ / /  _ \\| |   |_ _|  _ \\  / \\  |  _ \\ \n");
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     printf("[%d] %d\n", it->first, it->second);
   }
 
-  while (ydlidar::os_isOk()) 
+  while (ydlidar::os_isOk())
   {
     printf("Please select the lidar baudrate:");
     std::string number;
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
   int optval = TYPE_GS;
   laser.setlidaropt(LidarPropLidarType, &optval, sizeof(int));
   /// device type (YDLIDAR_TYPE_TCP,YDLIDAR_TYPE_SERIAL)
-  optval = baudrate == baudrateList[0] ? YDLIDAR_TYPE_TCP : YDLIDAR_TYPE_SERIAL; 
+  optval = baudrate == baudrateList[0] ? YDLIDAR_TYPE_TCP : YDLIDAR_TYPE_SERIAL;
   laser.setlidaropt(LidarPropDeviceType, &optval, sizeof(int));
   /// sample rate
   optval = isSingleChannel ? 3 : 4;
@@ -172,9 +172,9 @@ int main(int argc, char *argv[])
   /// abnormal count
   optval = 4;
   laser.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
-  /// Intenstiy bit count
+  /// Intensity bit count
   optval = 8;
-  laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
+  laser.setlidaropt(LidarPropIntensityBit, &optval, sizeof(int));
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
   laser.setlidaropt(LidarPropSingleChannel, &isSingleChannel, sizeof(bool));
   /// intensity
   b_optvalue = true;
-  laser.setlidaropt(LidarPropIntenstiy, &b_optvalue, sizeof(bool));
+  laser.setlidaropt(LidarPropIntensity, &b_optvalue, sizeof(bool));
   /// Motor DTR
   b_optvalue = true;
   laser.setlidaropt(LidarPropSupportMotorDtrCtrl, &b_optvalue, sizeof(bool));
@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
   //是否启用调试
-  laser.setEnableDebug(false); 
+  laser.setEnableDebug(false);
 
   //雷达初始化
   bool ret = laser.initialize();
@@ -273,12 +273,12 @@ int main(int argc, char *argv[])
         scan.moduleNum,
         int(scan.points.size()),
         scan.scanFreq);
-      
+
       //打印帧间隔
       // uint32_t t = getms();
       // printf("module[%d] time[%lld]\n", scan.moduleNum, t - ts[scan.moduleNum]);
       // ts[scan.moduleNum] = t;
-      
+
       //打印点云
       // for (size_t i = 0; i < scan.points.size(); ++i)
       // {

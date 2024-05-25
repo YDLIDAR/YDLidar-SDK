@@ -66,7 +66,7 @@ typedef enum {
   LidarPropDeviceType,/**< lidar connection type code */
   LidarPropSampleRate,/**< lidar sample rate */
   LidarPropAbnormalCheckCount,/**< abnormal maximum check times */
-  LidarPropIntenstiyBit,/**< lidar intensity bit count */
+  LidarPropIntensityBit,/**< lidar intensity bit count */
   /* float properties */
   LidarPropMaxRange = 20,/**< lidar maximum range */
   LidarPropMinRange,/**< lidar minimum range */
@@ -79,7 +79,7 @@ typedef enum {
   LidarPropInverted,/**< lidar inverted flag */
   LidarPropAutoReconnect,/**< lidar hot plug flag */
   LidarPropSingleChannel,/**< lidar single-channel flag */
-  LidarPropIntenstiy,/**< lidar intensity flag */
+  LidarPropIntensity,/**< lidar intensity flag */
   LidarPropSupportMotorDtrCtrl,/**< lidar support motor Dtr ctrl flag */
   LidarPropSupportHeartBeat,/**< lidar support heartbeat flag */
 } LidarProperty;
