@@ -213,11 +213,13 @@ int main(int argc, char *argv[]) {
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
-  bool b_optvalue = false;
+  bool b_optvalue = true;
   laser.setlidaropt(LidarPropFixedResolution, &b_optvalue, sizeof(bool));
   /// rotate 180
+  b_optvalue = false;
   laser.setlidaropt(LidarPropReversion, &b_optvalue, sizeof(bool));
   /// Counterclockwise
+  b_optvalue = false;
   laser.setlidaropt(LidarPropInverted, &b_optvalue, sizeof(bool));
   b_optvalue = true;
   laser.setlidaropt(LidarPropAutoReconnect, &b_optvalue, sizeof(bool));
@@ -266,8 +268,8 @@ int main(int argc, char *argv[]) {
     /// Turn On success and loop
     if (laser.doProcessSimple(scan))
     {
-      fprintf(stdout, "Scan received at [%lu] %u points is [%f]s\n",
-              scan.stamp / 100000,
+      fprintf(stdout, "Scan received at [%f]Hz %u points is [%f]s\n",
+              scan.scanFreq,
               (unsigned int)scan.points.size(),
               scan.config.scan_time);
 

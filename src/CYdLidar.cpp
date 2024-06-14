@@ -1587,8 +1587,10 @@ bool CYdLidar::checkScanFrequency()
     if (IS_OK(ans))
     {
       frequency = _scan_frequency.frequency / 100.f;
+      if (isTOFLidar(m_LidarType)) //TG雷达转速虚高0.4需要减去还原真实转速
+        frequency -= 0.4;
       hz = m_ScanFrequency - frequency;
-
+      printf("[YDLIDAR] Current scan frequency: %.02fHz\n", frequency);
       if (hz > 0)
       {
         //大调速
@@ -1635,6 +1637,8 @@ bool CYdLidar::checkScanFrequency()
   if (IS_OK(ans))
   {
     frequency = _scan_frequency.frequency / 100.0f;
+    if (isTOFLidar(m_LidarType)) //TG雷达转速虚高0.4需要减去还原真实转速
+        frequency -= 0.4;
     m_ScanFrequency = frequency;
   }
 

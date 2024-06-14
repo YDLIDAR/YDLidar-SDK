@@ -46,7 +46,7 @@ struct YdGsOutParam
     memset(items, 0, sizeof(items));
   }
 };
-//3D点
+//2D点
 struct Yd2DPoint
 {
   float x = .0; //x值，单位mm；弧度值，单位弧度
@@ -249,9 +249,9 @@ int main(int argc, char *argv[])
     return -1;
   }
   //设置雷达工作模式（0表示避障模式，1表示沿边模式）
-  ret &= laser.setWorkMode(0, 0x01);
-  ret &= laser.setWorkMode(0, 0x02);
-  ret &= laser.setWorkMode(1, 0x04);
+  ret &= laser.setWorkMode(0, LIDAR_MODULE_1);
+  ret &= laser.setWorkMode(0, LIDAR_MODULE_2);
+  ret &= laser.setWorkMode(1, LIDAR_MODULE_3);
   if (!ret)
   {
     fprintf(stderr, "Fail to set work mode %s\n", laser.DescribeError());
@@ -279,9 +279,9 @@ int main(int argc, char *argv[])
   ops[LIDAR2].rp.laserPitch = 17.0;
   ops[LIDAR2].rp.modulePitch = 15.0;
   //从文件中解析外参
-  if (!parseCsv("../examples/data/lidar0.csv", ops[0]) ||
-    !parseCsv("../examples/data/lidar1.csv", ops[1]) ||
-    !parseCsv("../examples/data/lidar2.csv", ops[2]))
+  if (!parseCsv("../examples/data/lidar0.csv", ops[LIDAR0]) ||
+    !parseCsv("../examples/data/lidar1.csv", ops[LIDAR1]) ||
+    !parseCsv("../examples/data/lidar2.csv", ops[LIDAR2]))
   {
     return -1;
   }
@@ -351,10 +351,11 @@ bool parseCsv(const std::string& name, YdGsOutParam& op)
       &op.items[index].k0,
       &op.items[index].k1) == 4) //解析成功
     {
-      std::cout << op.items[index].b0 << " "
-        << op.items[index].b1 << " "
-        << op.items[index].k0 << " "
-        << op.items[index].k1 << std::endl;
+      //打印参数
+      // std::cout << op.items[index].b0 << " "
+      //   << op.items[index].b1 << " "
+      //   << op.items[index].k0 << " "
+      //   << op.items[index].k1 << std::endl;
       index ++;
       if (index >= GS_MAXPOINTSIZE)
         break;
