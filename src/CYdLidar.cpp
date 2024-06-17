@@ -1303,8 +1303,10 @@ bool CYdLidar::calcSampleRate(int count, double scan_time)
     m_PointTime = 1e9 / (m_SampleRate * 1000);
     lidarPtr->setPointTime(m_PointTime);
     if (!m_SingleChannel)
-      m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
+      // m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1); //不知转速为何要减少0.1
+      m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency);
     
+    printf("[YDLIDAR] Scan Frequency: %.02fHz\n", m_ScanFrequency);
     if (!isSDMLidar(m_LidarType)) //非SDM雷达才打印Fixed Size
       printf("[YDLIDAR] Fixed Size: %d\n", m_FixedSize);
     printf("[YDLIDAR] Sample Rate: %.02fK\n", m_SampleRate);

@@ -308,7 +308,7 @@ result_t YDlidarDriver::sendData(const uint8_t *data, size_t size) {
       return RESULT_FAIL;
     }
 
-    // if (m_Debug)
+    if (m_Debug)
     {
       printf("send: ");
       printHex(data, r);
