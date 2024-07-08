@@ -749,7 +749,9 @@ result_t YDlidarDriver::waitDevicePackage(uint32_t timeout)
     
     device_info di;
     getData(reinterpret_cast<uint8_t *>(&di), DEVICEINFOSIZE);
-    model = di.model;
+    //没有启用底板时才使用模组的雷达型号码
+    if (!m_Bottom)
+      model = di.model;
     m_HasDeviceInfo |= EPT_Module;
     m_ModuleDevInfo = di;
     printfDeviceInfo(di, EPT_Module);
@@ -1270,7 +1272,7 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
                         package.nodes[nodeIndex].dist & 0xfffc;
                 (*node).is = package.nodes[nodeIndex].dist & 0x0003;
 
-                // printf("%d i %u\n", nodeIndex, (*node).qual);
+                // printf("%d d:%u\n", nodeIndex, (*node).dist);
                 // fflush(stdout);
             }
             else
@@ -1309,7 +1311,8 @@ void YDlidarDriver::parseNodeFromeBuffer(node_info *node)
                 // printf("SCL correct angle [%d]\n", correctAngle);
             }
             else if (isTriangleLidar(m_LidarType) &&
-                !isTminiLidar(model)) //去掉Tmini雷达的角度二级解析
+                !isTminiLidar(model) && //去掉Tmini雷达的角度二级解析
+                !isR3Lidar(model)) //去掉R3雷达的角度二级解析
             {
                 correctAngle = (int32_t)(((atan(((21.8 * (155.3 - ((*node).dist / 4.0))) / 155.3) / ((*node).dist / 4.0))) * 180.0 / 3.1415) * 64.0);
             }
@@ -1666,7 +1669,7 @@ result_t YDlidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
     //获取启动时抛出的设备信息或每帧数据中的设备信息
     if (m_HasDeviceInfo & EPT_Module)
     {
-      info = m_BaseDevInfo;
+      info = m_ModuleDevInfo;
       return RESULT_OK;
     }
     else

@@ -512,6 +512,7 @@ namespace ydlidar
           YDLIDAR_G5 = 20,            /**< G5 LiDAR Model. */
           YDLIDAR_G7 = 21,            /**< G7 LiDAR Model. */
           YDLIDAR_SCL = 22,           // SCL雷达
+          YDLIDAR_R3 = 23, //R3雷达
 
           YDLIDAR_GS2 = 51, // GS2雷达
           YDLIDAR_GS1 = 52, // GS1雷达

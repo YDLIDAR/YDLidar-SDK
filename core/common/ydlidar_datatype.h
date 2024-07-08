@@ -113,6 +113,7 @@ typedef struct {
   float sampleRate = .0;
   // Array of lidar points
   std::vector<LaserPoint> points;
+  int size = 0; //实际点数（固定分辨率时点数与实际点数不符）
   // Configuration of scan
   LaserConfig config;
   int moduleNum = 0;

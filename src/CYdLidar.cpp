@@ -679,8 +679,8 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     {
       const node_info& node = global_nodes[i];
 
-      // printf("%lu a %.01f r %u\n", 
-      //   i, float(node.angle) / 64.0f, node.dist);
+      // printf("%lu a:%.01f d:%u\n", 
+      //   i, float(node.angle) / 128.0f, node.dist);
 
       if (isNetTOFLidar(m_LidarType))
       {
@@ -699,6 +699,10 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
           isOldVersionTOFLidar(lidar_model, Major, Minjor))
       {
         range = static_cast<float>(global_nodes[i].dist / 2000.f);
+      }
+      else if (isR3Lidar(lidar_model))
+      {
+        range = static_cast<float>(global_nodes[i].dist / 40000.f);
       }
       else
       {
@@ -786,6 +790,8 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
         debug.maxIndex = 255;
       }
     } //end for (int i = 0; i < count; i++)
+
+    outscan.size = outscan.points.size(); //保留原点云数
 
     if (m_FixedResolution)
     {
@@ -1408,10 +1414,10 @@ bool CYdLidar::getDeviceInfo()
 
   frequencyOffset = 0.4;
   lidar_model = di.model;
+  printf("Current Lidar Model Code %d\n", lidar_model);
   bool intensity = hasIntensity(di.model);
   defalutSampleRate = getDefaultSampleRate(di.model);
   // printf("getDefaultSampleRate %d\n", defalutSampleRate.size());
-
   intensity = m_Intensity;
   std::string serial_number;
   lidarPtr->setIntensities(intensity);

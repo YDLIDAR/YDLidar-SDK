@@ -270,9 +270,9 @@ int main(int argc, char *argv[])
   laser.enableSunNoise(false);
 
   //设置是否获取底板设备信息（默认仅尝试获取模组设备信息）
-  laser.setBottomPriority(false);
+  laser.setBottomPriority(true);
   //启用调试
-  laser.setEnableDebug(true);
+  laser.setEnableDebug(false);
 
   uint32_t t = getms(); //时间
   int c = 0; //计数
@@ -334,9 +334,9 @@ int main(int argc, char *argv[])
       // for (size_t i = 0; i < scan.points.size(); ++i)
       // {
       //   const LaserPoint &p = scan.points.at(i);
-      //   printf("%d d %f a %f\n", i, p.range, p.angle * 180.0 / M_PI);
+      //   printf("%d a:%.02f d:%.01f\n", i, p.angle * 180.0 / M_PI, p.range * 1000.0);
       // }
-      fflush(stdout);
+      // fflush(stdout);
     }
     else
     {

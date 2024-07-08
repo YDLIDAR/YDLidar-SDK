@@ -135,6 +135,12 @@ inline std::string lidarModelToString(int model)
   case DriverInterface::YDLIDAR_G7:
     name = "G7";
     break;
+  case DriverInterface::YDLIDAR_SCL:
+    name = "SCL";
+    break;
+  case DriverInterface::YDLIDAR_R3:
+    name = "R3";
+    break;
   case DriverInterface::YDLIDAR_GS1:
     name = "GS1";
     break;
@@ -336,12 +342,21 @@ inline bool hasSampleRate(int model)
 
   return ret;
 }
+
+inline bool isR3Lidar(int model)
+{
+  if (model == DriverInterface::YDLIDAR_R3)
+  {
+      return true;
+  }
+  return false;
+}
+
 /*!
  * @brief Is there a zero offset angle
  * @param model   lidar model
  * @return true if there are zero offset angle, otherwise false.
  */
-
 inline bool hasZeroAngle(int model) {
   bool ret = false;
 
