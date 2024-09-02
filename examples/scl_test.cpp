@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
   optval = 4;
   laser.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
   /// Intenstiy bit count
-  optval = 10;
+  optval = 8;
   laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
 
   //////////////////////bool property/////////////////
