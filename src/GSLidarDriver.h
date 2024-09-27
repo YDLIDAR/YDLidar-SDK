@@ -416,14 +416,17 @@ namespace ydlidar
 
     //获取设备信息
     virtual result_t getDeviceInfo(
-      device_info &info, 
-      uint32_t timeout = DEFAULT_TIMEOUT);
+      device_info &di, 
+      uint32_t timeout = DEFAULT_TIMEOUT/4);
     //获取级联雷达设备信息
     virtual result_t getDeviceInfo(
       std::vector<device_info_ex> &dis,
       uint32_t timeout = DEFAULT_TIMEOUT);
+    virtual result_t getDeviceInfo1(
+      device_info &di, 
+      uint32_t timeout = DEFAULT_TIMEOUT);
     virtual result_t getDeviceInfo2(
-      device_info &info, 
+      device_info &di, 
       uint32_t timeout = DEFAULT_TIMEOUT);
 
     /**
@@ -486,7 +489,6 @@ namespace ydlidar
     int PackageSampleBytes; //一个包包含的激光点数
     ChannelDevice *_comm = nullptr; //通讯对象
     uint32_t trans_delay; //串口传输一个byte时间
-    int model; //雷达型号
     int sample_rate; //采样频率
 
     gs_node_package package; //带信号质量协议包
@@ -502,7 +504,8 @@ namespace ydlidar
     double b0[LIDAR_MAXCOUNT];
     double b1[LIDAR_MAXCOUNT];
     double bias[LIDAR_MAXCOUNT];
-
+    int m_models[LIDAR_MAXCOUNT] = {0};
+    int model = YDLIDAR_GS2; //雷达型号
     uint8_t moduleNum = 0; // 模块编号
     uint8_t moduleCount = 1; // 当前模组数量
     int nodeCount = 0; //当前包点数

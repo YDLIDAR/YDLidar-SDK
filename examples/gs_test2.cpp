@@ -115,6 +115,7 @@ int main(int argc, char *argv[])
   std::map<std::string, std::string> ports = ydlidar::lidarPortList();
   std::map<std::string, std::string>::iterator it;
   ports["IP1"] = "192.168.1.200";
+  ports["IP2"] = "192.168.152.1";
   if (ports.size() == 1) {
     port = ports.begin()->second;
   } else {
@@ -267,17 +268,17 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  //初始化外参（根据实际情况设置参数）
+  //初始化外参（需要根据实际情况设置参数）
   YdGsOutParam ops[LIDAR_MAXCOUNT];
-  ops[LIDAR0].rp.high = 50.0;
+  ops[LIDAR0].rp.high = 60.0;
   ops[LIDAR0].rp.laserPitch = 17.0;
   ops[LIDAR0].rp.modulePitch = 10.0;
-  ops[LIDAR1].rp.high = 50.0;
+  ops[LIDAR1].rp.high = 60.0;
   ops[LIDAR1].rp.laserPitch = 17.0;
   ops[LIDAR1].rp.modulePitch = 10.0;
-  ops[LIDAR2].rp.high = 50.0;
+  ops[LIDAR2].rp.high = 58.0;
   ops[LIDAR2].rp.laserPitch = 17.0;
-  ops[LIDAR2].rp.modulePitch = 15.0;
+  ops[LIDAR2].rp.modulePitch = 15.7;
   //从文件中解析外参
   if (!parseCsv("../examples/data/lidar0.csv", ops[LIDAR0]) ||
     !parseCsv("../examples/data/lidar1.csv", ops[LIDAR1]) ||

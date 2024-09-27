@@ -67,7 +67,6 @@ GSLidarDriver::GSLidarDriver(uint8_t type)
     sample_rate         = 5000;
     m_PointTime         = 1e9 / 5000;
     trans_delay         = 0;
-    model               = YDLIDAR_GS2;
     retryCount          = 0;
     m_SingleChannel     = false;
     m_LidarType         = TYPE_GS;
@@ -141,8 +140,10 @@ result_t GSLidarDriver::connect(const char *port_path, uint32_t baudrate)
     }
 
     stopScan();
-    delay(100);
-    clearDTR();
+    // delay(100);
+    // clearDTR();
+    //配置GS2模组地址（三个模组）
+    setDeviceAddress(300);
 
     return RESULT_OK;
 }
@@ -730,7 +731,7 @@ PARSEHEAD:
                 case 4:
                     if (c == LIDAR_ANS_SYNC_BYTE1) //过滤出现超过4个包头标识的情况
                         continue;
-                    moduleNum = c;
+                    moduleNum = uint8_t(c >> 1); //模组地址转编号: 1, 2, 4
                     CheckSumCal = c;
                     break;
                 case 5:
@@ -840,6 +841,17 @@ PARSEHEAD:
             if (CheckSumResult)
                 break;
         } //end while ((waitTime = getms() - startTs) <= timeout)
+
+        if (CheckSumResult)
+        {
+            model = m_models[moduleNum]; //当前雷达型号
+            printf("Module[%d] Lidar model[%u]\n", moduleNum, model);
+            //根据雷达型号设置角度参数
+            if (YDLIDAR_GS5 == model)
+                m_pitchAngle = Angle_PAngle2;
+            else
+                m_pitchAngle = Angle_PAngle;
+        }
     } //end if (nodeIndex == 0)
 
     (*node).stamp = getTime();
@@ -853,7 +865,7 @@ PARSEHEAD:
             (*node).stamp = getTime();
         stamp = (*node).stamp;
 
-        (*node).index = 0x03 & (moduleNum >> 1); //模组地址转编号: 1, 2, 4
+        (*node).index = moduleNum;
         (*node).scanFreq = m_ScanFreq;
         (*node).qual = 0;
         (*node).sync = Node_NotSync;
@@ -917,7 +929,8 @@ PARSEHEAD:
             }
         }
 
-        if (YDLIDAR_GS2 == model)
+        if (YDLIDAR_GS2 == model ||
+            YDLIDAR_GS5 == model)
         {
             // 过滤左右相机超过0°的点
             if (nodeIndex < 80)
@@ -973,7 +986,7 @@ void GSLidarDriver::angTransform(
     uint16_t *dstDist)
 {
     double pixelU = n, Dist, theta, tempTheta, tempDist, tempX, tempY;
-    uint8_t mdNum = 0x03 & (moduleNum >> 1);//1,2,4
+    uint8_t mdNum = moduleNum;
     if (n < nodeCount / 2)
     {
       pixelU = nodeCount / 2 - pixelU;
@@ -1034,7 +1047,7 @@ void GSLidarDriver::angTransform2(
     uint16_t *dstDist)
 {
     double pixelU = nodeCount - n, Dist, theta, tempTheta;
-    uint8_t mdNum = 0x03 & (moduleNum >> 1); // 1,2,4
+    uint8_t mdNum = moduleNum;
 
     tempTheta = atan(k0[mdNum] * pixelU - b0[mdNum]) * 180 / M_PI;
     Dist = dist / cos(tempTheta * M_PI / 180);
@@ -1404,9 +1417,6 @@ result_t GSLidarDriver::startScan(bool force, uint32_t timeout)
     checkTransDelay();
     flushSerial();
 
-    //配置GS2模组地址（三个模组）
-    setDeviceAddress(300);
-
     //获取GS2参数
     gs_device_para gs2_info;
     ans = getDevicePara(gs2_info, 300);
@@ -1572,47 +1582,19 @@ result_t GSLidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
     }
 
     //尝试获取雷达型号
-    ret = getDeviceInfo2(info, 300);
+    ret = getDeviceInfo2(info, timeout);
     if (!IS_OK(ret))
     {
-        model = YDLIDAR_GS2;
-        info.model = model;
+        for (int i=0; i<moduleCount && i<LIDAR_MAXCOUNT; ++i)
+            m_models[i] = YDLIDAR_GS2;
+        info.model = YDLIDAR_GS2;
     }
     else
     {
-        return ret;
+        ret = getDeviceInfo1(info, timeout);
     }
 
-    {
-        ScopedLocker l(_cmd_lock);
-
-        if ((ret = sendCommand(GS_LIDAR_CMD_GET_VERSION)) != RESULT_OK) {
-            return ret;
-        }
-
-        gs_package_head head;
-        if ((ret = waitResponseHeaderEx(&head, GS_LIDAR_CMD_GET_VERSION, timeout)) != RESULT_OK) {
-            return ret;
-        }
-        if (head.size < sizeof(gs_device_info)) {
-            return RESULT_FAIL;
-        }
-
-        if (waitForData(head.size + 1, timeout) != RESULT_OK) {
-            return RESULT_FAIL;
-        }
-        gs_device_info di = {0};
-        getData(reinterpret_cast<uint8_t*>(&di), sizeof(di));
-        
-        info.hardware_version = di.hwVersion;
-        info.firmware_version = uint16_t((di.fwVersion & 0xFF) << 8) +
-            uint16_t(di.fwVersion >> 8);
-        memcpy(info.serialnum, di.sn, SDK_SNLEN);
-        // head.address; //雷达序号
-        m_HasDeviceInfo |= EPT_Module | EPT_Base;
-    }
-
-    return RESULT_OK;
+    return ret;
 }
 
 result_t GSLidarDriver::getDeviceInfo(
@@ -1695,6 +1677,46 @@ result_t GSLidarDriver::getDeviceInfo(
     return ret;
 }
 
+result_t GSLidarDriver::getDeviceInfo1(device_info &info, uint32_t timeout)
+{
+    result_t ret = RESULT_FAIL;
+
+    ScopedLocker l(_cmd_lock);
+    if ((ret = sendCommand(GS_LIDAR_CMD_GET_VERSION)) != RESULT_OK) {
+        return ret;
+    }
+    uint8_t c = std::min(moduleCount, uint8_t(LIDAR_MAXCOUNT));
+    for (uint8_t i=0; i<c; ++i)
+    {
+        gs_package_head head;
+        memset(&head, 0, GSPACKEGEHEADSIZE);
+        if ((ret = waitResponseHeaderEx(&head, GS_LIDAR_CMD_GET_VERSION, timeout)) != RESULT_OK) {
+            return ret;
+        }
+        if (head.size < sizeof(gs_device_info)) {
+            return RESULT_FAIL;
+        }
+        if (waitForData(head.size + 1, timeout) != RESULT_OK) {
+            return RESULT_FAIL;
+        }
+
+        gs_device_info di = {0};
+        getData(reinterpret_cast<uint8_t*>(&di), sizeof(di));
+
+        if (LIDAR_MODULE_1 == head.address)
+        {
+            info.hardware_version = di.hwVersion;
+            info.firmware_version = uint16_t((di.fwVersion & 0xFF) << 8) +
+                uint16_t(di.fwVersion >> 8);
+            memcpy(info.serialnum, di.sn, SDK_SNLEN);
+            // head.address; //雷达序号
+            m_HasDeviceInfo |= EPT_Module | EPT_Base;
+        }
+    }
+
+    return ret;
+}
+
 result_t GSLidarDriver::getDeviceInfo2(device_info &info, uint32_t timeout)
 {
     result_t ret = RESULT_FAIL;
@@ -1704,29 +1726,37 @@ result_t GSLidarDriver::getDeviceInfo2(device_info &info, uint32_t timeout)
     ret = sendCommand(GS_LIDAR_CMD_GET_VERSION3);
     if (!IS_OK(ret))
         return ret;
-    gs_package_head head = {0};
-    ret = waitResponseHeaderEx(&head, GS_LIDAR_CMD_GET_VERSION3, timeout);
-    if (!IS_OK(ret))
-        return ret;
-    if (head.size < GSDEVINFO2SIZE)
-        return RESULT_FAIL;
-    ret = waitForData(head.size + 1, timeout);
-    if (!IS_OK(ret))
-        return ret;
+    uint8_t c = std::min(moduleCount, uint8_t(LIDAR_MAXCOUNT));
+    for (uint8_t i=0; i<c; ++i)
+    {
+        gs_package_head head;
+        memset(&head, 0, GSPACKEGEHEADSIZE);
+        ret = waitResponseHeaderEx(&head, GS_LIDAR_CMD_GET_VERSION3, timeout);
+        if (!IS_OK(ret))
+            return ret;
+        if (head.size < GSDEVINFO2SIZE)
+            return RESULT_FAIL;
+        ret = waitForData(head.size + 1, timeout);
+        if (!IS_OK(ret))
+            return ret;
 
-    gs_device_info2 di;
-    memset(&di, 0, GSDEVINFO2SIZE);
-    getData(reinterpret_cast<uint8_t*>(&di), GSDEVINFO2SIZE);
-
-    model = di.model; //雷达型号
-    if (YDLIDAR_GS5 == model)
-        m_pitchAngle = Angle_PAngle2;
-    info.model = uint8_t(di.model);
-    info.hardware_version = di.hwVersion;
-    info.firmware_version = uint16_t((di.fwVersion & 0xFF) << 8) +
-        uint16_t(di.fwVersion >> 8);
-    memcpy(info.serialnum, di.sn, SDK_SNLEN);
-    m_HasDeviceInfo |= EPT_Module | EPT_Base;
+        gs_device_info2 di;
+        memset(&di, 0, GSDEVINFO2SIZE);
+        getData(reinterpret_cast<uint8_t*>(&di), GSDEVINFO2SIZE);
+        
+        uint8_t id = uint8_t(head.address >> 1); //模组地址转编号: 1, 2, 4
+        m_models[id] = di.model;
+        printf("Get Module[%d] Lidar model[%u]\n", id, di.model);
+        if (LIDAR_MODULE_1 == head.address)
+        {
+            info.model = uint8_t(di.model);
+            info.hardware_version = di.hwVersion;
+            info.firmware_version = uint16_t((di.fwVersion & 0xFF) << 8) +
+                uint16_t(di.fwVersion >> 8);
+            memcpy(info.serialnum, di.sn, SDK_SNLEN);
+            m_HasDeviceInfo |= EPT_Module | EPT_Base;
+        }
+    }
 
     return ret;
 }
