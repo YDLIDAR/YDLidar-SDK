@@ -444,9 +444,22 @@ bool CYdLidar::initialize()
 /*-------------------------------------------------------------
                         initialize
 -------------------------------------------------------------*/
-void CYdLidar::GetLidarVersion(LidarVersion &version)
+void CYdLidar::GetLidarVersion(LidarVersion &lv)
 {
-  memcpy(&version, &m_LidarVersion, sizeof(LidarVersion));
+  memcpy(&lv, &m_LidarVersion, sizeof(LidarVersion));
+
+  printf("[YDLIDAR] lidar version\n"
+        "Firmware version: %u.%u.%u\n"
+        "Hardware version: %u\n"
+        "Serial: ",
+        lv.soft_major,
+        lv.soft_minor,
+        lv.soft_patch,
+        lv.hardware);
+  for (int i = 0; i < SDK_SNLEN; i++)
+    printf("%01X", lv.sn[i] & 0xff);
+  printf("\n");
+  fflush(stdout);
 }
 
 /*-------------------------------------------------------------
@@ -1127,6 +1140,7 @@ bool CYdLidar::checkLidarAbnormal()
         // 获取CT信息
         if (!(lidarPtr->getHasDeviceInfo() & EPT_Module))
         {
+          // printf("Get module device info\n");
           LaserDebug debug = {0};
           for (int i = 0; i < count; ++i)
           {

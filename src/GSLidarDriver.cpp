@@ -61,7 +61,6 @@ GSLidarDriver::GSLidarDriver(uint8_t type)
     //串口配置参数
     m_intensities       = false;
     isAutoReconnect     = true;
-    isAutoconnting      = false;
     m_baudrate          = 230400;
     scan_node_count     = 0;
     sample_rate         = 5000;
@@ -81,16 +80,19 @@ GSLidarDriver::GSLidarDriver(uint8_t type)
     nodeIndex = 0;
     globalRecvBuffer = new uint8_t[GSPACKSIZE];
     scan_node_buf = new node_info[MAX_SCAN_NODES];
-    bias[0] = 0;
-    bias[1] = 0;
-    bias[2] = 0;
+    for (int i=0; i<LIDAR_MAXCOUNT; ++i)
+    {
+        k0[i] = 0;
+        k1[i] = 0;
+        b0[i] = 0;
+        b1[i] = 0;
+        bias[i] = 0;
+    }
 }
 
 GSLidarDriver::~GSLidarDriver() 
 {
-    m_isScanning = false;
-    isAutoReconnect = false;
-    _thread.join();
+    disableDataGrabbing();
 
     ScopedLocker l(_cmd_lock);
     if (_comm) {
@@ -202,13 +204,20 @@ void GSLidarDriver::disconnect() {
     m_isConnected = false;
 }
 
-void GSLidarDriver::disableDataGrabbing() 
+void GSLidarDriver::disableDataGrabbing()
 {
     if (m_isScanning) {
         m_isScanning = false;
         _dataEvent.set();
     }
-    _thread.join();
+    if (m_thread)
+    {
+        if (m_thread->joinable())
+            m_thread->join();
+        delete m_thread;
+        m_thread = nullptr;
+    }
+    // _thread.join();
 }
 
 bool GSLidarDriver::isscanning() const {
@@ -524,59 +533,39 @@ result_t GSLidarDriver::waitForData(size_t data_count, uint32_t timeout,
 result_t GSLidarDriver::checkAutoConnecting() 
 {
     result_t ans = RESULT_FAIL;
-    isAutoconnting = true;
 
     if (m_driverErrno != BlockError)
         setDriverError(TimeoutError);
 
-    while (isAutoReconnect && isAutoconnting) 
+    while (isAutoReconnect && isscanning())
     {
         {
             ScopedLocker l(_cmd_lock);
             if (_comm) {
-                if (_comm->isOpen() || m_isConnected) {
+                if (_comm->isOpen()) {
                     m_isConnected = false;
                     _comm->closePort();
-                    delete _comm;
-                    _comm = NULL;
                 }
             }
         }
-        retryCount ++;
-        if (retryCount > 100) 
-            retryCount = 100;
+        delay(100); //延时
 
-        delay(100);
-
-        int retryConnect = 0;
-        while (isAutoReconnect &&
+        while (isscanning() &&
                connect(m_port.c_str(), m_baudrate) != RESULT_OK)
         {
             setDriverError(NotOpenError);
-            retryConnect ++;
-            if (retryConnect > 5)
-                retryConnect = 5;
-
-            delay(200);
+            delay(300);
         }
 
-        if (!isAutoReconnect) {
-            m_isScanning = false;
+        if (!isscanning()) {
             return RESULT_FAIL;
         }
         //判断是否已重连，如是则尝试启动雷达
         if (isconnected()) 
         {
             delay(100);
-            {
-                ans = startAutoScan();
-                if (!IS_OK(ans)) {
-                    ans = startAutoScan();
-                }
-            }
-
+            ans = startAutoScan();
             if (IS_OK(ans)) {
-                isAutoconnting = false;
                 return ans;
             }
             else {
@@ -618,12 +607,12 @@ int GSLidarDriver::cacheScanData()
                 if (m_driverErrno != BlockError)
                     setDriverError(TimeoutError);
             }
-            fprintf(stderr, "[YDLIDAR] Timeout count: %d\n", timeout_count);
+            fprintf(stderr, "[GSLIDAR] Timeout count: %d\n", timeout_count);
             fflush(stderr);
             // 重连雷达
             if (!isAutoReconnect)
             {
-                fprintf(stderr, "[YDLIDAR] Exit scanning thread!!\n");
+                fprintf(stderr, "[GSLIDAR] Exit scanning thread\n");
                 fflush(stderr);
                 m_isScanning = false;
                 return RESULT_FAIL;
@@ -845,7 +834,8 @@ PARSEHEAD:
         if (CheckSumResult)
         {
             model = m_models[moduleNum]; //当前雷达型号
-            printf("Module[%d] Lidar model[%u]\n", moduleNum, model);
+            if (m_Debug)
+                printf("GS Lidar Module[%d] Model[%u]\n", moduleNum, model);
             //根据雷达型号设置角度参数
             if (YDLIDAR_GS5 == model)
                 m_pitchAngle = Angle_PAngle2;
@@ -1466,19 +1456,25 @@ result_t GSLidarDriver::stopScan(uint32_t timeout)
 result_t GSLidarDriver::createThread()
 {
     // 如果线程已启动，则先退出线程
-    if (_thread.getHandle())
+    // if (_thread.getHandle())
+    // {
+    //     m_isScanning = false;
+    //     _thread.join();
+    // }
+    // _thread = CLASS_THREAD(GSLidarDriver, cacheScanData);
+    // if (!_thread.getHandle()) {
+    //     return RESULT_FAIL;
+    // }
+    m_thread = new std::thread(&GSLidarDriver::cacheScanData, this);
+    if (!m_thread)
     {
-        m_isScanning = false;
-        _thread.join();
-    }
-    _thread = CLASS_THREAD(GSLidarDriver, cacheScanData);
-    if (!_thread.getHandle()) {
+        printf("[GSLidar] Fail to create GS thread\n");
+        fflush(stdout);
         return RESULT_FAIL;
     }
 
-    printf("[GS2Lidar] Create GS thread 0x%X\n", _thread.getHandle());
+    printf("[GSLidar] Create GS thread 0x%X\n", m_thread->get_id());
     fflush(stdout);
-
     return RESULT_OK;
 }
 
@@ -1514,10 +1510,6 @@ result_t GSLidarDriver::startAutoScan(bool force, uint32_t timeout) {
 /************************************************************************/
 result_t GSLidarDriver::stop() 
 {
-    if (isAutoconnting) {
-        isAutoReconnect = false;
-    }
-
     disableDataGrabbing();
     stopScan();
 

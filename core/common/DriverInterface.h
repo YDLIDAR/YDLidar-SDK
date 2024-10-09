@@ -1,9 +1,10 @@
 ﻿#pragma once
+#include <map>
+#include <thread>
 #include <core/base/v8stdint.h>
 #include <core/base/thread.h>
 #include <core/base/locker.h>
 #include <core/base/datatype.h>
-#include <map>
 #include "ydlidar_protocol.h"
 #include "ydlidar_def.h"
 
@@ -552,8 +553,8 @@ namespace ydlidar
         {
           DEFAULT_TIMEOUT = 2000,    /**< Default timeout. */
           DEFAULT_HEART_BEAT = 1000, /**< Default heartbeat timeout. */
-          MAX_SCAN_NODES = 7200,     /**< Default Max Scan Count. */
-          DEFAULT_TIMEOUT_COUNT = 1, /**< Default Timeout Count. */
+          MAX_SCAN_NODES = 5000,     /**< Default Max Scan Count. */
+          DEFAULT_TIMEOUT_COUNT = 2, /**< Default Timeout Count. */
         };
 
       protected:
@@ -567,7 +568,8 @@ namespace ydlidar
         /// Data Locker（不支持嵌套）
         Locker _lock;
         /// Parse Data thread
-        Thread _thread;
+        Thread _thread; //线程对象
+        std::thread* m_thread = nullptr; //STD线程对象
         /// command locker（不支持嵌套）
         Locker _cmd_lock;
         /// driver error locker（不支持嵌套）
@@ -578,30 +580,30 @@ namespace ydlidar
         /// baudrate or IP port
         uint32_t m_baudrate;
         /// LiDAR intensity
-        bool m_intensities;
+        bool m_intensities = false;
         /// LiDAR intensity bit
-        int m_intensityBit;
+        int m_intensityBit = 0;
 
         /// LiDAR Point pointer
-        node_info *scan_node_buf;
+        node_info *scan_node_buf = nullptr;
         /// LiDAR scan count
-        size_t scan_node_count; //<! LiDAR Scan Count
+        size_t scan_node_count = 0; //LiDAR Scan Count
         /// package sample index
-        uint16_t nodeIndex;
+        uint16_t nodeIndex = 0;
         ///
-        int retryCount;
+        int retryCount = 0;
         /// auto reconnect
-        bool isAutoReconnect;
+        bool isAutoReconnect = true;
         /// auto connecting state
-        bool isAutoconnting;
+        bool isAutoconnting = false;
         lidarConfig m_config;
 
         /// number of last error
         DriverError m_driverErrno;
 
         /// invalid node count
-        int m_InvalidNodeCount;
-        size_t m_BufferSize;
+        int m_InvalidNodeCount = 0;
+        size_t m_BufferSize = 0;
       };
 
     } // common
