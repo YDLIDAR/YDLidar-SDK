@@ -437,7 +437,6 @@ bool CYdLidar::initialize()
 
   printf("[YDLIDAR] Lidar init success, Elapsed time %u ms\n", getms() - t);
   fflush(stdout);
-
   return true;
 }
 
@@ -975,6 +974,11 @@ bool CYdLidar::getDeviceInfo(std::vector<device_info_ex>& dis)
   return false;
 }
 
+void CYdLidar::setAutoIntensity(bool yes)
+{
+  m_AutoIntensity = yes;
+}
+
 bool CYdLidar::ota()
 {
   if (lidarPtr)
@@ -1345,8 +1349,6 @@ bool CYdLidar::getDeviceHealth()
     return false;
   }
 
-  lidarPtr->stop();
-
   result_t op_result;
   device_health healthinfo;
   memset(&healthinfo, 0, sizeof(device_health));
@@ -1429,14 +1431,15 @@ bool CYdLidar::getDeviceInfo()
   frequencyOffset = 0.4;
   lidar_model = di.model;
   printf("Current Lidar Model Code %d\n", lidar_model);
-  bool intensity = hasIntensity(di.model);
+  // bool intensity = hasIntensity(di.model);
+    // intensity = m_Intensity;
+      // lidarPtr->setIntensities(intensity);
+  //  printf("Set Lidar Intensity Bit count %d\n", m_IntensityBit);
+  // lidarPtr->setIntensityBit(m_IntensityBit);
   defalutSampleRate = getDefaultSampleRate(di.model);
   // printf("getDefaultSampleRate %d\n", defalutSampleRate.size());
-  intensity = m_Intensity;
+
   std::string serial_number;
-  lidarPtr->setIntensities(intensity);
-  //  printf("Set Lidar Intensity Bit count %d\n", m_IntensityBit);
-  lidarPtr->setIntensityBit(m_IntensityBit);
   ret = true;
 
   if (printfDeviceInfo(di, EPT_Base))
@@ -1798,10 +1801,26 @@ bool CYdLidar::checkCOMMs()
     return true;
   }
 
+  //初始化
+  lidarPtr->setSingleChannel(m_SingleChannel);
+  lidarPtr->setLidarType(m_LidarType);
+  lidarPtr->setScanFreq(m_ScanFrequency);
+  lidarPtr->setSupportMotorDtrCtrl(m_SupportMotorDtrCtrl);
+  lidarPtr->setBottom(m_Bottom);
+  lidarPtr->setDebug(m_Debug);
+  lidarPtr->setOtaName(otaName);
+  lidarPtr->setOtaEncode(otaEncode);
+  lidarPtr->setIntensities(m_Intensity);
+  lidarPtr->setIntensityBit(m_IntensityBit);
+  lidarPtr->setAutoIntensity(m_AutoIntensity);
+
+  uint32_t t = getms();
+
   // Is it COMX, X>4? ->  "\\.\COMX"
   if (m_SerialPort.size() >= 3)
   {
-    if (tolower(m_SerialPort[0]) == 'c' && tolower(m_SerialPort[1]) == 'o' &&
+    if (tolower(m_SerialPort[0]) == 'c' && 
+        tolower(m_SerialPort[1]) == 'o' &&
         tolower(m_SerialPort[2]) == 'm')
     {
       // Need to add "\\.\"?
@@ -1811,8 +1830,7 @@ bool CYdLidar::checkCOMMs()
       }
     }
   }
-
-  // make connection...
+  //连接
   result_t op_result = lidarPtr->connect(m_SerialPort.c_str(), m_SerialBaudrate);
   if (!IS_OK(op_result))
   {
@@ -1833,14 +1851,8 @@ bool CYdLidar::checkCOMMs()
     return false;
   }
 
-  lidarPtr->setSingleChannel(m_SingleChannel);
-  lidarPtr->setLidarType(m_LidarType);
-  lidarPtr->setScanFreq(m_ScanFrequency);
-  lidarPtr->setSupportMotorDtrCtrl(m_SupportMotorDtrCtrl);
-  lidarPtr->setBottom(m_Bottom);
-  lidarPtr->setDebug(m_Debug);
-  lidarPtr->setOtaName(otaName);
-  lidarPtr->setOtaEncode(otaEncode);
+  printf("[YDLIDAR] connect, Elapsed time %u ms\n", getms() - t);
+  fflush(stdout);
 
   printf("[YDLIDAR] Lidar successfully connected [%s:%d]\n", 
     m_SerialPort.c_str(), m_SerialBaudrate);
@@ -1852,9 +1864,11 @@ bool CYdLidar::checkCOMMs()
 -------------------------------------------------------------*/
 bool CYdLidar::checkStatus()
 {
+  uint32_t t = getms();
   getDeviceHealth();
-
   getDeviceInfo();
+  printf("[YDLIDAR] Check status, Elapsed time %u ms\n", getms() - t);
+  fflush(stdout);
 
   return true;
 }

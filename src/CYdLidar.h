@@ -176,6 +176,8 @@ class YDLIDAR_API CYdLidar {
   bool getDeviceInfo(device_info& di, int type);
   //获取级联设备信息
   bool getDeviceInfo(std::vector<device_info_ex>& dis);
+  //设置是否自动识别强度（启用时会占用一定时间）
+  void setAutoIntensity(bool yes=false);
 
   //启用调试
   void setEnableDebug(bool yes) {m_Debug = yes;}
@@ -284,10 +286,9 @@ class YDLIDAR_API CYdLidar {
     */
   void handleSingleChannelDevice();
 
-
   /**
     * @brief Parse Version by Package Information
-    * @param debug  LiDAR Point CT Pakcage Information
+    * @param debug LiDAR Point CT Pakcage Information
     */
   bool getDeviceInfoByPackage(const LaserDebug &debug);
 
@@ -348,6 +349,7 @@ class YDLIDAR_API CYdLidar {
   bool m_SingleChannel;             ///< LiDAR single channel
   bool m_Intensity;                 ///< LiDAR Intensity
   int m_IntensityBit;               ///< LiDAR Intensity bit
+  bool m_AutoIntensity; //自动识别强度
   bool m_SupportMotorDtrCtrl;       ///< LiDAR Motor DTR
   bool m_SupportHearBeat;           ///< LiDAR HeartBeat
 

@@ -144,8 +144,9 @@ namespace ydlidar
         }
         else
         {
-          _serial = new serial::Serial(m_port, m_baudrate,
-                                       serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT));
+          _serial = new serial::Serial(
+            m_port, m_baudrate,
+            serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT/2));
         }
         _serial->bindport(port_path, baudrate);
       }
@@ -157,9 +158,12 @@ namespace ydlidar
       m_isConnected = true;
     }
 
-    stopScan();
-    delay(100);
-    clearDTR();
+    //如果是双通雷达，需要先停止
+    if (!m_SingleChannel)
+    {
+      printf("[YDLIDAR] Stop Lidar\n");
+      stop();
+    }
 
     return RESULT_OK;
   }
@@ -1924,8 +1928,9 @@ namespace ydlidar
       if (!IS_OK(ret))
         return ret;
 
-      if (!m_SingleChannel)
+      if (!m_SingleChannel) //双通雷达
       {
+        //双通雷达需要等待响应
         lidar_ans_header response_header;
         if ((ret = waitResponseHeader(&response_header, timeout)) != RESULT_OK)
         {
@@ -1939,17 +1944,21 @@ namespace ydlidar
         {
           return RESULT_FAIL;
         }
+
+        //此处仅获取模组设备信息
+        {
+          waitDevicePackage(1000);
+        }
       }
 
-      // 此处仅获取模组设备信息
+      //非Tmini系列雷达才自动获取强度标识
+      if (m_AutoIntensity)
       {
-        waitDevicePackage(1000);
-      }
-      // 非Tmini系列雷达才自动获取强度标识
-      if (!isTminiLidar(model))
-      {
-        // 获取强度标识
-        getIntensityFlag();
+        if (!isTminiLidar(model))
+        {
+          // 获取强度标识
+          getIntensityFlag();
+        }
       }
 
       // 创建数据解析线程

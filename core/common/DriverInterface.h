@@ -55,6 +55,8 @@ namespace ydlidar
         PropertyBuilderByName(std::string, OtaName, protected);
         //OTA文件加密
         PropertyBuilderByName(bool, OtaEncode, protected);
+        //是否启用自动强度判断
+        PropertyBuilderByName(bool, AutoIntensity, protected);
 
         /**
          * @par Constructor
@@ -90,6 +92,7 @@ namespace ydlidar
           m_ScanFreq = 0;
           m_Bottom = true;
           m_HasDeviceInfo = EPT_None;
+          m_AutoIntensity = true;
         }
 
         virtual ~DriverInterface() {}

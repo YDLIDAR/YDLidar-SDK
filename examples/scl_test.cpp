@@ -239,11 +239,13 @@ int main(int argc, char *argv[])
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
-  bool b_optvalue = true;
+  bool b_optvalue = false;
   laser.setlidaropt(LidarPropFixedResolution, &b_optvalue, sizeof(bool));
   /// rotate 180
+  b_optvalue = false;
   laser.setlidaropt(LidarPropReversion, &b_optvalue, sizeof(bool));
   /// Counterclockwise
+  b_optvalue = false;
   laser.setlidaropt(LidarPropInverted, &b_optvalue, sizeof(bool));
   b_optvalue = true;
   laser.setlidaropt(LidarPropAutoReconnect, &b_optvalue, sizeof(bool));
@@ -278,7 +280,12 @@ int main(int argc, char *argv[])
   laser.enableSunNoise(false);
 
   //设置是否底板优先
-  laser.setBottomPriority(true);
+  laser.setBottomPriority(false);
+
+  //启用调试
+  laser.setEnableDebug(false);
+
+  laser.setAutoIntensity(false);
 
   uint32_t t = getms(); //时间
   int c = 0; //计数
