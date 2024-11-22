@@ -31,6 +31,7 @@ ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
 	#MSVC compiler
 	add_compile_options("/utf-8")
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
+    add_definitions(-DNOMINMAX)
 	ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	#MinGW compiler
 	ENDIF (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")

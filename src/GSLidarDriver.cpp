@@ -1111,8 +1111,8 @@ result_t GSLidarDriver::grabScanData(
             if (datas.size())
             {
                 //从数组中取出点云数据
-                gs_module_nodes ns = datas.front();
-                datas.pop_front();
+                gs_module_nodes ns = datas.back();
+                datas.clear();
                 size_t size = min(int(count), ns.pointCount);
                 memcpy(nodes, ns.points, size * SDKNODESIZE);
                 count = size;
