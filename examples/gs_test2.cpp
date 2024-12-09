@@ -40,7 +40,7 @@ struct YdGsOutParamItem
 struct YdGsOutParam
 {
   YdGsRigParam rp;
-  YdGsOutParamItem items[GS_MAXPOINTSIZE];
+  YdGsOutParamItem items[GS_PACKMAXNODES];
 
   YdGsOutParam() {
     memset(items, 0, sizeof(items));
@@ -358,7 +358,7 @@ bool parseCsv(const std::string& name, YdGsOutParam& op)
       //   << op.items[index].k0 << " "
       //   << op.items[index].k1 << std::endl;
       index ++;
-      if (index >= GS_MAXPOINTSIZE)
+      if (index >= GS_PACKMAXNODES)
         break;
     }
     else //解析失败
@@ -375,7 +375,7 @@ bool parseCsv(const std::string& name, YdGsOutParam& op)
 bool to3D(const LaserScan& scan, const YdGsOutParam& op, Yd3DPoints& out)
 {
   int size = scan.points.size();
-  if (size > GS_MAXPOINTSIZE)
+  if (size > GS_PACKMAXNODES)
   {
     std::cout << "点云数过大 " << size << std::endl;
     return false;

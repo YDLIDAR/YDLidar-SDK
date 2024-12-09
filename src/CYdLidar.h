@@ -201,7 +201,7 @@ class YDLIDAR_API CYdLidar {
    * @return true if communication has been established with the device.
    *  If it's not false on error.
    */
-  bool checkCOMMs();
+  bool checkConnect();
   /**
    * @brief check LiDAR health state and device information
    * @return true if health status and device information has been obtained with the device.
@@ -314,7 +314,6 @@ class YDLIDAR_API CYdLidar {
   bool isAngleOffsetCorrected() const;
 
  private:
-  bool    scanning;               ///< LiDAR is Scanning
   int     m_FixedSize;              ///< Fixed LiDAR Points
   float   m_AngleOffset;            ///< Zero angle offset value
   bool    m_isAngleOffsetCorrected; ///< Has the Angle offset been corrected
@@ -377,7 +376,8 @@ class YDLIDAR_API CYdLidar {
 #endif // CYDLIDAR_H
 
 //os
-namespace ydlidar {
+namespace ydlidar 
+{
 /**
  * @brief system signal initialize
  */
@@ -391,12 +391,13 @@ YDLIDAR_API bool os_isOk();
  * @brief shutdown system signal
  */
 YDLIDAR_API void os_shutdown();
-
 /**
  * @brief lidarPortList
  * @return
  */
 YDLIDAR_API std::map<std::string, std::string> lidarPortList();
+//打印logo字符
+YDLIDAR_API void printLogo();
 
 }
 

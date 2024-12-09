@@ -36,40 +36,22 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
+#include "core/common/ydlidar_help.h"
+
 using namespace std;
 using namespace ydlidar;
+using namespace ydlidar::core::common;
 
 #if defined(_MSC_VER)
 #pragma comment(lib, "ydlidar_sdk.lib")
 #endif
 
-/**
- * @brief sdm test
- * @param argc
- * @param argv
- * @return
- * @par Flow chart
- * Step1: instance CYdLidar.\n
- * Step2: set paramters.\n
- * Step3: initialize SDK and LiDAR.(::CYdLidar::initialize)\n
- * Step4: Start the device scanning routine which runs on a separate thread and enable motor.(::CYdLidar::turnOn)\n
- * Step5: Get the LiDAR Scan Data.(::CYdLidar::doProcessSimple)\n
- * Step6: Stop the device scanning thread and disable motor.(::CYdLidar::turnOff)\n
- * Step7: Uninitialize the SDK and Disconnect the LiDAR.(::CYdLidar::disconnecting)\n
- */
 
 int main(int argc, char *argv[])
 {
-  printf("__   ______  _     ___ ____    _    ____  \n");
-  printf("\\ \\ / /  _ \\| |   |_ _|  _ \\  / \\  |  _ \\ \n");
-  printf(" \\ V /| | | | |    | || | | |/ _ \\ | |_) | \n");
-  printf("  | | | |_| | |___ | || |_| / ___ \\|  _ <  \n");
-  printf("  |_| |____/|_____|___|____/_/   \\_\\_| \\_\\ \n");
-  printf("\n");
-  fflush(stdout);
-
+  printLogo();
   //初始化
-  ydlidar::os_init();
+  os_init();
   //初始化串口号
   std::string port;
   std::map<std::string, std::string> ports = ydlidar::lidarPortList();
@@ -95,7 +77,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-      while (ydlidar::os_isOk())
+      while (os_isOk())
       {
         printf("Please select the lidar port:");
         std::string number;

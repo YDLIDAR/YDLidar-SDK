@@ -7,6 +7,7 @@
 #include <core/base/datatype.h>
 #include "ydlidar_protocol.h"
 #include "ydlidar_def.h"
+#include "ydlidar_config.h"
 
 
 namespace ydlidar
@@ -43,6 +44,8 @@ namespace ydlidar
         PropertyBuilderByName(bool, Debug, protected);
         // 扫描频率
         PropertyBuilderByName(float, ScanFreq, protected);
+        // 采样率
+        PropertyBuilderByName(float, SampleRate, protected);
         // 是否底板优先
         PropertyBuilderByName(bool, Bottom, protected);
         // 是否已获取到设备信息
@@ -183,7 +186,9 @@ namespace ydlidar
          * static function
          * @return Version
          */
-        virtual std::string getSDKVersion() = 0;
+        virtual std::string getSDKVersion() {
+          return YDLIDAR_SDK_VERSION_STR;
+        }
 
         /**
          * @brief Is the Lidar in the scan \n
@@ -191,7 +196,9 @@ namespace ydlidar
          * @retval true     scanning
          * @retval false    non-scanning
          */
-        virtual bool isscanning() const = 0;
+        virtual bool isscanning() const {
+          return m_isScanning;
+        }
 
         /**
          * @brief Is it connected to the lidar \n
@@ -199,7 +206,9 @@ namespace ydlidar
          * @retval true     connected
          * @retval false    Non-connected
          */
-        virtual bool isconnected() const = 0;
+        virtual bool isconnected() const {
+          return m_isConnected;
+        }
 
         /**
          * @brief Is there intensity \n
@@ -222,7 +231,9 @@ namespace ydlidar
          *   true	support
          *   false no support
          */
-        virtual void setAutoReconnect(const bool &enable) = 0;
+        virtual void setAutoReconnect(const bool &enable) {
+          isAutoReconnect = enable;
+        }
 
         /**
          * @brief Get current scan update configuration.
@@ -286,8 +297,13 @@ namespace ydlidar
          * @retval RESULT_FAILE    failed
          * @note Just turn it on once
          */
-        virtual result_t startScan(bool force = false,
-                                   uint32_t timeout = DEFAULT_TIMEOUT) = 0;
+        virtual result_t startScan(
+          bool force = false,
+          uint32_t timeout = DEFAULT_TIMEOUT) {
+            UNUSED(force);
+            UNUSED(timeout); 
+            return RESULT_FAIL;
+          }
 
         /**
          * @brief turn off scanning \n
@@ -295,7 +311,9 @@ namespace ydlidar
          * @retval RESULT_OK       success
          * @retval RESULT_FAILE    failed
          */
-        virtual result_t stop() = 0;
+        virtual result_t stop() {
+          return RESULT_FAIL;
+        }
 
         /**
          * @brief Get a circle of laser data \n
@@ -540,7 +558,11 @@ namespace ydlidar
 
           YDLIDAR_T15 = 200, /**< T15 LiDAR Model. */
 
-          YDLIDAR_Tail,
+          YDLIDAR_TIA = 210, //TIA雷达
+          YDLIDAR_TIA_H = 211, //TIA-H雷达
+          YDLIDAR_TIA_X = 212, //TIA-X雷达
+
+          YDLIDAR_Tail = 255,
         };
 
         enum YDLIDAR_RATE
@@ -573,6 +595,7 @@ namespace ydlidar
         /// Parse Data thread
         Thread _thread; //线程对象
         std::thread* m_thread = nullptr; //STD线程对象
+        std::thread* m_thread2 = nullptr; //STD线程对象
         /// command locker（不支持嵌套）
         Locker _cmd_lock;
         /// driver error locker（不支持嵌套）

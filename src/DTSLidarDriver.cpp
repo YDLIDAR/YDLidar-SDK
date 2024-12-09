@@ -490,7 +490,7 @@ result_t DTSLidarDriver::waitPackage(node_info *node, uint32_t timeout)
 
     if (IS_OK(ret))
     {
-        (*node).sync = Node_Sync;
+        (*node).sync = NODE_SYNC;
         (*node).stamp = getTime();
         (*node).index = 0;
         (*node).scanFreq = uint8_t(0);
@@ -560,7 +560,7 @@ result_t DTSLidarDriver::sendData(const uint8_t *data, size_t size)
         if (m_Debug)
         {
             printf("send: ");
-            printHex(data, r);
+            infoh(data, r);
         }
 
         size -= r;
@@ -758,7 +758,7 @@ result_t DTSLidarDriver::getData(uint8_t *data, size_t size)
         if (m_Debug)
         {
             printf("recv: ");
-            printHex(data, r);
+            infoh(data, r);
         }
 
         //更新剩余的数据大小和数据指针
@@ -911,7 +911,7 @@ result_t DTSLidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
         printf("[YDLIDAR] Fail to get CalibParam\n");
         return RESULT_FAIL;
     }
-    // printHex(data.data(), data.size());
+    // infoh(data.data(), data.size());
 
     //取出校准参数k,b的值
     // memcpy(&k, &data[0], sizeof(float));

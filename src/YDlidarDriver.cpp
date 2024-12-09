@@ -21,12 +21,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-#include <core/serial/serial.h>
-#include <core/network/ActiveSocket.h>
-#include "YDlidarDriver.h"
-#include <core/serial/common.h>
 #include <math.h>
-#include <ydlidar_config.h>
+#include "core/common/ydlidar_help.h"
+#include "core/serial/common.h"
+#include "core/serial/serial.h"
+#include "core/network/ActiveSocket.h"
+#include "YDlidarDriver.h"
+#include "ydlidar_config.h"
 
 using namespace impl;
 
@@ -161,7 +162,7 @@ namespace ydlidar
     //如果是双通雷达，需要先停止
     if (!m_SingleChannel)
     {
-      printf("[YDLIDAR] Stop Lidar\n");
+      info("Stop Lidar");
       stop();
     }
 
@@ -338,8 +339,7 @@ namespace ydlidar
 
       if (m_Debug)
       {
-        printf("send: ");
-        printHex(data, r);
+        debugh(data, r);
       }
 
       size -= r;
@@ -365,8 +365,7 @@ namespace ydlidar
 
       if (m_Debug)
       {
-        printf("recv: ");
-        printHex(data, r);
+        debugh(data, r);
       }
 
       size -= r;
@@ -631,20 +630,14 @@ namespace ydlidar
     {
       count = 128;
       ans = waitScanData(local_buf, count, DEFAULT_TIMEOUT / 2);
-
-      // Thread::needExit();
-
       if (!IS_OK(ans))
       {
         if (timeout_count > DEFAULT_TIMEOUT_COUNT)
         {
           if (!isAutoReconnect)
           {
-            fprintf(stderr, "[YDLIDAR] Exit scanning thread\n");
-            fflush(stderr);
-            {
-              m_isScanning = false;
-            }
+            error("Exit scanning thread!");
+            m_isScanning = false;
             return RESULT_FAIL;
           }
           else
@@ -659,7 +652,7 @@ namespace ydlidar
             if (IS_OK(ans))
             {
               timeout_count = 0;
-              local_scan[0].sync = Node_NotSync;
+              local_scan[0].sync = NODE_UNSYNC;
             }
             else
             {
@@ -671,13 +664,12 @@ namespace ydlidar
         else
         {
           timeout_count++;
-          local_scan[0].sync = Node_NotSync;
+          local_scan[0].sync = NODE_UNSYNC;
 
           if (m_driverErrno == NoError)
             setDriverError(TimeoutError);
 
-          fprintf(stderr, "[YDLIDAR] Timeout count: %d\n", timeout_count);
-          fflush(stderr);
+          error("Timeout count: %d", timeout_count);
         }
       }
       else
@@ -698,22 +690,19 @@ namespace ydlidar
       {
         if (local_buf[pos].sync & LIDAR_RESP_SYNCBIT)
         {
-          // printf("[YDLIDAR] S2 points Stored in buffer start %lu\n", scan_count);
           if (local_scan[0].sync & LIDAR_RESP_SYNCBIT)
           {
             ScopedLocker l(_lock);
             local_scan[0].delayTime = local_buf[pos].delayTime;
-            // 将下一圈的第一个点的采集时间作为当前圈数据的采集时间
+            //TODO: 将下一圈的第一个点的采集时间作为当前圈数据的采集时间
 
             memcpy(scan_node_buf, local_scan, scan_count * sizeof(node_info));
             scan_node_count = scan_count;
             _dataEvent.set();
-            // printf("[YDLIDAR] S2 points Stored in buffer end %lu\n", scan_count);
           }
 
           scan_count = 0;
         }
-
         local_scan[scan_count++] = local_buf[pos];
 
         if (scan_count == _countof(local_scan))
@@ -823,9 +812,6 @@ namespace ydlidar
       for (size_t pos = 0; pos < recvSize; ++pos)
       {
         uint8_t currentByte = globalRecvBuffer[pos];
-
-        // printf("c:%02X p:%d\n", currentByte, recvPos);
-
         switch (recvPos)
         {
         case 0:
@@ -858,7 +844,6 @@ namespace ydlidar
             int remainSize = SIZE_STAMPPACKAGE - (recvSize - pos + 1); // 计算剩余应读字节数
             if (remainSize > 0)
             {
-              // printf("remainSize: %u\n", remainSize);
               size_t lastSize = recvSize;
               ans = waitForData(remainSize, timeout - waitTime, &recvSize);
               if (!IS_OK(ans))
@@ -885,16 +870,14 @@ namespace ydlidar
             }
             if (csc != csr)
             {
-              printf("[YDLIDAR] Checksum error c[0x%02X] != r[0x%02X]\n", csc, csr);
-              fflush(stdout);
+              error("Checksum error c[0x%02X] != r[0x%02X]", csc, csr);
             }
             else
             {
               stamp_package sp;
               memcpy(&sp, &globalRecvBuffer[lastPos], SIZE_STAMPPACKAGE);
               stamp = uint64_t(sp.stamp) * 1000000; // 毫秒转纳秒需要×1000000
-              // printf("stamp: 0x%"PRIx64" -> 0x%"PRIx64"\n", sp.stamp, stamp);
-              // fflush(stdout);
+              // debug("stamp: 0x%"PRIx64" -> 0x%"PRIx64"", sp.stamp, stamp);
               // 测试扫描时长
               // static uint32_t s_scanTime = 0;
               // if (s_scanTime > 0)
@@ -902,8 +885,8 @@ namespace ydlidar
               //     uint32_t dt = sp.stamp - s_scanTime;
               //     if (dt < 44 || dt > 57)
               //     {
-              //         error("单帧时长[%u]ms超出标准[%u~%u]",
-              //             dt, 44, 57);
+                      // error("单帧时长[%u]ms超出标准[%u~%u]",
+                      //     dt, 44, 57);
               //     }
               // }
               // s_scanTime = sp.stamp;
@@ -1144,7 +1127,7 @@ namespace ydlidar
     if (hasStamp)
     {
       memcpy(&stamp, globalRecvBuffer, size);
-      // printf("SCL stamp: %llu 0x%"PRIx64"\n", stamp, stamp);
+      // debug("SCL stamp: %llu 0x%"PRIx64"", stamp, stamp);
     }
 
     return hasStamp;
@@ -1220,14 +1203,14 @@ namespace ydlidar
       ct = packages.ct;
       nowPackageNum = packages.count;
     }
-    // printf("[YDLIDAR] S2 pack points %u\n", nowPackageNum);
+    // debug("S2 pack points %u", nowPackageNum);
   }
 
   void YDlidarDriver::parseNodeDebugFromBuffer(node_info *node)
   {
     if ((ct & 0x01) == CT_Normal)
     {
-      (*node).sync = Node_NotSync;
+      (*node).sync = NODE_UNSYNC;
       (*node).debugInfo = 0xff;
 
       if (!has_package_error)
@@ -1248,10 +1231,10 @@ namespace ydlidar
     }
     else
     {
-      (*node).sync = Node_Sync;
+      (*node).sync = NODE_SYNC;
       package_index = 0;
 
-      // printf("start angle %f end angle %f\n",
+      // debug("start angle %f end angle %f",
       // float(FirstSampleAngle) / 64.0,
       // float(LastSampleAngle) / 64.0);
 
@@ -1294,8 +1277,7 @@ namespace ydlidar
               package.nodes[nodeIndex].dist & 0xfffc;
           (*node).is = package.nodes[nodeIndex].dist & 0x0003;
 
-          // printf("%d d:%u\n", nodeIndex, (*node).dist);
-          // fflush(stdout);
+          // debug("%d d:%u", nodeIndex, (*node).dist);
         }
         else
         {
@@ -1320,7 +1302,7 @@ namespace ydlidar
 
       if ((*node).dist != 0)
       {
-        // printf("has angle 2nd parse %d %d\n", m_LidarType, model);
+        // debug("has angle 2nd parse %d %d", m_LidarType, model);
         if (isOctaveLidar(model))
         {
           correctAngle = (int32_t)(((atan(((21.8 * (155.3 - ((*node).dist / 2.0))) / 155.3) / ((*node).dist / 2.0))) * 180.0 / 3.1415) * 64.0);
@@ -1331,7 +1313,7 @@ namespace ydlidar
           // SCL雷达角度二级解析公式
           // correctAngle = int32_t(asin(17.8 / node->dist) * 180.0 / M_PI * 64.0);
           correctAngle = int32_t(atan(17.8 / (node->dist / 4.0)) * 180.0 / M_PI * 64.0);
-          // printf("SCL correct angle [%d]\n", correctAngle);
+          // debug("SCL correct angle [%d]", correctAngle);
         }
         else if (isTriangleLidar(m_LidarType) &&
                  !isTminiLidar(model) && // 去掉Tmini雷达的角度二级解析
@@ -1341,7 +1323,7 @@ namespace ydlidar
         }
         else
         {
-          //              printf("no angle 2nd parse\n");
+          //debug("no angle 2nd parse");
         }
 
         m_InvalidNodeCount++;
@@ -1381,7 +1363,7 @@ namespace ydlidar
     }
     else
     {
-      (*node).sync = Node_NotSync;
+      (*node).sync = NODE_UNSYNC;
       (*node).qual = Node_Default_Quality;
       (*node).angle = LIDAR_RESP_CHECKBIT;
       (*node).dist = 0;
@@ -1436,7 +1418,7 @@ namespace ydlidar
         {
           size_t packageNum = 0;
           size_t Number = 0;
-          size_t PackageSize = TRI_PACKDATASIZE;
+          size_t PackageSize = TRI_PACKMAXNODES;
           packageNum = size / PackageSize;
           Number = size % PackageSize;
           delayTime = packageNum * (PackageSize - TRI_PACKHEADSIZE) * m_PointTime / 2;
@@ -1486,50 +1468,6 @@ namespace ydlidar
       count = 0;
       return RESULT_FAIL;
     }
-
-    // node_info packNodes[LIDAR_PACKMAXPOINTSIZE];
-    // size_t packCount = 0; //单包点数
-    // size_t currCount = 0; //当前点数
-    // result_t ans = RESULT_FAIL;
-    // uint32_t st = getms();
-    // uint32_t wt = 0;
-    // while ((wt = getms() - st) < timeout)
-    // {
-    //   packCount = LIDAR_PACKMAXPOINTSIZE;
-    //   ans = waitScanData(packNodes, packCount, timeout - wt);
-    //   if (!IS_OK(ans))
-    //   {
-    //     return ans; //失败时直接返回
-    //   }
-    //   else
-    //   {
-    //     bool hasZero = false; //当前包中是否有零位标记
-    //     for (size_t i = 0; i < packCount; ++i)
-    //     {
-    //       if (packNodes[i].sync & LIDAR_RESP_SYNCBIT)
-    //       {
-    //         hasZero = true;
-    //       }
-
-    //       nodes[currCount ++] = packNodes[i];
-    //       if (currCount >= count)
-    //       {
-    //         hasZero = true;
-    //         printf("[YDLIDAR] Current points count %d > buffer size %d\n",
-    //           currCount, count);
-    //         fflush(stdout);
-    //         break;
-    //       }
-    //     }
-    //     if (hasZero)
-    //     {
-    //       count = currCount;
-    //       return RESULT_OK;
-    //     }
-    //   }
-    // }
-
-    // return RESULT_TIMEOUT;
   }
 
   result_t YDlidarDriver::ascendScanData(node_info *nodebuffer, size_t count)
@@ -1992,30 +1930,14 @@ namespace ydlidar
 
   result_t YDlidarDriver::createThread()
   {
-    // //如果线程已启动，则先退出线程
-    // if (_thread.getHandle())
-    // {
-    //   m_isScanning = false;
-    //   _thread.join();
-    // }
-    // _thread = CLASS_THREAD(YDlidarDriver, cacheScanData);
-    // if (!_thread.getHandle()) {
-    //   return RESULT_FAIL;
-    // }
-
-    // printf("[YDLIDAR] Create thread 0x%X\n", _thread.getHandle());
-    // fflush(stdout);
-    // return RESULT_OK;
     m_thread = new std::thread(&YDlidarDriver::cacheScanData, this);
     if (!m_thread)
     {
-      printf("[YDLIDAR] Fail to create thread\n");
-      fflush(stdout);
+      error("[YDLIDAR] Fail to create thread");
       return RESULT_FAIL;
     }
 
-    printf("[YDLIDAR] Create thread 0x%X\n", m_thread->get_id());
-    fflush(stdout);
+    info("[YDLIDAR] Create thread 0x%X", m_thread->get_id());
     return RESULT_OK;
   }
 
@@ -2692,19 +2614,10 @@ namespace ydlidar
         recvSize = remainSize;
 
       getData(s_buff, recvSize);
-      // ans = getData(s_buff, recvSize);
-      // if (!IS_OK(ans));
-      //   return ans;
-
-      // printf("recv: ");
-      // printHex(s_buff, recvSize);
-
       for (size_t pos = 0; pos < recvSize; ++pos)
       {
         uint8_t c = s_buff[pos];
         m_dataPos++;
-
-        // printf("i %u c 0x%02X p %d\n", m_dataPos, c, recvPos);
 
         switch (recvPos)
         {
@@ -2790,8 +2703,7 @@ namespace ydlidar
     if (!isTriangleLidar(m_LidarType))
       return RESULT_OK;
 
-    printf("[YDLIDAR] Start to getting intensity flag\n");
-    fflush(stdout);
+    info("Start to getting intensity flag");
 
     m_dataPos = 0;
     uint32_t lastOffset = 0;
@@ -2806,8 +2718,6 @@ namespace ydlidar
       uint32_t lastPos = 0; // 上一包包头位置
       while (IS_OK(parseHeader(zero, headPos, 500)))
       {
-        // printf("zero %u pos %u\n", zero, headPos);
-        // fflush(stdout);
         if (zero)
         {
           lastZero = 1;
@@ -2819,9 +2729,6 @@ namespace ydlidar
             lastZero = 0;
 
             offset = headPos - lastPos;
-            // printf("lastPos %u currPos %u offset %u\n", lastPos, headPos, offset);
-            // fflush(stdout);
-
             if (offset != ZERO_OFFSET12 &&
                 offset != ZERO_OFFSET13)
               break;
@@ -2829,7 +2736,7 @@ namespace ydlidar
             if (lastOffset &&
                 lastOffset != offset)
             {
-              printf("[YDLIDAR] Fail to getting intensity\n");
+              warn("Fail to getting intensity");
               return RESULT_FAIL;
             }
 
@@ -2853,11 +2760,10 @@ namespace ydlidar
         setIntensities(true);
         m_intensityBit = 8;
       }
-      printf("[YDLIDAR] Auto set intensity %d\n", m_intensities);
+      info("Auto set intensity %d", m_intensities);
     }
 
-    printf("[YDLIDAR] End to getting intensity flag\n");
-    fflush(stdout);
+    info("[YDLIDAR] End to getting intensity flag");
 
     return RESULT_OK;
   }

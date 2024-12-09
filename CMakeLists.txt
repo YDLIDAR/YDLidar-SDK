@@ -5,7 +5,7 @@ project(ydlidar_sdk C CXX)
 # version
 set(YDLIDAR_SDK_VERSION_MAJOR 1)
 set(YDLIDAR_SDK_VERSION_MINOR 2)
-set(YDLIDAR_SDK_VERSION_PATCH 8)
+set(YDLIDAR_SDK_VERSION_PATCH 9)
 set(YDLIDAR_SDK_VERSION ${YDLIDAR_SDK_VERSION_MAJOR}.${YDLIDAR_SDK_VERSION_MINOR}.${YDLIDAR_SDK_VERSION_PATCH})
 
 ##########################################################
@@ -16,7 +16,7 @@ ELSE()
 	SET(CMAKE_MRPT_WORD_SIZE 32)
 ENDIF()
 ##################################################
-#c++ 11
+# Add c++11 Flag
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ##########################################################

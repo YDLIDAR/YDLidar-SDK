@@ -1043,7 +1043,7 @@ int ETLidarDriver::cacheScanData() {
 
           if (IS_OK(ans)) {
             timeout_count = 0;
-            local_scan[0].sync = Node_NotSync;
+            local_scan[0].sync = NODE_UNSYNC;
           } else {
             m_isScanning = false;
             return RESULT_FAIL;
@@ -1051,7 +1051,7 @@ int ETLidarDriver::cacheScanData() {
         }
       } else {
         timeout_count++;
-        local_scan[0].sync = Node_NotSync;
+        local_scan[0].sync = NODE_UNSYNC;
 
         if (m_driverErrno == NoError) {
           setDriverError(TimeoutError);
@@ -1152,7 +1152,7 @@ result_t ETLidarDriver::waitPackage(node_info *node, uint32_t timeout) {
     }
   }
 
-  (*node).sync =  Node_NotSync;
+  (*node).sync =  NODE_UNSYNC;
   (*node).scanFreq = 0;
   (*node).debugInfo = 0xff;
   (*node).index = 0xff;
@@ -1192,7 +1192,7 @@ result_t ETLidarDriver::waitPackage(node_info *node, uint32_t timeout) {
   nodeIndex++;
 
   if (nodeIndex >= frame.dataNum) {
-    (*node).sync = frame.headFrameFlag ? Node_Sync : Node_NotSync;
+    (*node).sync = frame.headFrameFlag ? NODE_SYNC : NODE_UNSYNC;
     (*node).stamp = getTime();//(uint64_t)(frame.timestamp * 100);
     (*node).delayTime = 0;
     nodeIndex = 0;

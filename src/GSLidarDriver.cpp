@@ -35,8 +35,9 @@
 #include <fstream>
 #include "GSLidarDriver.h"
 #include "core/serial/common.h"
-#include <core/serial/serial.h>
-#include <core/network/ActiveSocket.h>
+#include "core/serial/serial.h"
+#include "core/network/ActiveSocket.h"
+#include "core/common/ydlidar_help.h"
 #include "ydlidar_config.h"
 
 #define GS_CMD_STARTIAP 0x0A //启动IAP
@@ -325,8 +326,7 @@ result_t GSLidarDriver::sendData(const uint8_t *data, size_t size) {
 
         if (m_Debug)
         {
-            printf("send: ");
-            printHex(data, r);
+            debugh(data, r);
         }
 
         size -= r;
@@ -352,8 +352,7 @@ result_t GSLidarDriver::getData(uint8_t *data, size_t size) {
 
         if (m_Debug)
         {
-            printf("recv: ");
-            printHex(data, r);
+            debugh(data, r);
         }
 
         size -= r;
@@ -579,8 +578,8 @@ result_t GSLidarDriver::checkAutoConnecting()
 
 int GSLidarDriver::cacheScanData()
 {
-    node_info      local_buf[GS_MAXPOINTSIZE];
-    size_t         count = GS_MAXPOINTSIZE;
+    node_info      local_buf[GS_PACKMAXNODES];
+    size_t         count = GS_PACKMAXNODES;
     size_t         scan_count = 0;
     result_t       ans = RESULT_FAIL;
 
@@ -592,7 +591,7 @@ int GSLidarDriver::cacheScanData()
 
     while (m_isScanning)
     {
-        count = GS_MAXPOINTSIZE;
+        count = GS_PACKMAXNODES;
         ans = waitScanData(local_buf, count);
         // Thread::needExit();
         if (!IS_OK(ans))
@@ -760,7 +759,7 @@ PARSEHEAD:
                     package_Sample_Num = sample_lens + 1; // 环境2Bytes + 点云320Bytes + CRC
                     package_recvPos = pos;
                     nodeCount = (sample_lens - 2) / GSNODESIZE; //计算1包数据中的点数
-                    // printf("sample num %d\n", (package_Sample_Num - 3) / 2);
+                    // info("Sample num %d", (package_Sample_Num - 3) / 2);
                     pos = 0;
                     // 解析协议数据部分
                     while ((waitTime = getms() - startTs) <= timeout)
@@ -835,7 +834,7 @@ PARSEHEAD:
         {
             model = m_models[moduleNum]; //当前雷达型号
             if (m_Debug)
-                printf("GS Lidar Module[%d] Model[%u]\n", moduleNum, model);
+                debug("GS lidar module[%d] model[%u]", moduleNum, model);
             //根据雷达型号设置角度参数
             if (YDLIDAR_GS5 == model)
                 m_pitchAngle = Angle_PAngle2;
@@ -858,7 +857,7 @@ PARSEHEAD:
         (*node).index = moduleNum;
         (*node).scanFreq = m_ScanFreq;
         (*node).qual = 0;
-        (*node).sync = Node_NotSync;
+        (*node).sync = NODE_UNSYNC;
 
         if (YDLIDAR_GS1 == model)
         {
@@ -945,7 +944,7 @@ PARSEHEAD:
         else if (1 == nodeIndex)
             (*node).is = package.env >> 8;
 
-        // printf("%u 0x%X %.02f %.02f\n", nodeIndex, 
+        // debug("%u 0x%X %.02f %.02f", nodeIndex, 
         //     package.nodes[nodeIndex].dist,
         //     sampleAngle, node->dist/1.0);
     }
@@ -962,7 +961,7 @@ PARSEHEAD:
     if (nodeIndex >= nodeCount)
     {
         nodeIndex = 0;
-        (*node).sync = Node_Sync;
+        (*node).sync = NODE_SYNC;
         CheckSumResult = false;
     }
 
@@ -1027,7 +1026,7 @@ void GSLidarDriver::angTransform(
     *dstTheta = theta;
     *dstDist = Dist;
 
-    // printf("%d %d %f %d\n", n, dist, (float)theta, (int)Dist);
+    // debug("%d %d %f %d", n, dist, (float)theta, (int)Dist);
 }
 
 void GSLidarDriver::angTransform2(
@@ -1122,30 +1121,6 @@ result_t GSLidarDriver::grabScanData(
         delay(1); //延时
     }
     return RESULT_TIMEOUT;
-
-    // node_info packNodes[LIDAR_PACKMAXPOINTSIZE];
-    // size_t packCount = 0; //单包点数
-    // size_t currCount = 0; //当前点数
-    // result_t ans = RESULT_FAIL;
-    // uint32_t st = getms();
-    // uint32_t wt = 0;
-    // while ((wt = getms() - st) < timeout)
-    // {
-    //   packCount = LIDAR_PACKMAXPOINTSIZE;
-    //   ans = waitScanData(packNodes, packCount, timeout - wt);
-    //   if (!IS_OK(ans))
-    //   {
-    //     return ans; //失败时直接返回
-    //   } 
-    //   else 
-    //   {
-    //     count = packCount;
-    //     memcpy(nodes, packNodes, count * SDKNODESIZE);
-    //     return RESULT_OK;
-    //   }
-    // }
-
-    // return RESULT_TIMEOUT;
 }
 
 result_t GSLidarDriver::ascendScanData(node_info *nodebuffer, size_t count) {
@@ -1342,7 +1317,7 @@ result_t GSLidarDriver::setDeviceAddress(uint32_t timeout)
             return ans;
         }
         moduleCount = (h.address >> 1) + 1;
-        printf("[YDLIDAR] GS Lidar count %u\n", moduleCount);
+        info("GS lidar count %u", moduleCount);
     }
 
     return RESULT_OK;
@@ -1455,26 +1430,14 @@ result_t GSLidarDriver::stopScan(uint32_t timeout)
 
 result_t GSLidarDriver::createThread()
 {
-    // 如果线程已启动，则先退出线程
-    // if (_thread.getHandle())
-    // {
-    //     m_isScanning = false;
-    //     _thread.join();
-    // }
-    // _thread = CLASS_THREAD(GSLidarDriver, cacheScanData);
-    // if (!_thread.getHandle()) {
-    //     return RESULT_FAIL;
-    // }
     m_thread = new std::thread(&GSLidarDriver::cacheScanData, this);
     if (!m_thread)
     {
-        printf("[GSLidar] Fail to create GS thread\n");
-        fflush(stdout);
+        error("Fail to create GS thread");
         return RESULT_FAIL;
     }
 
-    printf("[GSLidar] Create GS thread 0x%X\n", m_thread->get_id());
-    fflush(stdout);
+    info("Create GS thread 0x%X", m_thread->get_id());
     return RESULT_OK;
 }
 
@@ -1597,7 +1560,7 @@ result_t GSLidarDriver::getDeviceInfo(
     result_t ret = setDeviceAddress(timeout);
     if (!IS_OK(ret))
     {
-        printf("[YDLIDAR] Fail to get GS lidar count");
+        error("Fail to get GS lidar count");
         return ret;
     }
     //2、获取设备信息（带雷达型号码）
@@ -1709,7 +1672,7 @@ result_t GSLidarDriver::getDeviceInfo1(device_info &info, uint32_t timeout)
     return ret;
 }
 
-result_t GSLidarDriver::getDeviceInfo2(device_info &info, uint32_t timeout)
+result_t GSLidarDriver::getDeviceInfo2(device_info &dev, uint32_t timeout)
 {
     result_t ret = RESULT_FAIL;
 
@@ -1738,14 +1701,14 @@ result_t GSLidarDriver::getDeviceInfo2(device_info &info, uint32_t timeout)
         
         uint8_t id = uint8_t(head.address >> 1); //模组地址转编号: 1, 2, 4
         m_models[id] = di.model;
-        printf("Get Module[%d] Lidar model[%u]\n", id, di.model);
+        info("Get Module[%d] Lidar model[%u]", id, di.model);
         if (LIDAR_MODULE_1 == head.address)
         {
-            info.model = uint8_t(di.model);
-            info.hardware_version = di.hwVersion;
-            info.firmware_version = uint16_t((di.fwVersion & 0xFF) << 8) +
+            dev.model = uint8_t(di.model);
+            dev.hardware_version = di.hwVersion;
+            dev.firmware_version = uint16_t((di.fwVersion & 0xFF) << 8) +
                 uint16_t(di.fwVersion >> 8);
-            memcpy(info.serialnum, di.sn, SDK_SNLEN);
+            memcpy(dev.serialnum, di.sn, SDK_SNLEN);
             m_HasDeviceInfo |= EPT_Module | EPT_Base;
         }
     }
@@ -1794,7 +1757,7 @@ bool GSLidarDriver::ota()
 {
     if (m_OtaName.empty())
     {
-        printf("[YDLIDAR OTA] Not set OTA file\n");
+        error("[OTA] Not set OTA file");
         return false;
     }
     // 读取文件所有内容
@@ -1802,7 +1765,7 @@ bool GSLidarDriver::ota()
     f.open(m_OtaName, ios::in | ios::binary);
     if (!f.is_open())
     {
-        printf("[YDLIDAR OTA] Fail to open OTA file[%s]\n", m_OtaName.c_str());
+        error("[OTA] Fail to open OTA file[%s]", m_OtaName.c_str());
         return false;
     }
     //读数据
@@ -1816,7 +1779,7 @@ bool GSLidarDriver::ota()
         for (int i=0; i<s; ++i)
             data.push_back(d.at(i));
     }
-    printf("[YDLIDAR OTA] File size [%.02lf]KB\n", data.size() / 1024.0);
+    info("[OTA] File size [%.02lf]KB", data.size() / 1024.0);
 
     int count = moduleCount; // 雷达数量
     for (int i = 0; i < count; ++i)
@@ -1825,32 +1788,32 @@ bool GSLidarDriver::ota()
         // 开始OTA
         if (!startOta(addr))
         {
-            printf("[YDLIDAR 0x%02X] Fail to Start OTA\n", addr);
+            error("[OTA] 0x%02X Fail to Start OTA", addr);
             return false;
         }
 
         // 下载数据
         if (!execOta(addr, data))
         {
-            printf("[YDLIDAR 0x%02X] Fail to download data\n", addr);
+            error("[OTA] 0x%02X Fail to download data", addr);
             return false;
         }
 
         // 停止OTA
         if (!stopOta(addr))
         {
-            printf("[YDLIDAR 0x%02X] Fail to Start OTA\n", addr);
+            error("[OTA] 0x%02X Fail to Start OTA", addr);
             return false;
         }
 
         // 重启雷达
         if (!IS_OK(reset(addr, TIMEOUT_1S)))
         {
-            printf("[YDLIDAR 0x%02X] Fail to restart gs lidar\n", addr);
+            error("[OTA] 0x%02X Fail to restart gs lidar", addr);
             return false;
         }
 
-        printf("[YDLIDAR 0x%02X] Success to finish OTA\n", addr);
+        info("[OTA] 0x%02X Success to finish OTA", addr);
     }
 
     return true;
@@ -1903,7 +1866,7 @@ bool GSLidarDriver::execOta(uint8_t addr, const std::vector<uint8_t>& data)
         if (p != percent)
         {
             percent = p;
-            printf("[YDLDIAR OTA] Downloading [%d%%]\n", p);
+            info("[OTA] Downloading [%d%%]", p);
         }
 
         std::vector<uint8_t> d;
@@ -1938,7 +1901,7 @@ bool GSLidarDriver::execOta(uint8_t addr, const std::vector<uint8_t>& data)
         }
         if (!ret)
         {
-            printf("[YDLDIAR OTA] Fail to download [%d] package\n", j + 1);
+            error("[OTA] Fail to download [%d] package", j + 1);
             break;
         }
     }

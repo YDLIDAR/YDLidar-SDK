@@ -240,7 +240,7 @@ result_t SDMLidarDriver::sendData(const uint8_t *data, size_t size)
         if (m_Debug)
         {
             printf("send: ");
-            printHex(data, r);
+            infoh(data, r);
         }
 
         size -= r;
@@ -268,7 +268,7 @@ result_t SDMLidarDriver::getData(uint8_t *data, size_t size)
         if (m_Debug)
         {
             printf("recv: ");
-            printHex(data, r);
+            infoh(data, r);
         }
 
         size -= r;
@@ -628,7 +628,7 @@ result_t SDMLidarDriver::waitPackage(node_info *node, uint32_t timeout)
 
     if (IS_OK(ret))
     {
-        (*node).sync = Node_Sync;
+        (*node).sync = NODE_SYNC;
         (*node).stamp = getTime();
         (*node).index = 0;
         (*node).scanFreq = m_ScanFreq;
