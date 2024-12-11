@@ -60,19 +60,21 @@
 #define LIDAR_CMD_GET_EAI                   0x55
 #define LIDAR_CMD_GET_DEVICE_INFO           0x90
 #define LIDAR_CMD_GET_DEVICE_HEALTH         0x92
-#define LIDAR_ANS_TYPE_DEVINFO              0x4
-#define LIDAR_ANS_TYPE_DEVHEALTH            0x6
 #define LIDAR_CMD_SYNC_BYTE                 0xA5
 #define LIDAR_CMDFLAG_HAS_PAYLOAD           0x80
-#define LIDAR_ANS_SYNC_BYTE1                0xA5
-#define LIDAR_ANS_SYNC_BYTE2                0x5A
-#define LIDAR_ANS_TYPE_MEASUREMENT          0x81
 #define LIDAR_RESP_SYNCBIT        (0x1<<0)
 #define LIDAR_RESP_QUALITY_SHIFT  2
 #define LIDAR_RESP_CHECKBIT       (0x1<<0)
 #define LIDAR_RESP_ANGLE_SHIFT    1
 #define LIDAR_RESP_DIST_SHIFT  2
 #define LIDAR_RESP_ANGLE_SAMPLE_SHIFT 8
+
+#define LIDAR_ANS_SYNC_BYTE1                0xA5
+#define LIDAR_ANS_SYNC_BYTE2                0x5A
+#define LIDAR_ANS_TYPE_DEVINFO              0x04
+#define LIDAR_ANS_TYPE_DEVHEALTH            0x06
+#define LIDAR_ANS_TYPE_PITCH                0x10
+#define LIDAR_ANS_TYPE_MEASUREMENT          0x81
 
 #define LIDAR_CMD_RUN_POSITIVE             0x06
 #define LIDAR_CMD_RUN_INVERSION            0x07
@@ -101,6 +103,7 @@
 #define LIDAR_CMD_DIS_EXPOSURE       	    0x97
 
 #define LIDAR_CMD_SET_HEART_BEAT            0xD9
+#define LIDAR_CMD_GETPITCH 0x98 //获取俯仰角
 
 //GS命令
 #define GS_LIDAR_CMD_GET_ADDRESS               0x60

@@ -502,6 +502,12 @@ namespace ydlidar
           return RESULT_OK; 
         }
 
+        //获取俯仰角值
+        virtual bool getPitchAngle(float& pitch) {
+          UNUSED(pitch);
+          return false;
+        }
+
         // 开始OTA升级
         virtual bool ota() {
           return false;
@@ -552,6 +558,7 @@ namespace ydlidar
           YDLIDAR_Tmini = 140, /**< Tmini LiDAR Model. */
           YDLIDAR_TminiPro = 150, /**< Tmini Pro LiDAR Model. */
           YDLIDAR_TminiPlus = 151, /**< Tmini Plus LiDAR Model. */
+          YDLIDAR_TminiPlusSH = 152, //Tmini Plus 森合
 
           YDLIDAR_SDM15 = 160, //SDM15单点雷达
           YDLIDAR_SDM18, //DTS单点雷达

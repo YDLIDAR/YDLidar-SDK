@@ -2768,4 +2768,40 @@ namespace ydlidar
     return RESULT_OK;
   }
 
+bool YDlidarDriver::getPitchAngle(float& pitch)
+{
+  if (!m_isConnected || m_SingleChannel)
+      return false;
+
+  result_t ret = RESULT_OK;
+  ScopedLocker l(_cmd_lock);
+  ret = sendCommand(LIDAR_CMD_GETPITCH);
+  if (!IS_OK(ret))
+    return false;
+  u_int32_t timeout = TIMEOUT_300;
+  uint32_t st = getms();
+  uint32_t wt = 0;
+  while ((wt = getms() - st) <= timeout)
+  {
+    lidar_ans_header head = {0};
+    ret = waitResponseHeader(&head, timeout);
+    if (!IS_OK(ret))
+      return ret;
+    if (head.type != LIDAR_ANS_TYPE_PITCH)
+      continue;
+    if (head.size < 4) //数据大小为4字节
+      return false;
+    ret = waitForData(head.size, timeout);
+    if (!IS_OK(ret))
+      return ret;
+
+    int32_t p = 0;
+    getData(reinterpret_cast<uint8_t *>(&p), 4);
+    pitch = p / 100.0f; //缩小100倍
+    return true;
+  }
+
+  return false;
+}
+
 }

@@ -178,6 +178,8 @@ class YDLIDAR_API CYdLidar {
   bool getDeviceInfo(std::vector<device_info_ex>& dis);
   //设置是否自动识别强度（启用时会占用一定时间）
   void setAutoIntensity(bool yes=false);
+  //获取俯仰角值（目前仅针对Tmini Plus（森合））
+  bool getPitchAngle(float& pitch);
 
   //启用调试
   void setEnableDebug(bool yes) {m_Debug = yes;}

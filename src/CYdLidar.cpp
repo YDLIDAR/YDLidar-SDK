@@ -945,6 +945,13 @@ void CYdLidar::setAutoIntensity(bool yes)
   m_AutoIntensity = yes;
 }
 
+bool CYdLidar::getPitchAngle(float& pitch)
+{
+    if (lidarPtr)
+      return lidarPtr->getPitchAngle(pitch);
+    return false;
+}
+
 bool CYdLidar::ota()
 {
   if (lidarPtr)

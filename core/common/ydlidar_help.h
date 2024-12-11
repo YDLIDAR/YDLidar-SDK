@@ -80,6 +80,12 @@ namespace common {
     localTime->tm_hour, \
     localTime->tm_min, \
     localTime->tm_sec);
+#define WIN_PRINT_TIME UNIX_PRINT_TIME
+#ifdef _WIN32
+  #define PRINT_TIME WIN_PRINT_TIME
+#else
+  #define PRINT_TIME UNIX_PRINT_TIME
+#endif
 //格式化字符串
 #define FORMAT_STDOUT \
   char buff[1024] = {0}; \
@@ -94,10 +100,7 @@ namespace common {
 inline void debug(char* fmt, ...)
 {
   printf(GREEN); //设置绿色
-#ifdef _WIN32
-#else
-  UNIX_PRINT_TIME
-#endif
+  PRINT_TIME
   printf("[debug] ");
   FORMAT_STDOUT
   printf(COLOFF); //恢复默认颜色
@@ -107,10 +110,7 @@ inline void debug(char* fmt, ...)
 //常规
 inline void info(char* fmt, ...)
 {
-#ifdef _WIN32
-#else
-  UNIX_PRINT_TIME
-#endif
+  PRINT_TIME
   printf("[info] ");
   FORMAT_STDOUT
   fflush(stdout);
@@ -120,10 +120,7 @@ inline void info(char* fmt, ...)
 inline void warn(char* fmt, ...)
 {
   printf(YELLOW); //设置黄色
-#ifdef _WIN32
-#else
-  UNIX_PRINT_TIME
-#endif
+  PRINT_TIME
   printf("[warn] ");
   FORMAT_STDOUT
   printf(COLOFF); //恢复默认颜色
@@ -134,10 +131,7 @@ inline void warn(char* fmt, ...)
 inline void error(char* fmt, ...)
 {
   printf(RED); //设置红色
-#ifdef _WIN32
-#else
-  UNIX_PRINT_TIME
-#endif
+  PRINT_TIME
   printf("[error] ");
   FORMAT_STDOUT
   printf(COLOFF); //恢复默认颜色
@@ -150,10 +144,7 @@ inline void debugh(const uint8_t *data, int size)
   if (!data || !size)
     return;
   printf(GREEN); //设置绿色
-#ifdef _WIN32
-#else
-  UNIX_PRINT_TIME
-#endif
+  PRINT_TIME
   printf("[debug] ");
   for (int i=0; i<size; ++i)
       printf("%02X", data[i]);
@@ -165,17 +156,14 @@ inline void debugh(const uint8_t *data, int size)
 //常规（16进制）
 inline void infoh(const uint8_t *data, int size)
 {
-    if (!data || !size)
-        return;
-#ifdef _WIN32
-#else
-  UNIX_PRINT_TIME
-#endif
-    printf("[info] ");
-    for (int i=0; i<size; ++i)
-        printf("%02X", data[i]);
-    printf("\n");
-    fflush(stdout);
+  if (!data || !size)
+      return;
+  PRINT_TIME
+  printf("[info] ");
+  for (int i=0; i<size; ++i)
+      printf("%02X", data[i]);
+  printf("\n");
+  fflush(stdout);
 }
 
 /*!
@@ -294,6 +282,9 @@ inline std::string lidarModelToString(int model)
     break;
   case DriverInterface::YDLIDAR_TminiPlus:
     name = "Tmini Plus";
+    break;
+  case DriverInterface::YDLIDAR_TminiPlusSH:
+    name = "Tmini Plus SH";
     break;
   case DriverInterface::YDLIDAR_T15:
     name = "T15";
