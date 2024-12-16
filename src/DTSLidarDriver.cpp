@@ -1,4 +1,5 @@
 #include <math.h>
+#include <algorithm>
 #include "DTSLidarDriver.h"
 #include "core/serial/common.h"
 #include "ydlidar_config.h"

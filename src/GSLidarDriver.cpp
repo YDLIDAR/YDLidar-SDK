@@ -33,6 +33,7 @@
 *********************************************************************/
 #include <math.h>
 #include <fstream>
+#include <algorithm>
 #include "GSLidarDriver.h"
 #include "core/serial/common.h"
 #include "core/serial/serial.h"

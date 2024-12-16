@@ -32,6 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 #include <math.h>
+#include <algorithm>
 #include "SDMLidarDriver.h"
 #include "core/serial/common.h"
 #include "ydlidar_config.h"

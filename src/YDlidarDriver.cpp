@@ -22,6 +22,7 @@
 // SOFTWARE.
 //
 #include <math.h>
+#include <algorithm>
 #include "core/common/ydlidar_help.h"
 #include "core/serial/common.h"
 #include "core/serial/serial.h"
@@ -2778,7 +2779,7 @@ bool YDlidarDriver::getPitchAngle(float& pitch)
   ret = sendCommand(LIDAR_CMD_GETPITCH);
   if (!IS_OK(ret))
     return false;
-  u_int32_t timeout = TIMEOUT_300;
+  uint32_t timeout = TIMEOUT_300;
   uint32_t st = getms();
   uint32_t wt = 0;
   while ((wt = getms() - st) <= timeout)

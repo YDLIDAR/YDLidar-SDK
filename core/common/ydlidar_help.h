@@ -275,20 +275,15 @@ inline std::string lidarModelToString(int model)
     name = "TSA Pro";
     break;
   case DriverInterface::YDLIDAR_Tmini:
-    name = "Tmini";
-    break;
+    return "Tmini";
   case DriverInterface::YDLIDAR_TminiPro:
-    name = "Tmini Pro";
-    break;
+    return "Tmini Pro";
   case DriverInterface::YDLIDAR_TminiPlus:
-    name = "Tmini Plus";
-    break;
+    return "Tmini Plus";
   case DriverInterface::YDLIDAR_TminiPlusSH:
-    name = "Tmini Plus SH";
-    break;
+    return "Tmini Plus SH";
   case DriverInterface::YDLIDAR_T15:
-    name = "T15";
-    break;
+    return "T15";
   case DriverInterface::YDLIDAR_SDM15:
     return "SDM15";
   case DriverInterface::YDLIDAR_SDM18:

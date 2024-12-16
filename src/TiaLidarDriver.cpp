@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <errno.h>
+#include <algorithm>
 #include "core/network/PassiveSocket.h"
 #include "core/network/SimpleSocket.h"
 #include "core/serial/common.h"
