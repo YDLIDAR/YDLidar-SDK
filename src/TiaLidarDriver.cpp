@@ -318,6 +318,24 @@ result_t TiaLidarDriver::stopScan(uint32_t timeout)
     return ret ? RESULT_OK : RESULT_FAIL;
 }
 
+result_t TiaLidarDriver::startAutoScan(bool force, uint32_t timeout)
+{
+    UNUSED(force);
+    UNUSED(timeout);
+
+    bool ret = setParam(P_TIA_SCANTYPE, 0);
+    return ret ? RESULT_OK : RESULT_FAIL;
+}
+
+result_t TiaLidarDriver::stopAutoScan(uint32_t timeout)
+{
+    UNUSED(timeout);
+
+    //停止扫描
+    bool ret = setParam(P_TIA_SCANTYPE, -1);
+    return ret ? RESULT_OK : RESULT_FAIL;
+}
+
 bool TiaLidarDriver::dataConnect(const char *ip, int port)
 {
     UNUSED(ip);
@@ -463,7 +481,7 @@ result_t TiaLidarDriver::checkAutoConnecting()
         }
         //重新连接
         while (isAutoconnting &&
-            !IS_OK(connect(m_port.c_str(), m_baudrate)))
+            !IS_OK(connect(m_port.c_str(), m_port2)))
         {
             setDriverError(NotOpenError);
             delay(300); //延时
@@ -477,7 +495,8 @@ result_t TiaLidarDriver::checkAutoConnecting()
         if (isconnected() &&
             isAutoconnting)
         {
-            ans = startScan();
+            stopAutoScan(); //尝试停止扫描
+            ans = startAutoScan();
             if (IS_OK(ans))
             {
                 if (getDriverError() == DeviceNotFoundError)

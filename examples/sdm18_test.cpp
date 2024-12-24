@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
   //   }
   // }
 
-  int baudrate = 921600; //默认串口号
+  int baudrate = 921600; //默认波特率
 
   bool isSingleChannel = false;
   

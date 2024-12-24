@@ -203,6 +203,13 @@ private:
     bool createThread();
     //销毁线程
     void deleteThread();
+    //启动扫描
+    result_t startAutoScan(
+            bool force = false,
+            uint32_t timeout = SDK_TIMEOUT);
+    //停止扫描
+    result_t stopAutoScan(
+            uint32_t timeout = SDK_TIMEOUT);
 
     result_t getScanData(node_info* nodes, size_t& count);
     //检查自动连接

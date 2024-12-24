@@ -21,12 +21,12 @@ YDLidar SDK consists of YDLidar SDK communication protocol, YDLidar SDK core, YD
 
 ### Prerequisites
 * Linux
-* Windows 7/10, Visual Studio 2015/2017(UTF-8 encoding)
+* Windows 7/10, Visual Studio 2015 latest version or higher(UTF-8 encoding)
 * C++11 compiler
 
 ### Supported Languages
 * C / C++
-* Python
+* Python2 32-bit
 * C#
 
 ## YDLidar SDK Communication Protocol
