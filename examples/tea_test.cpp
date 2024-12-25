@@ -277,9 +277,9 @@ int main(int argc, char *argv[])
       //     scan.config.time_increment);
       // }
       
-      // core::common::info("[%u] points Stamp [%u]ms",
-      //   uint32_t(scan.points.size()),
-      //   uint32_t(scan.stamp / 1000000));
+      core::common::info("[%u] points Stamp [%u]ms",
+        uint32_t(scan.points.size()),
+        uint32_t(scan.stamp / 1e6));
 
       // for (size_t i = 0; i < scan.points.size(); ++i)
       // {
