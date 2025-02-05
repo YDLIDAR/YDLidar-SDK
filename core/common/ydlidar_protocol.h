@@ -141,7 +141,7 @@
 
 //Package
 #define TRI_PACKHEADSIZE 10
-#define TRI_PACKMAXNODES 40 //单包最大点数
+#define TRI_PACKMAXNODES 80 //单包最大点数（G4最大点数为80，其它三角等最大均为40）
 #define TIA_PACKWIDTH 12 //TIA单包行数
 #define TIA_PACKHEIGHT 16 //TIA单包行数
 #define TIA_PACKMAXBUFFS (TIA_PACKWIDTH * (4 + TIA_PACKHEIGHT * 4) + 4 + 4) //TIA-H单包最大字节数

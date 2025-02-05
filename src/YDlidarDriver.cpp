@@ -612,8 +612,8 @@ namespace ydlidar
   // 解析扫描数据线程主函数
   int YDlidarDriver::cacheScanData()
   {
-    node_info local_buf[128];
-    size_t count = 128;
+    node_info local_buf[TRI_PACKMAXNODES];
+    size_t count = TRI_PACKMAXNODES;
     node_info local_scan[MAX_SCAN_NODES];
     size_t scan_count = 0;
     result_t ans = RESULT_FAIL;
@@ -629,7 +629,7 @@ namespace ydlidar
 
     while (m_isScanning)
     {
-      count = 128;
+      count = TRI_PACKMAXNODES;
       ans = waitScanData(local_buf, count, DEFAULT_TIMEOUT / 2);
       if (!IS_OK(ans))
       {
