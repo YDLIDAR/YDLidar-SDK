@@ -2787,14 +2787,14 @@ bool YDlidarDriver::getPitchAngle(float& pitch)
     lidar_ans_header head = {0};
     ret = waitResponseHeader(&head, timeout);
     if (!IS_OK(ret))
-      return ret;
+      return false;
     if (head.type != LIDAR_ANS_TYPE_PITCH)
       continue;
     if (head.size < 4) //数据大小为4字节
       return false;
     ret = waitForData(head.size, timeout);
     if (!IS_OK(ret))
-      return ret;
+      return false;
 
     int32_t p = 0;
     getData(reinterpret_cast<uint8_t *>(&p), 4);

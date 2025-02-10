@@ -135,6 +135,8 @@ int main(int argc, char *argv[])
   laser.enableGlassNoise(false);
   laser.enableSunNoise(false);
 
+  // laser.setEnableDebug(true); //调试开关
+
   bool ret = laser.initialize();
   if (!ret) 
   {
@@ -143,16 +145,17 @@ int main(int argc, char *argv[])
   }
 
   //获取俯仰角值
-  float pitch = .0f;
-  if (!laser.getPitchAngle(pitch))
-  {
-    warn("Fail to get pitch angle");
-  }
-  else
-  {
-    info("Pitch angle [%.02f]°", pitch);
-  }
+  // float pitch = .0f;
+  // if (!laser.getPitchAngle(pitch))
+  // {
+  //   warn("Fail to get pitch angle");
+  // }
+  // else
+  // {
+  //   info("Pitch angle [%.02f]°", pitch);
+  // }
 
+  //启动扫描
   ret = laser.turnOn();
   if (!ret) 
   {
