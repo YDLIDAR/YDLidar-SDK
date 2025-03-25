@@ -46,7 +46,7 @@
 #endif
 
 //浮点型判断是否为0
-#define ISZERO(v) (abs(v) < 1e-6)
+#define ISZERO(v) (abs(v) < 1e-12)
 
 #define SUNNOISEINTENSITY 0x03 //sun noise flag constant
 #define GLASSNOISEINTENSITY 0x02 //glass noise flag constant

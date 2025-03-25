@@ -939,7 +939,7 @@ PARSEHEAD:
             }
         }
 
-        //处理环境数据（2个字节分别存储在两个点的is属性中）
+        //处理环境数据（2个字节分别存储在前2个点的is属性中）
         if (0 == nodeIndex)
             (*node).is = package.env & 0xFF;
         else if (1 == nodeIndex)
@@ -996,7 +996,8 @@ void GSLidarDriver::angTransform(
       tempX = tempX + Angle_Px;
       tempY = tempY - Angle_Py; //5.315
       Dist = sqrt(tempX * tempX + tempY * tempY);
-      theta = atan(tempY / tempX) * 180 / M_PI;
+      if (!ISZERO(tempX))
+        theta = atan(tempY / tempX) * 180 / M_PI;
     }
     else
     {
@@ -1018,7 +1019,8 @@ void GSLidarDriver::angTransform(
       tempX = tempX + Angle_Px;
       tempY = tempY + Angle_Py; //5.315
       Dist = sqrt(tempX * tempX + tempY * tempY);
-      theta = atan(tempY / tempX) * 180 / M_PI;
+      if (!ISZERO(tempX))
+        theta = atan(tempY / tempX) * 180 / M_PI;
     }
     if (theta < 0)
     {
@@ -1026,8 +1028,6 @@ void GSLidarDriver::angTransform(
     }
     *dstTheta = theta;
     *dstDist = Dist;
-
-    // debug("%d %d %f %d", n, dist, (float)theta, (int)Dist);
 }
 
 void GSLidarDriver::angTransform2(

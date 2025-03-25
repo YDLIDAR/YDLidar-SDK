@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
   /// lidar baudrate
   laser.setlidaropt(LidarPropSerialBaudrate, &baudrate, sizeof(int));
   //TYPE_TRIANGLE(Tmini Pro\Tmini Plus),TYPE_TOF(Tmini Plus(森合))
-  int optval = TYPE_TRIANGLE;
+  int optval = TYPE_TOF;
   laser.setlidaropt(LidarPropLidarType, &optval, sizeof(int));
   /// device type
   optval = YDLIDAR_TYPE_SERIAL;
@@ -144,16 +144,16 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  //获取俯仰角值
-  // float pitch = .0f;
-  // if (!laser.getPitchAngle(pitch))
-  // {
-  //   warn("Fail to get pitch angle");
-  // }
-  // else
-  // {
-  //   info("Pitch angle [%.02f]°", pitch);
-  // }
+  //森合获取俯仰角值
+  float pitch = .0f;
+  if (!laser.getPitchAngle(pitch))
+  {
+    warn("Fail to get pitch angle");
+  }
+  else
+  {
+    info("Pitch angle [%.02f]°", pitch);
+  }
 
   //启动扫描
   ret = laser.turnOn();

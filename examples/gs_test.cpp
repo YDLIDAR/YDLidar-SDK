@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
     fflush(stderr);
     return -1;
   }
-  //设置雷达工作模式（0表示避障模式，1表示沿边模式）
+  //设置雷达工作模式（0表示避障模式，1或2表示沿边模式，3表示固定12Hz避障模式（需要固件支持））
   // ret &= laser.setWorkMode(0, 0x01);
   // ret &= laser.setWorkMode(0, 0x02);
   // ret &= laser.setWorkMode(1, 0x04);
@@ -280,12 +280,13 @@ int main(int argc, char *argv[])
       // ts[scan.moduleNum] = t;
       
       //打印点云
-      // for (size_t i = 0; i < scan.points.size(); ++i)
-      // {
-      //   const LaserPoint &p = scan.points.at(i);
-      //   printf("%d a %.01f r %.01f\n", int(i), p.angle * 180.0f / M_PI, p.range * 1000.0f);
-      // }
-      // fflush(stdout);
+      for (size_t i = 0; i < scan.points.size(); ++i)
+      {
+        const LaserPoint &p = scan.points.at(i);
+          printf("%d a %.02f r %.01f\n", int(i), 
+            p.angle * 180.0f / M_PI, p.range * 1000.0f);
+      }
+      fflush(stdout);
     }
     else
     {
