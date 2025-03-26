@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
     {
       info("Scan received at [%.02f]Hz [%u] points in [%.03f]s",
           scan.scanFreq,
-          uint(scan.points.size()),
+          int(scan.points.size()),
           scan.config.scan_time);
     }
     else

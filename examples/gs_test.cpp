@@ -224,9 +224,9 @@ int main(int argc, char *argv[])
     return -1;
   }
   //设置雷达工作模式（0表示避障模式，1或2表示沿边模式，3表示固定12Hz避障模式（需要固件支持））
-  // ret &= laser.setWorkMode(0, 0x01);
-  // ret &= laser.setWorkMode(0, 0x02);
-  // ret &= laser.setWorkMode(1, 0x04);
+  // ret &= laser.setWorkMode(3, 0x01);
+  // ret &= laser.setWorkMode(3, 0x02);
+  // ret &= laser.setWorkMode(3, 0x04);
   // if (!ret)
   // {
   //   fprintf(stderr, "Fail to set work mode %s\n", laser.DescribeError());
