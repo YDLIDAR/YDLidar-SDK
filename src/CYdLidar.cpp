@@ -643,13 +643,18 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
 
     float scanfrequency = 0.0;
 
+    //如果使用固定分辨率
     if (m_FixedResolution)
     {
-      all_node_count = m_FixedSize;
+      if (!isGSLidar(m_LidarType))
+        all_node_count = m_FixedSize;
     }
 
-    outscan.config.angle_increment = math::from_degrees(m_field_of_view) /
-      (all_node_count - 1);
+    if (isGSLidar(m_LidarType))
+      outscan.config.angle_increment = math::from_degrees(0.4); //GS雷达暂时固定角分辨率为0.4度
+    else
+      outscan.config.angle_increment = math::from_degrees(m_field_of_view) /
+        (all_node_count - 1);
 
     float range = 0.0;
     float intensity = 0.0;
