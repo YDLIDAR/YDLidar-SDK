@@ -160,13 +160,6 @@ namespace ydlidar
       m_isConnected = true;
     }
 
-    //如果是双通雷达，需要先停止
-    if (!m_SingleChannel)
-    {
-      info("Stop Lidar");
-      stop();
-    }
-
     return RESULT_OK;
   }
 
@@ -528,14 +521,14 @@ namespace ydlidar
       {
         delay(50);
 
-        if (!m_SingleChannel && m_driverErrno != BlockError)
+        if (!m_SingleChannel)
         {
-          device_info devinfo;
-          ans = getDeviceInfo(devinfo, 1000);
+          device_info di;
+          ans = getDeviceInfo(di, 1000);
           if (!IS_OK(ans))
           {
             stopScan();
-            ans = getDeviceInfo(devinfo);
+            ans = getDeviceInfo(di);
           }
           if (!IS_OK(ans))
           {
@@ -1625,8 +1618,9 @@ namespace ydlidar
       return RESULT_OK;
     }
 
-    disableDataGrabbing();
-    flushSerial();
+    //如果是双通雷达，需要先停止
+    stop();
+
     {
       ScopedLocker l(_cmd_lock);
 

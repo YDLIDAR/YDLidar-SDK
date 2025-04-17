@@ -800,13 +800,9 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
   }
   else
   {
-    // if (lidarPtr->getDriverError() != NoError)
-    {
-      fprintf(stderr, "[YDLIDAR ERROR]: %d %s\n",
-        op_result,
-        DriverInterface::DescribeDriverError(lidarPtr->getDriverError()));
-      fflush(stderr);
-    }
+    error("[YDLIDAR]: %d %s\n",
+      op_result,
+      DriverInterface::DescribeDriverError(lidarPtr->getDriverError()));
 
     m_AllNode = 0;
     m_FristNodeTime = tim_scan_start;

@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
   //设置是否获取底板设备信息（默认仅尝试获取模组设备信息）
   laser.setBottomPriority(true);
   //启用调试
-  laser.setEnableDebug(false);
+  // laser.setEnableDebug(true);
 
   uint32_t t = getms(); //时间
   int c = 0; //计数
