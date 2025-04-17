@@ -7,6 +7,12 @@
 class YDLIDAR_API StrongLightFilter : public FilterInterface
 {
 public:
+    enum FilterStrategy //方法
+    {
+        FS_1, //方法1，角度距离法
+        FS_2, //方法2，截距法
+    };
+public:
     StrongLightFilter();
     virtual ~StrongLightFilter();
     
@@ -17,6 +23,13 @@ public:
     void setMaxDist(float dist) {maxDist = dist;}
     void setMaxAngle(float angle) {maxAngle = angle;}
     void setMinNoise(int noise) {minNoise = noise;}
+    void setStrategy(int s) {m_strategy = s;}
+
+protected:
+    bool filter1(const LaserScan &in,
+                LaserScan &out);
+    bool filter2(const LaserScan &in,
+                LaserScan &out);
 
 protected:
     struct Point
@@ -48,6 +61,8 @@ protected:
             const Point &p4);
     };
 
+    //过滤方法
+    int m_strategy = FS_2;
     float maxDist = 0.05; //最大距离阈值，单位米（此值可根据需要自己修改）
     float maxAngle = 12.0; //最大角度阈值，单位°（此值可根据需要自己修改）
     int minNoise = 2; //最小连续噪点数（此值可根据需要自己修改）

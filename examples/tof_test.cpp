@@ -259,7 +259,6 @@ int main(int argc, char *argv[]) {
   }
 
   LaserScan scan;
-  LaserScan outScan;
   NoiseFilter filter;
   filter.setStrategy(NoiseFilter::FS_TailWeek);
 
@@ -274,7 +273,8 @@ int main(int argc, char *argv[]) {
               scan.config.scan_time);
 
       // 使用拖尾滤波器
-      //  filter.filter(scan, 0, 0, outScan);
+      //  filter.filter(scan, 0, 0, scan);
+      // 打印点云
       // for (size_t i = 0; i < scan.points.size(); ++i)
       // {
       //   const LaserPoint &p = scan.points.at(i);

@@ -39,6 +39,7 @@
 #include <core/base/timer.h>
 #include "CYdLidar.h"
 #include "core/common/ydlidar_help.h"
+#include "filters/StrongLightFilter.h"
 
 
 using namespace std;
@@ -259,6 +260,10 @@ int main(int argc, char *argv[])
   }
 
   LaserScan scan;
+  //拖尾滤波
+  StrongLightFilter filter;
+  filter.setStrategy(StrongLightFilter::FS_2); //设置策略为截距法
+  filter.setMaxDist(0.025); //设置最大截距为0.025米
   //打印帧间隔相关
   std::map<int, uint32_t> ts;
   ts[0] = getms();
@@ -273,19 +278,19 @@ int main(int argc, char *argv[])
         scan.moduleNum,
         int(scan.points.size()),
         scan.scanFreq);
-      
       //打印帧间隔
-      // uint32_t t = getms();
-      // printf("module[%d] time[%lld]\n", scan.moduleNum, t - ts[scan.moduleNum]);
-      // ts[scan.moduleNum] = t;
-      
+      uint32_t t = getms();
+      printf("module[%d] time[%lld]\n", scan.moduleNum, t - ts[scan.moduleNum]);
+      ts[scan.moduleNum] = t;
+      //滤波
+      filter.filter(scan, 0, 0, scan);
       //打印点云
-      for (size_t i = 0; i < scan.points.size(); ++i)
-      {
-        const LaserPoint &p = scan.points.at(i);
-          printf("%d a %.02f r %.01f\n", int(i), 
-            p.angle * 180.0f / M_PI, p.range * 1000.0f);
-      }
+      // for (size_t i = 0; i < scan.points.size(); ++i)
+      // {
+      //   const LaserPoint &p = scan.points.at(i);
+      //     printf("%d a %.02f r %.01f\n", int(i), 
+      //       p.angle * 180.0f / M_PI, p.range * 1000.0f);
+      // }
       fflush(stdout);
     }
     else

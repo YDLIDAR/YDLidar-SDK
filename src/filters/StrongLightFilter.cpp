@@ -16,9 +16,20 @@ StrongLightFilter::~StrongLightFilter()
 }
 
 void StrongLightFilter::filter(
-    const LaserScan &in,
+    const LaserScan &ins,
     int lidarType,
     int version,
+    LaserScan &out)
+{
+    const LaserScan in = ins; //复制
+    if (FS_1 == m_strategy)
+        filter1(in, out);
+    else //if (FS_2 == m_strategy)
+        filter2(in, out);
+}
+
+bool StrongLightFilter::filter1(
+    const LaserScan &in,
     LaserScan &out)
 {
     int size = in.points.size(); // 点数
@@ -114,6 +125,69 @@ void StrongLightFilter::filter(
     }
 
     // printf("强光过滤噪点数[%d]\n", noiseCount);
+    return noiseCount;
+}
+
+bool StrongLightFilter::filter2(
+    const LaserScan &in,
+    LaserScan &out)
+{
+    int size = in.points.size(); //点数
+    // 按角度排序
+    std::map<float, int> ais;
+    for (int i = 0; i < size; ++i)
+    {
+        const LaserPoint &p = in.points.at(i);
+        if (IS_ZERO(p.range))
+            continue;
+        ais[p.angle] = i;
+    }
+    // printf("按角度排序从[%d]点到[%d]点\n", size, ais.size());
+
+    size = ais.size(); // 更新点数（过滤无效点后的点数）
+    out = in;
+    out.points.resize(size); // 更新点数
+    std::map<float, int>::iterator it;
+    int i = 0;
+    for (it = ais.begin(); it != ais.end(); ++it)
+    {
+        out.points[i++] = in.points.at(it->second);
+    }
+    // 初始化变量
+    std::vector<bool> noises(size, false); // 是否为噪点的标记
+
+    // 主循环函数
+    for (int i = 0; i < size; ++i)
+    {
+        const LaserPoint &p1 = out.points.at(i);
+        const LaserPoint &p2 = out.points.at((i + 1) % size);
+        //计算两点连线在x，y轴的截距（直角坐标系）
+        Point a1 = Point::polar2Angular(Point(p1.angle, p1.range));
+        Point a2 = Point::polar2Angular(Point(p2.angle, p2.range));
+        float x = abs((a1.y * a2.x - a2.y * a1.x) / (a2.x - a1.x));
+        float y = abs((a1.y * a2.x - a2.y * a1.x) / (a2.y - a1.y));
+        float min = std::min(x, y);
+        //如果最小截距小于距离阈值，则认为是噪点
+        if (min < maxDist)
+        {
+            noises[i] = true;
+            noises[(i + 1) % size] = true;
+        }
+    }
+
+    // 处理被标记的点
+    int noiseCount = 0;
+    for (int i = 0; i < size; ++i)
+    {
+        if (noises[i])
+        {
+            out.points[i].range = 0.0f;
+            noiseCount++;
+        }
+    }
+
+    // printf("强光过滤噪点数[%d]\n", noiseCount);
+    return noiseCount;
 }
 
 StrongLightFilter::Point::Point(float x, float y)
