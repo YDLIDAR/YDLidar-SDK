@@ -121,7 +121,7 @@
 #define Angle_Px 1.22
 #define Angle_Py 5.315
 #define Angle_PAngle 22.5 //GS2
-#define Angle_PAngle2 19.0 //GS5
+#define Angle_PAngle2 16.0 //GS5
 #define GS_PACKHEADSIZE 8
 #define GS_PACKMAXNODES 160 //GS数据包中最大点云数
 
