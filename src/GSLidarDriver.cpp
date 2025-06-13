@@ -590,6 +590,11 @@ int GSLidarDriver::cacheScanData()
 
     m_isScanning = true;
 
+  //打印帧间隔相关
+  //std::map<int, uint32_t> ts;
+  //for (int i=0; i<LIDAR_MAXCOUNT; ++i)
+  //  ts[i] = getms();
+
     while (m_isScanning)
     {
         count = GS_PACKMAXNODES;
@@ -644,8 +649,15 @@ int GSLidarDriver::cacheScanData()
             nodes.pointCount = count;
             memcpy(nodes.points, local_buf, count * SDKNODESIZE);
             datas.push_back(nodes);
+            if (datas.size() > moduleCount)
+              datas.pop_front();
             scan_count = 0;
             }
+            //uint32_t t = getms();
+            //uint32_t dt = t - ts[moduleNum];
+            //if (dt > 150)
+      	    //  core::common::warn("module[%d] time[%lld]ms", moduleNum, dt);
+            //ts[moduleNum] = t;
         }
     }
 
@@ -1111,8 +1123,8 @@ result_t GSLidarDriver::grabScanData(
             if (datas.size())
             {
                 //从数组中取出点云数据
-                gs_module_nodes ns = datas.back();
-                datas.clear();
+                gs_module_nodes ns = datas.front();
+                datas.pop_front();
                 size_t size = min(int(count), ns.pointCount);
                 memcpy(nodes, ns.points, size * SDKNODESIZE);
                 count = size;

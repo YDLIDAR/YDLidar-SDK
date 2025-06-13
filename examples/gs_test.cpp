@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
   //是否启用调试
-  laser.setEnableDebug(false); 
+  //laser.setEnableDebug(true); 
 
   //雷达初始化
   bool ret = laser.initialize();
@@ -266,24 +266,27 @@ int main(int argc, char *argv[])
   filter.setMaxDist(0.025); //设置最大截距为0.025米
   //打印帧间隔相关
   std::map<int, uint32_t> ts;
-  ts[0] = getms();
-  ts[1] = getms();
-  ts[2] = getms();
+  for (int i=0; i<LIDAR_MAXCOUNT; ++i)
+    ts[i] = getms();
 
   while (ret && ydlidar::os_isOk())
   {
     if (laser.doProcessSimple(scan))
     {
-      printf("Module [%d] [%d] points in [%.02f]Hz\n",
-        scan.moduleNum,
-        int(scan.points.size()),
-        scan.scanFreq);
+      //printf("Module [%d] [%d] points in [%.02f]Hz\n",
+       // scan.moduleNum,
+       // int(scan.points.size()),
+       // scan.scanFreq);
       //打印帧间隔
       uint32_t t = getms();
-      printf("module[%d] time[%lld]\n", scan.moduleNum, t - ts[scan.moduleNum]);
+      uint32_t dt = t - ts[scan.moduleNum];
+      if (dt > 150)
+      	core::common::warn("module[%d] time[%lld]ms", scan.moduleNum, dt);
+      //else
+      //  core::common::info("module[%d] time[%lld]ms", scan.moduleNum, dt);
       ts[scan.moduleNum] = t;
       //滤波
-      filter.filter(scan, 0, 0, scan);
+      //filter.filter(scan, 0, 0, scan);
       //打印点云
       // for (size_t i = 0; i < scan.points.size(); ++i)
       // {
@@ -291,7 +294,6 @@ int main(int argc, char *argv[])
       //     printf("%d a %.02f r %.01f\n", int(i), 
       //       p.angle * 180.0f / M_PI, p.range * 1000.0f);
       // }
-      fflush(stdout);
     }
     else
     {
