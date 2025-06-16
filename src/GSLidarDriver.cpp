@@ -1318,7 +1318,7 @@ result_t GSLidarDriver::setDeviceAddress(uint32_t timeout)
         return RESULT_OK;
     }
 
-    disableDataGrabbing();
+    //disableDataGrabbing();
     flushSerial();
     {
         ScopedLocker l(_cmd_lock);
