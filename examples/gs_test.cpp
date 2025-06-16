@@ -280,10 +280,10 @@ int main(int argc, char *argv[])
       //打印帧间隔
       uint32_t t = getms();
       uint32_t dt = t - ts[scan.moduleNum];
-      //if (dt > 150)
-      //	core::common::warn("module[%d] time[%lld]ms", scan.moduleNum, dt);
-      //else
-      //  core::common::info("module[%d] time[%lld]ms", scan.moduleNum, dt);
+      if (dt > 150)
+      	core::common::warn("module[%d] time[%lld]ms", scan.moduleNum, dt);
+      else
+        core::common::info("module[%d] time[%lld]ms", scan.moduleNum, dt);
       ts[scan.moduleNum] = t;
       //滤波
       //filter.filter(scan, 0, 0, scan);

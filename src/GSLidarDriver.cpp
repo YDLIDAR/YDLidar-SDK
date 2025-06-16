@@ -591,9 +591,9 @@ int GSLidarDriver::cacheScanData()
     m_isScanning = true;
 
   //打印帧间隔相关
-  std::map<int, uint32_t> ts;
-  for (int i=0; i<LIDAR_MAXCOUNT; ++i)
-    ts[i] = getms();
+//   std::map<int, uint32_t> ts;
+//   for (int i=0; i<LIDAR_MAXCOUNT; ++i)
+//     ts[i] = getms();
 
     while (m_isScanning)
     {
@@ -653,11 +653,11 @@ int GSLidarDriver::cacheScanData()
               datas.pop_front();
             scan_count = 0;
             }
-            uint32_t t = getms();
-            uint32_t dt = t - ts[moduleNum];
-            if (dt > 150)
-      	      core::common::warn("module[%d] time[%lld]ms", moduleNum, dt);
-            ts[moduleNum] = t;
+            // uint32_t t = getms();
+            // uint32_t dt = t - ts[moduleNum];
+            // if (dt > 150)
+      	    //   core::common::warn("module[%d] time[%lld]ms", moduleNum, dt);
+            // ts[moduleNum] = t;
         }
     }
 

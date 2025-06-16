@@ -218,6 +218,7 @@ int main(int argc, char *argv[])
 
   bool ret = true;
   LaserScan scan;
+  uint32_t count = 0; //测试次数
   while (ret && ydlidar::os_isOk())
   {
     //雷达初始化，打开串口
@@ -231,7 +232,7 @@ int main(int argc, char *argv[])
     ret = laser.turnOn();
     if (!ret)
     {
-      core::common::error("Fail to turn on %s", laser.DescribeError());
+      core::common::error("Fail to turn on");
       return -1;
     }
     //启动后运行5秒然后停止扫描
@@ -255,6 +256,7 @@ int main(int argc, char *argv[])
     laser.turnOff();
     //关闭串口
     laser.disconnecting();
+    core::common::warn("Test count %u", ++count);
   }
 
   return 0;
