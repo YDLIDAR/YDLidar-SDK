@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
   /// lidar baudrate
   laser.setlidaropt(LidarPropSerialBaudrate, &baudrate, sizeof(int));
   //TYPE_TRIANGLE(Tmini Pro\Tmini Plus),TYPE_TOF(Tmini Plus(森合))
-  int optval = TYPE_TRIANGLE;
+  int optval = TYPE_TOF;
   laser.setlidaropt(LidarPropLidarType, &optval, sizeof(int));
   /// device type
   optval = YDLIDAR_TYPE_SERIAL;
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
   optval = 4;
   laser.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
   /// Intenstiy bit count
-  optval = 8;
+  optval = 16;
   laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
 
   //////////////////////bool property/////////////////
