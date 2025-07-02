@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
   int baudrate = 8090;
   bool isSingleChannel = false;
   float frequency = 30.0f; //TIA(10~30Hz),TIA-H(100Hz,150Hz)
-  float samplerate = 20.0f; //TIA(10~30Hz),TIA-H(100Hz,300Hz)
+  float samplerate = 20.0f; //TIA(10~30Hz),TIA-H(200Hz,300Hz)
 
   /// instance
   CYdLidar laser;

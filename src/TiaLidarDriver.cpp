@@ -696,31 +696,37 @@ bool TiaLidarDriver::setParam(
 
 bool TiaLidarDriver::setParam(cJSON *json)
 {
-    if (!sendData(json))
-        return false;
-
-    cJSON *js = nullptr;
-    if (!waitResp(js, TIMEOUT_500))
-        return false;
-    bool ret = cJSON_Compare(json, js, cJSON_bool(0));
-    cJSON_Delete(js); //释放内存
+    bool ret = false;
+    do
+    {
+        if (!sendData(json))
+	    break;
+        cJSON *js = nullptr;
+        if (!waitResp(js, TIMEOUT_500))
+	    break;
+        ret = cJSON_Compare(json, js, cJSON_bool(0));
+        cJSON_Delete(js); //释放内存
+    } while (false);
+    cJSON_Delete(json); //释放内存
     if (!ret)
     {
         warn("Fail to set lidar parameter,Error to response");
         return false;
     }
-
     return true;
 }
 
 bool TiaLidarDriver::getParams(const std::string &key, cJSON* &value)
 {
+    bool ret = false;
     //组装发送数据
     cJSON* json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, P_TIA_READ, key.data());
-    if (!sendData(json))
+    ret = sendData(json);
+    cJSON_Delete(json); //释放内存
+    if (!ret)
         return false;
-
+   //wait for response
     if (!waitResp(value, TIMEOUT_1S))
         return false;
     return true;
@@ -733,7 +739,6 @@ bool TiaLidarDriver::sendData(cJSON* json)
     char* ss = cJSON_PrintUnformatted(json); //发送命令需要使用紧凑json格式
     std::string sd(ss);
     free(ss);
-    cJSON_Delete(json);  //释放内存
     //发送数据
     ScopedLocker l(_lock);
     int32_t rs = socket_cmd->Send(
