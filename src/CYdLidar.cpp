@@ -1296,8 +1296,8 @@ bool CYdLidar::calcSampleRate(int count, double scan_time)
     m_PointTime = 1e9 / (m_SampleRate * 1000);
     lidarPtr->setPointTime(m_PointTime);
     if (!m_SingleChannel)
-      // m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1); //不知转速为何要减少0.1
-      m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency);
+      //通过增加采样率值来增加点数，以免计算出的点数不够导致缺点
+      m_FixedSize = (m_SampleRate + 0.1) * 1000 / m_ScanFrequency;
     
     info("Scan Frequency: %.02fHz", m_ScanFrequency);
     if (!isSDMLidar(m_LidarType)) //非SDM雷达才打印Fixed Size
