@@ -327,7 +327,7 @@ result_t GSLidarDriver::sendData(const uint8_t *data, size_t size) {
 
         if (m_Debug)
         {
-            debugh(data, r);
+            debugh(data, r, "[send] ");
         }
 
         size -= r;
@@ -353,7 +353,7 @@ result_t GSLidarDriver::getData(uint8_t *data, size_t size) {
 
         if (m_Debug)
         {
-            debugh(data, r);
+            debugh(data, r, "[recv] ");
         }
 
         size -= r;

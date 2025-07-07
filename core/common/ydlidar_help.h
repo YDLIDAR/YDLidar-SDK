@@ -139,13 +139,15 @@ inline void error(char* fmt, ...)
 }
 
 //调试（16进制）
-inline void debugh(const uint8_t *data, int size)
+inline void debugh(const uint8_t *data, int size, const char* prefix=NULL)
 {
   if (!data || !size)
     return;
   printf(GREEN); //设置绿色
   PRINT_TIME
   printf("[debug] ");
+  if (prefix)
+      printf(prefix);
   for (int i=0; i<size; ++i)
       printf("%02X", data[i]);
   printf("\n");
@@ -154,12 +156,14 @@ inline void debugh(const uint8_t *data, int size)
 }
 
 //常规（16进制）
-inline void infoh(const uint8_t *data, int size)
+inline void infoh(const uint8_t *data, int size, const char* prefix=NULL)
 {
   if (!data || !size)
       return;
   PRINT_TIME
   printf("[info] ");
+  if (prefix)
+      printf(prefix);
   for (int i=0; i<size; ++i)
       printf("%02X", data[i]);
   printf("\n");

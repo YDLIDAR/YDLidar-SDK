@@ -333,7 +333,7 @@ namespace ydlidar
 
       if (m_Debug)
       {
-        debugh(data, r);
+        debugh(data, r, "[send] ");
       }
 
       size -= r;
@@ -359,7 +359,7 @@ namespace ydlidar
 
       if (m_Debug)
       {
-        debugh(data, r);
+        debugh(data, r, "[recv] ");
       }
 
       size -= r;
