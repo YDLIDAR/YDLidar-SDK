@@ -143,9 +143,13 @@ result_t GSLidarDriver::connect(const char *port_path, uint32_t baudrate)
         m_isConnected = true;
     }
 
+    //DTR
+    if (m_SupportMotorDtrCtrl)
+    	setDTR();
+    else
+        clearDTR();
+
     stopScan();
-    // delay(100);
-    // clearDTR();
     //配置GS2模组地址（三个模组）
     setDeviceAddress(300);
 
