@@ -1553,16 +1553,14 @@ result_t GSLidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
         return RESULT_FAIL;
     }
 
-    //尝试获取雷达型号
+    //获取设备信息（带雷达型号码）
     ret = getDeviceInfo2(info, timeout);
     if (!IS_OK(ret))
     {
         for (int i=0; i<moduleCount && i<LIDAR_MAXCOUNT; ++i)
             m_models[i] = YDLIDAR_GS2;
         info.model = YDLIDAR_GS2;
-    }
-    else
-    {
+        //获取设备信息（不带雷达型号码）
         ret = getDeviceInfo1(info, timeout);
     }
 

@@ -37,6 +37,7 @@
 #include <cctype>
 #include "CYdLidar.h"
 #include "filters/NoiseFilter.h"
+#include "core/common/ydlidar_help.h"
 
 using namespace std;
 using namespace ydlidar;
@@ -160,9 +161,7 @@ int main(int argc, char *argv[]) {
   }
 
   std::string input_frequency;
-
   float frequency = 8.0f;
-
   while (ydlidar::os_isOk() && !isSingleChannel) {
     printf("Please enter the lidar scan frequency[3-15.7]:");
     std::cin >> input_frequency;
@@ -172,15 +171,13 @@ int main(int argc, char *argv[]) {
       break;
     }
 
-    fprintf(stderr,
-            "Invalid scan frequency,The scanning frequency range is 3 to 15.7 HZ, Please re-enter.\n");
+    fprintf(stderr, "Invalid scan frequency,"
+      "The scanning frequency range is 3 to 15.7 HZ, Please re-enter.\n");
   }
 
   if (!ydlidar::os_isOk()) {
     return 0;
   }
-
-
 
   /// instance
   CYdLidar laser;
@@ -213,7 +210,7 @@ int main(int argc, char *argv[]) {
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
-  bool b_optvalue = true;
+  bool b_optvalue = false;
   laser.setlidaropt(LidarPropFixedResolution, &b_optvalue, sizeof(bool));
   /// rotate 180
   b_optvalue = false;
@@ -262,37 +259,51 @@ int main(int argc, char *argv[]) {
   NoiseFilter filter;
   filter.setStrategy(NoiseFilter::FS_TailWeek);
 
+  //main loop
+  uint64_t stamp = 0;
   while (ret && ydlidar::os_isOk())
   {
-    /// Turn On success and loop
     if (laser.doProcessSimple(scan))
     {
-      fprintf(stdout, "Scan received at [%f]Hz %u points is [%f]s\n",
-              scan.scanFreq,
-              (unsigned int)scan.points.size(),
-              scan.config.scan_time);
-
+      // core::common::info("Scan received at [%f]Hz %u points is [%f]s\n",
+      //         scan.scanFreq,
+      //         (unsigned int)scan.points.size(),
+      //         scan.config.scan_time);
       // 使用拖尾滤波器
       //  filter.filter(scan, 0, 0, scan);
       // 打印点云
       // for (size_t i = 0; i < scan.points.size(); ++i)
       // {
       //   const LaserPoint &p = scan.points.at(i);
-      //   printf("%d a %.02f d %.03f i %.0f\n",
-      //          i, p.angle * 180 / M_PI, p.range, p.intensity);
+      //   core::common::info("%d a %.02f d %.03f i %.0f\n",
+      //     i, p.angle * 180 / M_PI, p.range, p.intensity);
       // }
-      fflush(stdout);
+      //打印首点和尾点时间戳
+      if (scan.points.size())
+      {
+        //如果上一圈末点时间戳大于当前圈首点时间戳则打印警告信息，否则打印正常信息
+        uint64_t lastStamp = scan.stamp + 
+          uint64_t((scan.points.size() - 1) * 1e9 * scan.config.time_increment);
+        if (scan.stamp < stamp)
+          core::common::warn("first %llu last %llu size %lu",
+            scan.stamp, 
+            lastStamp,
+            scan.points.size());
+        else
+          core::common::info("first %llu last %llu size %lu",
+            scan.stamp, 
+            lastStamp,
+            scan.points.size());
+        stamp = lastStamp;
+      }
     }
     else
     {
-      fprintf(stderr, "Failed to get Lidar Data\n");
-      fflush(stderr);
+      core::common::error("Failed to get Lidar Data");
     }
   }
 
-  /// Stop the device scanning thread and disable motor.
   laser.turnOff();
-  /// Uninitialize the SDK and Disconnect the LiDAR.
   laser.disconnecting();
 
   return 0;

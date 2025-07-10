@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
   std::map<int, int> baudrateList;
   baudrateList[0] = 8000; //网络端口
   baudrateList[1] = 921600; //串口波特率
+  baudrateList[2] = 951600; //串口波特率
   printf("Baudrate:\n");
   for (std::map<int, int>::iterator it = baudrateList.begin();
        it != baudrateList.end(); it++) {
@@ -214,7 +215,7 @@ int main(int argc, char *argv[])
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
   //是否启用调试
-  //laser.setEnableDebug(true); 
+  laser.setEnableDebug(true); 
 
   //雷达初始化
   bool ret = laser.initialize();
