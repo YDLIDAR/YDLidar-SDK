@@ -782,7 +782,19 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
 
     if (m_FixedResolution)
     {
-      outscan.points.resize(all_node_count);
+      if (count > all_node_count)
+      {
+        //如果点过多则直接删除多余的点并打印警告
+        warn("[YDLIDAR]: Real point count %lu > fixed point count %d", count, all_node_count);
+      	outscan.points.resize(all_node_count);
+      }
+      else
+      {
+        //如果点过少则添加末点
+        LaserPoint p = outscan.points.back();
+	while (outscan.points.size() < all_node_count)
+          outscan.points.push_back(p);
+      }
     }
 
     //解析V2协议雷达扫描数据中ct信息中的设备信息
