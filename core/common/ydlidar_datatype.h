@@ -104,18 +104,20 @@ typedef struct  {
  * @endcode
  */
 
-typedef struct {
+struct LaserScan {
   // System time when first range was measured in nanoseconds
   uint64_t stamp = 0;
-  //转速
+  // rpm
   float scanFreq = .0;
-  //采样率
+  // sampling rate
   float sampleRate = .0;
   // Array of lidar points
   std::vector<LaserPoint> points;
-  int size = 0; //实际点数（固定分辨率时点数与实际点数不符）
+  // Actual number of points (when fixed resolution, the number of points does not match the actual number of points)
+  int size = 0;
   // Configuration of scan
   LaserConfig config;
   int moduleNum = 0;
-  uint16_t envFlag = 0; //环境标记（目前只针对GS2）
-} LaserScan;
+  // Environmental flags (currently only applicable to GS2)
+  uint16_t envFlag = 0; 
+} ;

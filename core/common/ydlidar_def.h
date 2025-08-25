@@ -35,21 +35,21 @@ extern "C" {
 
 /** Device Type ID */
 typedef enum {
-  YDLIDAR_TYPE_SERIAL = 0x0,/**< serial type.*/
-  YDLIDAR_TYPE_TCP = 0x1,/**< socket tcp type.*/
-  YDLIDAR_TYPC_UDP = 0x2,/**< socket udp type.*/
+  YDLIDAR_TYPE_SERIAL = 0x0, /**< serial type.*/
+  YDLIDAR_TYPE_TCP = 0x1, /**< socket tcp type.*/
+  YDLIDAR_TYPC_UDP = 0x2, /**< socket udp type.*/
 } DeviceTypeID;
 
 /** Lidar Type ID */
 typedef enum {
-  TYPE_TOF = 0, //TG系列雷达
-  TYPE_TRIANGLE = 1, //S2、S2 Pro、S4、G4、G6、G2、Tmini等三角协议雷达
-  TYPE_TOF_NET = 2, //T系列雷达
-  TYPE_GS = 3, //GS系列雷达（目前只有GS2）
-  TYPE_SCL = 4, //SCL雷达
-  TYPE_SDM = 5, //SDM15单点雷达
-  TYPE_SDM18 = 6, //SDM18单点雷达
-  TYPE_TIA = 7, //TIA系列雷达
+  TYPE_TOF = 0, //TG series
+  TYPE_TRIANGLE = 1, //S2、S2 Pro、S4、G4、G6、G2、Tmini and other triangular protocol
+  TYPE_TOF_NET = 2, //T series
+  TYPE_GS = 3, //GS series
+  TYPE_SCL = 4, //SCL series
+  TYPE_SDM = 5, //SDM15
+  TYPE_SDM18 = 6, //SDM18
+  TYPE_TIA = 7, //TIA series
   TYPE_Tail,
 } LidarTypeID;
 
@@ -127,19 +127,19 @@ typedef struct {
  * range unit: meter.\n
  */
 typedef struct {
-  /// Start angle for the laser scan [rad].  0 is forward and angles are measured clockwise when viewing YDLIDAR from the top.
+  // Start angle for the laser scan [rad].  0 is forward and angles are measured clockwise when viewing YDLIDAR from the top.
   float min_angle;
-  /// Stop angle for the laser scan [rad].   0 is forward and angles are measured clockwise when viewing YDLIDAR from the top.
+  // Stop angle for the laser scan [rad].   0 is forward and angles are measured clockwise when viewing YDLIDAR from the top.
   float max_angle;
-  /// angle resoltuion [rad]
+  // angle resoltuion [rad]
   float angle_increment;
-  /// Scan resoltuion [s]
+  // Scan resoltuion [s]
   float time_increment;
-  /// Time between scans 扫描时长，单位秒
+  // Scanning duration, in seconds
   float scan_time;
-  /// Minimum range [m]
+  // Minimum range [m]
   float min_range;
-  /// Maximum range [m]
+  // Maximum range [m]
   float max_range;
 } LaserConfig;
 
