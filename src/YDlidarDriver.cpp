@@ -2578,9 +2578,14 @@ namespace ydlidar
 
     for (std::vector<PortInfo>::iterator it = lst.begin(); it != lst.end(); it++)
     {
-      std::string port = "ydlidar" + (*it).device_id;
-      ports[port] = (*it).port;
-    }
+      std::string port;
+      if ((*it).device_id.empty()) {
+          port = "ydlidar" + (*it).port;
+        } else {
+          port = "ydlidar" + (*it).device_id;
+        }
+        ports[port] = (*it).port;
+     }
 
     return ports;
   }
