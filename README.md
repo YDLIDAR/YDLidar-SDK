@@ -26,7 +26,7 @@ YDLidar SDK consists of YDLidar SDK communication protocol, YDLidar SDK core, YD
 
 ### Supported Languages
 * C / C++
-* Python2 32-bit
+* Python2 on Windows, Python2/Python3 on Linux
 * C#
 
 ## YDLidar SDK Communication Protocol
