@@ -83,7 +83,7 @@ namespace ydlidar
     headerBuffer = reinterpret_cast<uint8_t *>(&header_);
     healthBuffer = reinterpret_cast<uint8_t *>(&health_);
     nodeIndex = 0;
-    globalRecvBuffer = new uint8_t[sizeof(tri_node_package)];
+    globalRecvBuffer = new uint8_t[sizeof(tof_node_package)];
     scan_node_buf = new node_info[MAX_SCAN_NODES];
     package_index = 0;
     has_package_error = false;
@@ -907,6 +907,12 @@ namespace ydlidar
         case 3:
           SampleNumlAndCTCal += (currentByte * 0x100);
           package_Sample_Num = currentByte;
+          if (package_Sample_Num > TRI_PACKMAXNODES)
+          {
+              warn("Current pack point count %d too big", package_Sample_Num);
+              recvPos = 0;
+              continue;
+          }
           break;
 
         case 4:
