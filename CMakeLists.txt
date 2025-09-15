@@ -182,6 +182,7 @@ install_package(
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include
     INCLUDE_DIRS ${SDK_INCS}
     LINK_LIBS ${SDK_LIBS}
+    LINK_DIRS ${CMAKE_INSTALL_PREFIX}/lib
     )
 #########################################################################################
 # install doc
