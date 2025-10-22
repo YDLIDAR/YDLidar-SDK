@@ -1583,7 +1583,7 @@ bool CYdLidar::checkScanFrequency()
     if (IS_OK(ans))
     {
       frequency = _scan_frequency.frequency / 100.f;
-      if (isTOFLidar(m_LidarType)) //TG雷达转速虚高0.4需要减去还原真实转速
+      if (isTOFLidarByModel(lidar_model)) //TG雷达转速虚高0.4需要减去还原真实转速
         frequency -= 0.4;
       hz = m_ScanFrequency - frequency;
       info("Current scan frequency: %.02fHz", frequency);
@@ -1633,17 +1633,10 @@ bool CYdLidar::checkScanFrequency()
   if (IS_OK(ans))
   {
     frequency = _scan_frequency.frequency / 100.0f;
-    if (isTOFLidar(m_LidarType)) //TG雷达转速虚高0.4需要减去还原真实转速
+    if (isTOFLidarByModel(lidar_model)) //TG雷达转速虚高0.4需要减去还原真实转速
         frequency -= 0.4;
     m_ScanFrequency = frequency;
   }
-
-  //   if( (lidar_model  == DriverInterface::YDLIDAR_TG15)
-  //       || (lidar_model  == DriverInterface::YDLIDAR_TG30)
-  //       || (lidar_model  == DriverInterface::YDLIDAR_TG50) )
-  //   {
-  //       m_SampleRate = m_SampleRatebyD1;
-  //   }
 
   // m_ScanFrequency -= frequencyOffset;
   m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);

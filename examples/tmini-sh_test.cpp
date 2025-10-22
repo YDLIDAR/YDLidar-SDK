@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
   laser.enableGlassNoise(false);
   laser.enableSunNoise(false);
 
-  // laser.setEnableDebug(true); //调试开关
+  //laser.setEnableDebug(true); //调试开关
 
   bool ret = laser.initialize();
   if (!ret) 
