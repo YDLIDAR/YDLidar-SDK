@@ -172,3 +172,7 @@ YDLidar-SDK.files
 .gitignore
 YDLidar-SDK.includes
 build/Testing/Temporary/LastTest.log
+
+# Dapster changes
+build/
+**/__pycache__/
