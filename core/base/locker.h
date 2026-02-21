@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <time.h>
 #endif
 
 namespace ydlidar {
@@ -55,7 +56,7 @@ class Locker {
     }
 
 #else
-#ifdef _MACOS
+#if defined(__APPLE__)
 
     if (timeout != 0) {
       if (pthread_mutex_lock(&_lock) == 0) {
@@ -78,7 +79,7 @@ class Locker {
       }
     }
 
-#ifndef _MACOS
+#if !defined(__APPLE__)
     else {
       timespec wait_time;
       timeval now;
@@ -212,7 +213,9 @@ class Event {
       fflush(stderr);
     }
 
+  #if !defined(__APPLE__)
     ret = pthread_condattr_setclock(&_cond_cattr, CLOCK_MONOTONIC);
+  #endif
     pthread_mutex_init(&_cond_locker, NULL);
     ret =  pthread_cond_init(&_cond_var, &_cond_cattr);
 #endif
@@ -273,7 +276,11 @@ class Event {
         pthread_cond_wait(&_cond_var, &_cond_locker);
       } else {
         struct timespec wait_time;
+      #if defined(__APPLE__)
+        clock_gettime(CLOCK_REALTIME, &wait_time);
+      #else
         clock_gettime(CLOCK_MONOTONIC, &wait_time);
+      #endif
 
         wait_time.tv_sec += timeout / 1000;
         wait_time.tv_nsec += (timeout % 1000) * 1000000ULL;
