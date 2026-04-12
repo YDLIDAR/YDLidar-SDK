@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
     lidarS2.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
     //////////////////////bool property/////////////////
     /// fixed angle resolution
-    bool b_optvalue = true;
+    bool b_optvalue = false;
     lidarS2.setlidaropt(LidarPropFixedResolution, &b_optvalue, sizeof(bool));
     b_optvalue = false;
     /// rotate 180

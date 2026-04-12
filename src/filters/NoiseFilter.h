@@ -37,18 +37,12 @@ public:
 
 protected:
     void filter_noise(const LaserScan &in,
-                      int lidarType,
-                      int version,
                       LaserScan &out);
     //过滤拖尾方式1
     void filter_tail(const LaserScan &in,
-                     int lidarType,
-                     int version,
                      LaserScan &out);
     //过滤拖尾方式2
     void filter_tail2(const LaserScan &in,
-                      int lidarType,
-                      int version,
                       LaserScan &out);
 
     double calcInclineAngle(double reading1, double reading2,

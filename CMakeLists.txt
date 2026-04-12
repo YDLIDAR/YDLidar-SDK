@@ -5,7 +5,7 @@ project(ydlidar_sdk C CXX)
 # version
 set(YDLIDAR_SDK_VERSION_MAJOR 1)
 set(YDLIDAR_SDK_VERSION_MINOR 2)
-set(YDLIDAR_SDK_VERSION_PATCH 5)
+set(YDLIDAR_SDK_VERSION_PATCH 19)
 set(YDLIDAR_SDK_VERSION ${YDLIDAR_SDK_VERSION_MAJOR}.${YDLIDAR_SDK_VERSION_MINOR}.${YDLIDAR_SDK_VERSION_PATCH})
 
 ##########################################################
@@ -16,7 +16,7 @@ ELSE()
 	SET(CMAKE_MRPT_WORD_SIZE 32)
 ENDIF()
 ##################################################
-#c++ 11
+# Add c++11 Flag
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ##########################################################
@@ -31,6 +31,7 @@ ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
 	#MSVC compiler
 	add_compile_options("/utf-8")
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
+    add_definitions(-DNOMINMAX)
 	ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	#MinGW compiler
 	ENDIF (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")

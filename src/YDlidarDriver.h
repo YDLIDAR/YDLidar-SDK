@@ -584,6 +584,8 @@ class YDlidarDriver : public DriverInterface {
     uint32_t timeout = DEFAULT_TIMEOUT / 2);
   //解析点云数据并判断带不带强度信息
   virtual result_t getIntensityFlag();
+  //获取俯仰角值
+  virtual bool getPitchAngle(float& pitch);
 
  private:
   /// package sample bytes

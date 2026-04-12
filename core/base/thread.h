@@ -1,7 +1,6 @@
 #pragma once
 #include "v8stdint.h"
 #include "timer.h"
-
 #ifdef _WIN32
 #include <conio.h>
 #include <windows.h>

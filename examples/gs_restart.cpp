@@ -122,7 +122,6 @@ int main(int argc, char *argv[])
   std::map<int, int> baudrateList;
   baudrateList[0] = 8000; //网络端口
   baudrateList[1] = 921600; //串口波特率
-  baudrateList[2] = 951600; //串口波特率
   printf("Baudrate:\n");
   for (std::map<int, int>::iterator it = baudrateList.begin();
        it != baudrateList.end(); it++) {
@@ -215,96 +214,50 @@ int main(int argc, char *argv[])
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
   //是否启用调试
-  laser.setEnableDebug(true); 
+  laser.setEnableDebug(false); 
 
-  //雷达初始化
-  bool ret = laser.initialize();
-  if (!ret)
-  {
-    fprintf(stderr, "Fail to initialize %s\n", laser.DescribeError());
-    fflush(stderr);
-    return -1;
-  }
-  //设置雷达工作模式（0表示避障模式，1或2表示沿边模式，3表示固定12Hz避障模式（需要固件支持））
-  // ret &= laser.setWorkMode(3, 0x01);
-  // ret &= laser.setWorkMode(3, 0x02);
-  // ret &= laser.setWorkMode(3, 0x04);
-  // if (!ret)
-  // {
-  //   fprintf(stderr, "Fail to set work mode %s\n", laser.DescribeError());
-  //   fflush(stderr);
-  //   return -1;
-  // }
-  //获取级联雷达设备信息
-  // std::vector<device_info_ex> dis;
-  // ret = laser.getDeviceInfo(dis);
-  // if (!ret)
-  // {
-  //   fprintf(stderr, "Fail to get Device infomations %s\n", laser.DescribeError());
-  //   fflush(stderr);
-  //   return -1;
-  // }
-  // for (int i=0; i<dis.size(); ++i)
-  // {
-  //   const device_info_ex& di = dis.at(i);
-  //   printf("Device [%u]\n", di.id);
-  //   ydlidar::core::common::printfDeviceInfo(di.di, EPT_Module);
-  // }
-
-  //启动扫描
-  ret = laser.turnOn();
-  if (!ret)
-  {
-    fprintf(stderr, "Fail to turn on %s\n", laser.DescribeError());
-    fflush(stderr);
-    return -1;
-  }
-
+  bool ret = true;
   LaserScan scan;
-  //拖尾滤波
-  StrongLightFilter filter;
-  filter.setStrategy(StrongLightFilter::FS_2); //设置策略为截距法
-  filter.setMaxDist(0.025); //设置最大截距为0.025米
-  //打印帧间隔相关
-  std::map<int, uint32_t> ts;
-  for (int i=0; i<LIDAR_MAXCOUNT; ++i)
-    ts[i] = getms();
-
+  uint32_t count = 0; //测试次数
   while (ret && ydlidar::os_isOk())
   {
-    if (laser.doProcessSimple(scan))
+    //雷达初始化，打开串口
+    bool ret = laser.initialize();
+    if (!ret)
     {
-      //printf("Module [%d] [%d] points in [%.02f]Hz\n",
-       // scan.moduleNum,
-       // int(scan.points.size()),
-       // scan.scanFreq);
-      //打印帧间隔
-      uint32_t t = getms();
-      uint32_t dt = t - ts[scan.moduleNum];
-      if (dt > 150)
-      	core::common::warn("module[%d] time[%lld]ms", scan.moduleNum, dt);
+      core::common::error("Fail to initialize %s", laser.DescribeError());
+      return -1;
+    }
+    //启动扫描
+    ret = laser.turnOn();
+    if (!ret)
+    {
+      core::common::error("Fail to turn on");
+      return -1;
+    }
+    //启动后运行5秒然后停止扫描
+    uint64_t t = getms();
+    while (getms() - t < 5000)
+    {
+      if (laser.doProcessSimple(scan))
+      {
+        core::common::info("Module [%d] [%d] points in [%.02f]Hz",
+          scan.moduleNum,
+          int(scan.points.size()),
+          scan.scanFreq);
+      }
       else
-        core::common::info("module[%d] time[%lld]ms", scan.moduleNum, dt);
-      ts[scan.moduleNum] = t;
-      //滤波
-      //filter.filter(scan, 0, 0, scan);
-      //打印点云
-      // for (size_t i = 0; i < scan.points.size(); ++i)
-      // {
-      //   const LaserPoint &p = scan.points.at(i);
-      //     printf("%d a %.02f r %.01f\n", int(i), 
-      //       p.angle * 180.0f / M_PI, p.range * 1000.0f);
-      // }
+      {
+        core::common::error("Failed to get Lidar Data");
+      }
     }
-    else
-    {
-      fprintf(stderr, "Failed to get Lidar Data\n");
-      fflush(stderr);
-    }
+    //停止雷达
+    laser.turnOff();
+    laser.turnOff();
+    //关闭串口
+    laser.disconnecting();
+    core::common::warn("Test count %u", ++count);
   }
-
-  laser.turnOff();
-  laser.disconnecting();
 
   return 0;
 }

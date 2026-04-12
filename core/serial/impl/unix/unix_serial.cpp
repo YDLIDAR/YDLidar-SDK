@@ -53,6 +53,7 @@
 #if defined(MAC_OS_X_VERSION_10_3) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_3)
 #include <IOKit/serial/ioss.h>
 #endif
+#include "core/common/ydlidar_help.h"
 
 /**
 * setup_port - Configure the port, eg. baud rate, data bits,etc.
@@ -656,89 +657,143 @@ Serial::SerialImpl::~SerialImpl() {
   pthread_mutex_destroy(&this->write_mutex);
 }
 
-bool Serial::SerialImpl::open() {
-  if (port_.empty()) {
+bool Serial::SerialImpl::open() 
+{
+  if (port_.empty())
     return false;
-  }
+  if (isOpen())
+    return true;
 
-  if (isOpen()) {
+  if (async_)
+  {
+    pid = -1;
+  #ifdef USE_LOCK_FILE
+    pid = getpid();
+    if (LOCK(port_.c_str(), pid)) {
+      fprintf(stderr, "Could not lock serial port for exclusive access\n");
+      return false;
+    }
+  #endif
+
+    fd_ = ::open(port_.c_str(),
+                O_RDWR | O_NOCTTY | O_NONBLOCK | O_APPEND | O_NDELAY);
+    if (fd_ == -1) {
+      switch (errno) {
+        case EINTR:
+          // Recurse because this is a recoverable error.
+          return open();
+        case EIO:
+  //        fprintf(stderr, "I/O error\n");
+        case ENFILE:
+  //        fprintf(stderr, "File table overflow\n");
+        case EMFILE:
+  //        fprintf(stderr, "Too many open files\n");
+        default:
+  //        fprintf(stderr, "Default: %d\n", errno);
+          close();
+          return false;
+      }
+    }
+
+    termios tio;
+    if (!getTermios(&tio)) {
+      close();
+      return false;
+    }
+
+    set_common_props(&tio);
+    set_databits(&tio, bytesize_);
+    set_parity(&tio, parity_);
+    set_stopbits(&tio, stopbits_);
+    set_flowcontrol(&tio, flowcontrol_);
+
+    if (!setTermios(&tio)) {
+      close();
+      return false;
+    }
+    if (!setBaudrate(baudrate_)) {
+      close();
+      return false;
+    }
+
+    // Update byte_time_ based on the new settings.
+    uint32_t bit_time_ns = 1e9 / baudrate_;
+    byte_time_ns_ = bit_time_ns * (1 + bytesize_ + parity_ + stopbits_);
+    // Compensate for the stopbits_one_point_five enum being equal to int 3,
+    // and not 1.5.
+    if (stopbits_ == stopbits_one_point_five) {
+      byte_time_ns_ += ((1.5 - stopbits_one_point_five) * bit_time_ns);
+    }
+    is_open_ = true;
     return true;
   }
-
-  pid = -1;
-#ifdef USE_LOCK_FILE
-  pid = getpid();
-
-  if (LOCK(port_.c_str(), pid)) {
-    fprintf(stderr, "Could not lock serial port for exclusive access\n");
-    return false;
-  }
-
-#endif
-
-  fd_ = ::open(port_.c_str(),
-               O_RDWR | O_NOCTTY | O_NONBLOCK | O_APPEND | O_NDELAY);
-
-  if (fd_ == -1) {
-    switch (errno) {
-      case EINTR:
-        // Recurse because this is a recoverable error.
-        return open();
-
-      case EIO:
-
-//        fprintf(stderr, "I/O error\n");
-
-      case ENFILE:
-
-//        fprintf(stderr, "File table overflow\n");
-
-      case EMFILE:
-
-//        fprintf(stderr, "Too many open files\n");
-
-      default:
-//        fprintf(stderr, "Default: %d\n", errno);
+  else
+  {
+    pid = -1;
+    fd_ = ::open(port_.c_str(),
+                O_RDWR | O_NOCTTY | O_APPEND | O_NDELAY);
+    if (fd_ == -1) {
+      switch (errno) {
+        case EINTR:
+          // Recurse because this is a recoverable error.
+          return open();
+        case EIO:
+        case ENFILE:
+        case EMFILE:
+        default:
+          close();
+          return false;
+      }
+    }
+    // 设置为阻塞模式
+    // if (fcntl(fd_, F_SETFL, 0) == -1) {
+    //     perror("fcntl error");
+    //     close();
+    //     return false;
+    // }
+    int flags = fcntl(fd_, F_GETFL);
+    if (flags == -1) {
+        ydlidar::core::common::error("fcntl F_GETFL failed");
         close();
         return false;
     }
+    if (fcntl(fd_, F_SETFL, flags & (~O_ASYNC)) == -1) {
+        ydlidar::core::common::error("fcntl F_SETFL failed");
+        close();
+        return false;
+    }
+
+    termios tio;
+    if (!getTermios(&tio)) {
+      close();
+      return false;
+    }
+    set_common_props(&tio);
+    set_databits(&tio, bytesize_);
+    set_parity(&tio, parity_);
+    set_stopbits(&tio, stopbits_);
+    set_flowcontrol(&tio, flowcontrol_);
+    if (!setTermios(&tio)) {
+      close();
+      return false;
+    }
+    if (!setBaudrate(baudrate_)) {
+      close();
+      return false;
+    }
+
+    // Update byte_time_ based on the new settings.
+    uint32_t bit_time_ns = 1e9 / baudrate_;
+    byte_time_ns_ = bit_time_ns * (1 + bytesize_ + parity_ + stopbits_);
+    // Compensate for the stopbits_one_point_five enum being equal to int 3,
+    // and not 1.5.
+    if (stopbits_ == stopbits_one_point_five) {
+      byte_time_ns_ += ((1.5 - stopbits_one_point_five) * bit_time_ns);
+    }
+
+    is_open_ = true;
+    return true;
   }
-
-  termios tio;
-
-  if (!getTermios(&tio)) {
-    close();
-    return false;
-  }
-
-  set_common_props(&tio);
-  set_databits(&tio, bytesize_);
-  set_parity(&tio, parity_);
-  set_stopbits(&tio, stopbits_);
-  set_flowcontrol(&tio, flowcontrol_);
-
-  if (!setTermios(&tio)) {
-    close();
-    return false;
-  }
-
-  if (!setBaudrate(baudrate_)) {
-    close();
-    return false;
-  }
-
-  // Update byte_time_ based on the new settings.
-  uint32_t bit_time_ns = 1e9 / baudrate_;
-  byte_time_ns_ = bit_time_ns * (1 + bytesize_ + parity_ + stopbits_);
-
-  // Compensate for the stopbits_one_point_five enum being equal to int 3,
-  // and not 1.5.
-  if (stopbits_ == stopbits_one_point_five) {
-    byte_time_ns_ += ((1.5 - stopbits_one_point_five) * bit_time_ns);
-  }
-
-  is_open_ = true;
-  return true;
 }
 
 Serial::SerialPortError Serial::SerialImpl::getSystemError(
@@ -840,7 +895,7 @@ void Serial::SerialImpl::close() {
 }
 
 bool Serial::SerialImpl::isOpen() const {
-  return is_open_;
+  return fd_ != -1 && is_open_;
 }
 
 size_t Serial::SerialImpl::available() {
@@ -890,88 +945,106 @@ bool Serial::SerialImpl::waitReadable(uint32_t timeout) {
 }
 
 
-int Serial::SerialImpl::waitfordata(size_t data_count, uint32_t timeout,
-                                    size_t *returned_size) {
-  if (!isOpen()) {
+int Serial::SerialImpl::waitfordata(
+  size_t data_count, 
+  uint32_t timeout,
+  size_t *returned_size)
+{
+  if (!isOpen())
     return -2;
-  }
 
-  size_t length = 0;
-
-  if (returned_size == NULL) {
-    returned_size = (size_t *)&length;
-  }
-
-  *returned_size = 0;
-
-  if (isOpen()) {
-    if (ioctl(fd_, FIONREAD, returned_size) == -1) {
-      return -2;
+  if (async_) //异步
+  {
+    size_t length = 0;
+    if (returned_size == NULL) {
+      returned_size = (size_t *)&length;
+    }
+    *returned_size = 0;
+    if (isOpen()) {
+      if (ioctl(fd_, FIONREAD, returned_size) == -1) {
+        return -2;
+      }
+      if (*returned_size >= data_count) {
+        return 0;
+      }
     }
 
-    if (*returned_size >= data_count) {
-      return 0;
-    }
-  }
+    fd_set readfds;
+    /* Initialize the input set */
+    FD_ZERO(&readfds);
+    FD_SET(fd_, &readfds);
 
-  fd_set readfds;
-  /* Initialize the input set */
-  FD_ZERO(&readfds);
-  FD_SET(fd_, &readfds);
+    MillisecondTimer total_timeout(timeout);
 
-  MillisecondTimer total_timeout(timeout);
+    while (isOpen()) {
+      int64_t timeout_remaining_ms = total_timeout.remaining();
 
-  while (isOpen()) {
-    int64_t timeout_remaining_ms = total_timeout.remaining();
-
-    if ((timeout_remaining_ms <= 0)) {
-      // Timed out
-      return -1;
-    }
-
-    /* Initialize the timeout structure */
-    timespec timeout_val(timespec_from_ms(timeout_remaining_ms));
-
-    /* Do the select */
-    int n = pselect(fd_ + 1, &readfds, NULL, NULL, &timeout_val, NULL);
-
-    if (n < 0) {
-      if (errno == EINTR) {
+      if ((timeout_remaining_ms <= 0)) {
+        // Timed out
         return -1;
       }
 
-      // Otherwise there was some error
-      return -2;
-    } else if (n == 0) {
-      // time out
-      return -1;
-    } else {
-      // data avaliable
-      if (FD_ISSET(fd_, &readfds)) {
-        if (ioctl(fd_, FIONREAD, returned_size) < 0) {
-          return -2;
+      /* Initialize the timeout structure */
+      timespec timeout_val(timespec_from_ms(timeout_remaining_ms));
+
+      /* Do the select */
+      int n = pselect(fd_ + 1, &readfds, NULL, NULL, &timeout_val, NULL);
+
+      if (n < 0) {
+        if (errno == EINTR) {
+          return -1;
         }
 
-        if (*returned_size >= data_count) {
-          return 0;
-        } else {
-          int remain_timeout = timeout_val.tv_sec * 1000000 + timeout_val.tv_nsec / 1000;
-          int expect_remain_time = (data_count - *returned_size) * 1000000 * 8 /
-                                   baudrate_;
-
-          if (remain_timeout > expect_remain_time) {
-            usleep(expect_remain_time);
-          }
-        }
+        // Otherwise there was some error
+        return -2;
+      } else if (n == 0) {
+        // time out
+        return -1;
       } else {
-        usleep(30);
+        // data avaliable
+        if (FD_ISSET(fd_, &readfds)) {
+          if (ioctl(fd_, FIONREAD, returned_size) < 0) {
+            return -2;
+          }
+
+          if (*returned_size >= data_count) {
+            return 0;
+          } else {
+            int remain_timeout = timeout_val.tv_sec * 1000000 + timeout_val.tv_nsec / 1000;
+            int expect_remain_time = (data_count - *returned_size) * 1000000 * 8 /
+                                    baudrate_;
+
+            if (remain_timeout > expect_remain_time) {
+              usleep(expect_remain_time);
+            }
+          }
+        } else {
+          usleep(30);
+        }
       }
     }
+
+    return -2;
   }
-
-  return -2;
+  else
+  {
+    MillisecondTimer t(timeout);
+    while (available() < data_count)
+    {
+      int64_t dt = t.remaining();
+      if ((dt <= 0)) 
+      {
+        // Timed out
+        ydlidar::core::common::warn("Wait for data [%u]ms timeout", timeout);
+        return -1;
+      }
+      usleep(10); //等待
+    }
+    if (returned_size)
+      *returned_size = available();
+    return 0;
+  }
 }
-
 
 void Serial::SerialImpl::waitByteTimes(size_t count) {
   timespec wait_time = { 0, static_cast<long>(byte_time_ns_ * count)};
@@ -1062,102 +1135,122 @@ size_t Serial::SerialImpl::read(uint8_t *buf, size_t size) {
   return bytes_read;
 }
 
-size_t Serial::SerialImpl::write(const uint8_t *data, size_t length) {
-  if (is_open_ == false) {
+size_t Serial::SerialImpl::write(const uint8_t *data, size_t length) 
+{
+  if (!isOpen())
     return 0;
-  }
 
-  fd_set writefds;
-  size_t bytes_written = 0;
+  if (async_)
+  {
+    fd_set writefds;
+    size_t bytes_written = 0;
 
-  // Calculate total timeout in milliseconds t_c + (t_m * N)
-  long total_timeout_ms = timeout_.write_timeout_constant;
-  total_timeout_ms += timeout_.write_timeout_multiplier * static_cast<long>
-                      (length);
-  MillisecondTimer total_timeout(total_timeout_ms);
+    // Calculate total timeout in milliseconds t_c + (t_m * N)
+    long total_timeout_ms = timeout_.write_timeout_constant;
+    total_timeout_ms += timeout_.write_timeout_multiplier * static_cast<long>
+                        (length);
+    MillisecondTimer total_timeout(total_timeout_ms);
 
-  bool first_iteration = true;
+    bool first_iteration = true;
 
-  while (bytes_written < length) {
-    int64_t timeout_remaining_ms = total_timeout.remaining();
+    while (bytes_written < length) {
+      int64_t timeout_remaining_ms = total_timeout.remaining();
 
-    // Only consider the timeout if it's not the first iteration of the loop
-    // otherwise a timeout of 0 won't be allowed through
-    if (!first_iteration && (timeout_remaining_ms <= 0)) {
-      // Timed out
-      break;
-    }
+      // Only consider the timeout if it's not the first iteration of the loop
+      // otherwise a timeout of 0 won't be allowed through
+      if (!first_iteration && (timeout_remaining_ms <= 0)) {
+        // Timed out
+        break;
+      }
 
-    first_iteration = false;
+      first_iteration = false;
 
-    timespec timeout(timespec_from_ms(timeout_remaining_ms));
+      timespec timeout(timespec_from_ms(timeout_remaining_ms));
 
-    FD_ZERO(&writefds);
-    FD_SET(fd_, &writefds);
+      FD_ZERO(&writefds);
+      FD_SET(fd_, &writefds);
 
-    // Do the select
-    int r = pselect(fd_ + 1, NULL, &writefds, NULL, &timeout, NULL);
+      // Do the select
+      int r = pselect(fd_ + 1, NULL, &writefds, NULL, &timeout, NULL);
 
-    // Figure out what happened by looking at select's response 'r'
-    /** Error **/
-    if (r < 0) {
-      // Select was interrupted, try again
-      if (errno == EINTR) {
+      // Figure out what happened by looking at select's response 'r'
+      /** Error **/
+      if (r < 0) {
+        // Select was interrupted, try again
+        if (errno == EINTR) {
+          continue;
+        }
+
+        // Otherwise there was some error
         continue;
       }
 
-      // Otherwise there was some error
-      continue;
-    }
-
-    /** Timeout **/
-    if (r == 0) {
-      break;
-    }
-
-    /** Port ready to write **/
-    if (r > 0) {
-      // Make sure our file descriptor is in the ready to write list
-      if (FD_ISSET(fd_, &writefds)) {
-        // This will write some
-        ssize_t bytes_written_now = ::write(fd_, data + bytes_written,
-                                            length - bytes_written);
-
-        // write should always return some data as select reported it was
-        // ready to write when we get to this point.
-        if (bytes_written_now < 1) {
-          // Disconnected devices, at least on Linux, show the
-          // behavior that they are always ready to write immediately
-          // but writing returns nothing.
-          continue;
-        }
-
-        // Update bytes_written
-        bytes_written += static_cast<size_t>(bytes_written_now);
-
-        // If bytes_written == size then we have written everything we need to
-        if (bytes_written == length) {
-          break;
-        }
-
-        // If bytes_written < size then we have more to write
-        if (bytes_written < length) {
-          continue;
-        }
-
-        // If bytes_written > size then we have over written, which shouldn't happen
-        if (bytes_written > length) {
-          break;
-        }
+      /** Timeout **/
+      if (r == 0) {
+        break;
       }
 
-      // This shouldn't happen, if r > 0 our fd has to be in the list!
-      break;
-      //THROW (IOException, "select reports ready to write, but our fd isn't in the list, this shouldn't happen!");
-    }
-  }
+      /** Port ready to write **/
+      if (r > 0) {
+        // Make sure our file descriptor is in the ready to write list
+        if (FD_ISSET(fd_, &writefds)) {
+          // This will write some
+          ssize_t bytes_written_now = ::write(fd_, data + bytes_written,
+                                              length - bytes_written);
 
-  return bytes_written;
+          // write should always return some data as select reported it was
+          // ready to write when we get to this point.
+          if (bytes_written_now < 1) {
+            // Disconnected devices, at least on Linux, show the
+            // behavior that they are always ready to write immediately
+            // but writing returns nothing.
+            continue;
+          }
+
+          // Update bytes_written
+          bytes_written += static_cast<size_t>(bytes_written_now);
+
+          // If bytes_written == size then we have written everything we need to
+          if (bytes_written == length) {
+            break;
+          }
+
+          // If bytes_written < size then we have more to write
+          if (bytes_written < length) {
+            continue;
+          }
+
+          // If bytes_written > size then we have over written, which shouldn't happen
+          if (bytes_written > length) {
+            break;
+          }
+        }
+
+        // This shouldn't happen, if r > 0 our fd has to be in the list!
+        break;
+        //THROW (IOException, "select reports ready to write, but our fd isn't in the list, this shouldn't happen!");
+      }
+    }
+
+    return bytes_written;
+  }
+  else
+  {
+    ssize_t realSize = ::write(fd_, data, length);
+    if (realSize < 1)
+    {
+        ydlidar::core::common::error("Failed to write serial port data [%d]", errno);
+        return 0;
+    }
+    else if (realSize < length)
+    {
+        ydlidar::core::common::warn("Failed to write serial port data, "
+                      "real size [%ld] < expect size [%u]", 
+            realSize, length);
+        return realSize;
+    }
+    return realSize;
+  }
 }
 
 void Serial::SerialImpl::setPort(const string &port) {

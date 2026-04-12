@@ -76,10 +76,29 @@ bool NoiseFilter::isIncreasing(double value) const {
     return false;
 }
 
+void NoiseFilter::filter(
+        const LaserScan &ins,
+        int lidarType,
+        int version,
+        LaserScan &out)
+{
+    const LaserScan in = ins; //复制
+    if (FS_Normal == m_strategy)
+    {
+        filter_noise(in, out);
+    }
+    else if (FS_Tail == m_strategy)
+    {
+        filter_tail(in, out);
+    }
+    else
+    {
+        filter_tail2(in, out);
+    }
+}
+
 void NoiseFilter::filter_noise(
         const LaserScan &in,
-        int /*lidarType*/,
-        int /*version*/,
         LaserScan &out)
 {
     //range is empty
@@ -224,30 +243,8 @@ void NoiseFilter::filter_noise(
     }
 }
 
-void NoiseFilter::filter(
-        const LaserScan &in,
-        int lidarType,
-        int version,
-        LaserScan &out)
-{
-    if (FS_Normal == m_strategy)
-    {
-        filter_noise(in, lidarType, version, out);
-    }
-    else if (FS_Tail == m_strategy)
-    {
-        filter_tail(in, lidarType, version, out);
-    }
-    else
-    {
-        filter_tail2(in, lidarType, version, out);
-    }
-}
-
 void NoiseFilter::filter_tail(
         const LaserScan &in,
-        int /*lidarType*/,
-        int /*version*/,
         LaserScan &out)
 {
 //    printf("%s\n", __FUNCTION__);
@@ -437,8 +434,6 @@ void NoiseFilter::filter_tail(
 
 void NoiseFilter::filter_tail2(
         const LaserScan &in,
-        int /*lidarType*/,
-        int /*version*/,
         LaserScan &out)
 {
     //    LOG_DEBUG("[{}] 点数[{}]",

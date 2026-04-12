@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
   //初始化
   ydlidar::os_init();
   //初始化串口号
-  std::string port = "/dev/ttyCH341USB0";
+  std::string port = "/dev/ttyUSB0"; ///dev/ttyCH341USB0
   // std::map<std::string, std::string> ports = ydlidar::lidarPortList();
   // std::map<std::string, std::string>::iterator it;
   // if (ports.size() == 1)
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
   //   }
   // }
 
-  int baudrate = 921600; //默认串口号
+  int baudrate = 921600; //默认波特率
 
   bool isSingleChannel = false;
   

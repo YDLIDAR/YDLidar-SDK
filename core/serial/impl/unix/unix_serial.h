@@ -37,7 +37,7 @@ class Serial::SerialImpl {
 
   virtual ~SerialImpl();
 
-  bool open();
+  bool open(); //打开
 
   Serial::SerialPortError getSystemError(int systemErrorCode) const;
 
@@ -56,7 +56,6 @@ class Serial::SerialImpl {
   size_t read(uint8_t *buf, size_t size = 1);
 
   size_t write(const uint8_t *data, size_t length);
-
 
   void flush();
 
@@ -137,6 +136,7 @@ class Serial::SerialImpl {
   bool is_open_;
   bool xonxoff_;
   bool rtscts_;
+  bool async_ = true; //异步标记
 
   Timeout timeout_;           // Timeout for read operations
   unsigned long baudrate_;    // Baudrate
