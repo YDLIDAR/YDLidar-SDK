@@ -41,6 +41,47 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *----------------------------------------------------------------------------*/
 #include "SimpleSocket.h"
+
+#ifndef IOCTLSOCKET
+#define IOCTLSOCKET ioctl
+#endif
+
+#ifndef SETSOCKOPT
+#define SETSOCKOPT setsockopt
+#endif
+
+#ifndef GETSOCKOPT
+#define GETSOCKOPT getsockopt
+#endif
+
+#ifndef SEND
+#define SEND send
+#endif
+
+#ifndef SENDTO
+#define SENDTO sendto
+#endif
+
+#ifndef RECV
+#define RECV recv
+#endif
+
+#ifndef RECVFROM
+#define RECVFROM recvfrom
+#endif
+
+#ifndef CLOSE
+#define CLOSE close
+#endif
+
+#ifndef WRITEV
+#define WRITEV writev
+#endif
+
+#ifndef SELECT
+#define SELECT select
+#endif
+
 using namespace ydlidar;
 using namespace ydlidar::core;
 using namespace ydlidar::core::network;
@@ -651,8 +692,7 @@ bool CSimpleSocket::Flush() {
   //--------------------------------------------------------------------------
   // Get the current setting of the TCP_NODELAY flag.
   //--------------------------------------------------------------------------
-  if (GETSOCKOPT(m_socket, IPPROTO_TCP, TCP_NODELAY, &nCurFlags,
-                 sizeof(int32_t)) == 0) {
+  if (GETSOCKOPT(m_socket, IPPROTO_TCP, TCP_NODELAY, &nCurFlags, (socklen_t*)sizeof(int32_t))) {
     //----------------------------------------------------------------------
     // Set TCP NoDelay flag
     //----------------------------------------------------------------------
@@ -944,8 +984,7 @@ int32_t CSimpleSocket::Receive(int32_t nMaxBytes, uint8_t *pBuffer) {
             break;
           }
 
-          m_nBytesReceived = RECVFROM(m_socket, pWorkBuffer, nMaxBytes, 0,
-                                      &m_stMulticastGroup, &srcSize);
+          m_nBytesReceived = RECVFROM(m_socket, pWorkBuffer, nMaxBytes, 0, (struct sockaddr *)&m_stMulticastGroup, (socklen_t *)&srcSize);
           TranslateSocketError();
 
           if (m_nBytesReceived >= nMaxBytes) {
@@ -961,8 +1000,7 @@ int32_t CSimpleSocket::Receive(int32_t nMaxBytes, uint8_t *pBuffer) {
             break;
           }
 
-          m_nBytesReceived = RECVFROM(m_socket, pWorkBuffer, nMaxBytes, 0,
-                                      &m_stClientSockaddr, &srcSize);
+          m_nBytesReceived = RECVFROM(m_socket, pWorkBuffer, nMaxBytes, 0, (struct sockaddr *)&m_stClientSockaddr, (socklen_t *)&srcSize);
           TranslateSocketError();
 
           if (m_nBytesReceived >= nMaxBytes) {
@@ -1379,7 +1417,7 @@ bool CSimpleSocket::Select(int32_t nTimeoutSec, int32_t nTimeoutUSec) {
            (FD_ISSET(m_socket, &m_writeFds))) {
     int32_t nLen = sizeof(nError);
 
-    if (GETSOCKOPT(m_socket, SOL_SOCKET, SO_ERROR, &nError, &nLen) == 0) {
+    if (GETSOCKOPT(m_socket, SOL_SOCKET, SO_ERROR, &nError, (socklen_t*)&nLen) == 0) {
       errno = nError;
 
       if (nError == 0) {
@@ -1448,7 +1486,7 @@ int CSimpleSocket::WaitForData(size_t data_count, uint32_t timeout,
         int32_t nLen = sizeof(nError);
         int bRetVal = -2;
 
-        if (GETSOCKOPT(m_socket, SOL_SOCKET, SO_ERROR, &nError, &nLen) == 0) {
+        if (GETSOCKOPT(m_socket, SOL_SOCKET, SO_ERROR, &nError, (socklen_t*)&nLen) == 0) {
           errno = nError;
 
           if (nError == 0) {
@@ -1491,7 +1529,7 @@ int CSimpleSocket::WaitForData(size_t data_count, uint32_t timeout,
       if (IOCTLSOCKET(m_socket, FIONREAD, returned_size) == -1) {
         int32_t nLen = sizeof(nError);
 
-        if (GETSOCKOPT(m_socket, SOL_SOCKET, SO_ERROR, &nError, &nLen) == 0) {
+        if (GETSOCKOPT(m_socket, SOL_SOCKET, SO_ERROR, &nError, (socklen_t*)&nLen) == 0) {
           errno = nError;
         }
 
