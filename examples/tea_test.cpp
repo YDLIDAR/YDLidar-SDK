@@ -101,65 +101,11 @@ int main(int argc, char *argv[])
       printf("Please enter the lidar IP: ");
       std::cin >> port;
     }
-
-  //串口
-  // ports = ydlidar::lidarPortList();
-  // if (ports.size() == 1)
-  // {
-  //   port = ports.begin()->second;
-  // }
-  // else
-  // {
-  //   int id = 0;
-
-  //   for (it = ports.begin(); it != ports.end(); it++)
-  //   {
-  //     printf("[%d] %s %s\n", id, it->first.c_str(), it->second.c_str());
-  //     id++;
-  //   }
-
-  //   if (ports.empty())
-  //   {
-  //     printf("Not Lidar was detected. Please enter the lidar serial port:");
-  //     std::cin >> port;
-  //   }
-  //   else
-  //   {
-  //     while (ydlidar::os_isOk())
-  //     {
-  //       printf("Please select the lidar port:");
-  //       std::string number;
-  //       std::cin >> number;
-
-  //       if ((size_t)atoi(number.c_str()) >= ports.size())
-  //       {
-  //         continue;
-  //       }
-
-  //       it = ports.begin();
-  //       id = atoi(number.c_str());
-
-  //       while (id)
-  //       {
-  //         id--;
-  //         it++;
-  //       }
-
-  //       port = it->second;
-  //       break;
-  //     }
-  //   }
-  // }
-
   }
 
-  // int baudrate = 512000; //8090
   int baudrate = 8090;
-
   bool isSingleChannel = false;
-
   float frequency = 20.0f;
-
   // std::string input_frequency;
   // while (ydlidar::os_isOk() && !isSingleChannel)
   // {
@@ -191,8 +137,7 @@ int main(int argc, char *argv[])
   int optval = TYPE_TOF;
   laser.setlidaropt(LidarPropLidarType, &optval, sizeof(int));
   /// device type
-  // optval = YDLIDAR_TYPE_SERIAL;
-  optval = YDLIDAR_TYPE_TCP;
+  optval = YDLIDAR_TYPE_UDP; //YDLIDAR_TYPE_UDP,YDLIDAR_TYPE_TCP
   laser.setlidaropt(LidarPropDeviceType, &optval, sizeof(int));
   /// sample rate
   optval = 20;
@@ -200,8 +145,8 @@ int main(int argc, char *argv[])
   /// abnormal count
   optval = 4;
   laser.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
-  //  optval = 16;
-  //  laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
+  optval = 16;
+  laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
@@ -238,11 +183,11 @@ int main(int argc, char *argv[])
   /// unit: Hz
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
+  laser.setAutoIntensity(false);
   // laser.setEnableDebug(true); //启用调试
 
   /// initialize SDK and LiDAR.
   bool ret = laser.initialize();
-
   if (ret)
   { // success
     /// Start the device scanning routine which runs on a separate thread and enable motor.
@@ -284,7 +229,8 @@ int main(int argc, char *argv[])
       // for (size_t i = 0; i < scan.points.size(); ++i)
       // {
       //   const LaserPoint &p = scan.points.at(i);
-      //   printf("%d d %.0f a %.02f i %.0f\n", i, p.range, p.angle * 180.0 / M_PI, p.intensity);
+      //   printf("%d d %.0f a %.02f i %.0f\n", 
+      //     i, p.range * SDK_UNIT1000, p.angle * SDK_ANGLE180 / M_PI, p.intensity);
       // }
       // fflush(stdout);
 

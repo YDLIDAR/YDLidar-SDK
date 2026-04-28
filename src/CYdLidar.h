@@ -222,7 +222,7 @@ class YDLIDAR_API CYdLidar {
    * @brief Get LiDAR Health state
    * @return true if the device is in good health, If it's not
    */
-  bool getDeviceHealth();
+  bool getHealthInfo();
 
   /**
    * @brief Get LiDAR Device information
@@ -265,7 +265,7 @@ class YDLIDAR_API CYdLidar {
    * @brief Check if the LiDAR Offset Angle is corrected.
    * @param serialNumber    LiDAR serial number
    */
-  bool checkCalibrationAngle(const std::string &serialNumber);
+  bool checkZeroAngle(const std::string &serialNumber);
 
   /**
     * @brief Whether the current LiDAR range is valid

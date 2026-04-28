@@ -286,7 +286,7 @@ result_t ETLidarDriver::startScan(bool force, uint32_t timeout) {
       return RESULT_FAIL;
     }
 
-    ans = this->createThread();
+    ans = this->startThread();
     return ans;
   }
 
@@ -313,7 +313,7 @@ result_t ETLidarDriver::stop() {
   return RESULT_OK;
 }
 
-result_t ETLidarDriver::createThread() {
+result_t ETLidarDriver::startThread() {
   m_isScanning = true;
   _thread = CLASS_THREAD(ETLidarDriver, cacheScanData);
 
@@ -1014,7 +1014,7 @@ int ETLidarDriver::cacheScanData() {
   memset(local_scan, 0, sizeof(local_scan));
   waitScanData(local_buf, count);
 
-  int timeout_count   = 0;
+  int timeoutCount   = 0;
   retryCount = 0;
   m_BufferSize = 0;
   m_InvalidNodeCount = 0;
@@ -1025,7 +1025,7 @@ int ETLidarDriver::cacheScanData() {
     ans = waitScanData(local_buf, count);
 
     if (!IS_OK(ans)) {
-      if (IS_FAIL(ans) || timeout_count > DEFAULT_TIMEOUT_COUNT) {
+      if (IS_FAIL(ans) || timeoutCount > DEFAULT_TIMEOUT_COUNT) {
         if (!isAutoReconnect) {
           fprintf(stderr, "exit scanning thread!!\n");
           fflush(stderr);
@@ -1042,7 +1042,7 @@ int ETLidarDriver::cacheScanData() {
           ans = checkAutoConnecting();
 
           if (IS_OK(ans)) {
-            timeout_count = 0;
+            timeoutCount = 0;
             local_scan[0].sync = NODE_UNSYNC;
           } else {
             m_isScanning = false;
@@ -1050,18 +1050,18 @@ int ETLidarDriver::cacheScanData() {
           }
         }
       } else {
-        timeout_count++;
+        timeoutCount++;
         local_scan[0].sync = NODE_UNSYNC;
 
         if (m_driverErrno == NoError) {
           setDriverError(TimeoutError);
         }
 
-        fprintf(stderr, "timeout count: %d\n", timeout_count);
+        fprintf(stderr, "timeout count: %d\n", timeoutCount);
         fflush(stderr);
       }
     } else {
-      timeout_count = 0;
+      timeoutCount = 0;
       retryCount = 0;
       m_BufferSize = 0;
       m_last_frame_valid = true;

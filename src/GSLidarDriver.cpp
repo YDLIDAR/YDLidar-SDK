@@ -399,28 +399,28 @@ result_t GSLidarDriver::waitResponseHeader(gs_package_head *header,
     
         switch (recvPos) {
             case 0:
-              if (currentByte != LIDAR_ANS_SYNC_BYTE1) {
+              if (currentByte != PHA5) {
                   recvPos = 0;
                   continue;
               }
               break;
     
             case 1:
-              if (currentByte != LIDAR_ANS_SYNC_BYTE1) {
+              if (currentByte != PHA5) {
                   recvPos = 0;
                   continue;
               }
               break;
     
             case 2:
-              if (currentByte != LIDAR_ANS_SYNC_BYTE1) {
+              if (currentByte != PHA5) {
                   recvPos = 0;
                   continue;
               }
               break;
     
             case 3:
-              if (currentByte != LIDAR_ANS_SYNC_BYTE1) {
+              if (currentByte != PHA5) {
                   recvPos = 0;
                   continue;
               }
@@ -475,31 +475,31 @@ result_t GSLidarDriver::waitResponseHeaderEx(
             uint8_t currentByte = recvBuffer[pos];
             switch (recvPos) {
             case 0:
-                if (currentByte != LIDAR_ANS_SYNC_BYTE1) {
+                if (currentByte != PHA5) {
                     recvPos = 0;
                     continue;
                 }
                 break;
             case 1:
-                if (currentByte != LIDAR_ANS_SYNC_BYTE1) {
+                if (currentByte != PHA5) {
                     recvPos = 0;
                     continue;
                 }
                 break;
             case 2:
-                if (currentByte != LIDAR_ANS_SYNC_BYTE1) {
+                if (currentByte != PHA5) {
                     recvPos = 0;
                     continue;
                 }
                 break;
             case 3:
-                if (currentByte != LIDAR_ANS_SYNC_BYTE1) {
+                if (currentByte != PHA5) {
                     recvPos = 0;
                     continue;
                 }
                 break;
             case 4:
-                if (currentByte == LIDAR_ANS_SYNC_BYTE1)
+                if (currentByte == PHA5)
                     continue;
                 break;
             case 5:
@@ -588,7 +588,7 @@ int GSLidarDriver::cacheScanData()
     size_t         scan_count = 0;
     result_t       ans = RESULT_FAIL;
 
-    int timeout_count = 0;
+    int timeoutCount = 0;
     retryCount = 0;
     lastStamp = 0;
 
@@ -608,15 +608,15 @@ int GSLidarDriver::cacheScanData()
         {
             if (IS_FAIL(ans))
             {
-                timeout_count ++;
+                timeoutCount ++;
             }
             else
             {
-                timeout_count += 2;
+                timeoutCount += 2;
                 if (m_driverErrno != BlockError)
                     setDriverError(TimeoutError);
             }
-            fprintf(stderr, "[GSLIDAR] Timeout count: %d\n", timeout_count);
+            fprintf(stderr, "[GSLIDAR] Timeout count: %d\n", timeoutCount);
             fflush(stderr);
             // 重连雷达
             if (!isAutoReconnect)
@@ -626,12 +626,12 @@ int GSLidarDriver::cacheScanData()
                 m_isScanning = false;
                 return RESULT_FAIL;
             }
-            else if (timeout_count > DEFAULT_TIMEOUT_COUNT)
+            else if (timeoutCount > DEFAULT_TIMEOUT_COUNT)
             {
                 ans = checkAutoConnecting();
                 if (IS_OK(ans))
                 {
-                    timeout_count = 0;
+                    timeoutCount = 0;
                 }
                 else
                 {
@@ -642,7 +642,7 @@ int GSLidarDriver::cacheScanData()
         } 
         else 
         {
-            timeout_count = 0;
+            timeoutCount = 0;
             retryCount = 0;
 
             {
@@ -706,35 +706,35 @@ PARSEHEAD:
                 switch (pos)
                 {
                 case 0:
-                    if (c != LIDAR_ANS_SYNC_BYTE1)
+                    if (c != PHA5)
                     {
                         pos = 0;
                         continue;
                     }
                     break;
                 case 1:
-                    if (c != LIDAR_ANS_SYNC_BYTE1)
+                    if (c != PHA5)
                     {
                         pos = 0;
                         continue;
                     }
                     break;
                 case 2:
-                    if (c != LIDAR_ANS_SYNC_BYTE1)
+                    if (c != PHA5)
                     {
                         pos = 0;
                         continue;
                     }
                     break;
                 case 3:
-                    if (c != LIDAR_ANS_SYNC_BYTE1)
+                    if (c != PHA5)
                     {
                         pos = 0;
                         continue;
                     }
                     break;
                 case 4:
-                    if (c == LIDAR_ANS_SYNC_BYTE1) //过滤出现超过4个包头标识的情况
+                    if (c == PHA5) //过滤出现超过4个包头标识的情况
                         continue;
                     moduleNum = uint8_t(c >> 1); //模组地址转编号: 1, 2, 4
                     CheckSumCal = c;
@@ -1416,7 +1416,7 @@ result_t GSLidarDriver::startScan(bool force, uint32_t timeout)
             return ans;
         }
         //启动线程
-        ans = createThread();
+        ans = startThread();
         m_isScanning = true;
     }
 
@@ -1445,7 +1445,7 @@ result_t GSLidarDriver::stopScan(uint32_t timeout)
     return RESULT_OK;
 }
 
-result_t GSLidarDriver::createThread()
+result_t GSLidarDriver::startThread()
 {
     m_thread = new std::thread(&GSLidarDriver::cacheScanData, this);
     if (!m_thread)
@@ -1518,18 +1518,6 @@ result_t GSLidarDriver::reset(uint8_t addr, uint32_t timeout) {
 
 std::string GSLidarDriver::getSDKVersion() {
     return YDLIDAR_SDK_VERSION_STR;
-}
-
-std::map<std::string, std::string> GSLidarDriver::lidarPortList() {
-    std::vector<PortInfo> lst = list_ports();
-    std::map<std::string, std::string> ports;
-
-    for (std::vector<PortInfo>::iterator it = lst.begin(); it != lst.end(); it++) {
-        std::string port = "ydlidar" + (*it).device_id;
-        ports[port] = (*it).port;
-    }
-
-    return ports;
 }
 
 const char *GSLidarDriver::DescribeError(bool isTCP) 

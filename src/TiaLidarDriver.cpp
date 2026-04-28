@@ -242,7 +242,7 @@ result_t TiaLidarDriver::getDeviceInfo(device_info &di, uint32_t timeout)
 //         !IS_OK(startScan()))
 //         return RESULT_FAIL;
 
-//     ret = createThread();
+//     ret = startThread();
 
 //     return ret;
 // }
@@ -267,7 +267,7 @@ result_t TiaLidarDriver::getDeviceInfo(device_info &di, uint32_t timeout)
 //     return RESULT_OK;
 // }
 
-bool TiaLidarDriver::createThread()
+bool TiaLidarDriver::startThread()
 {
     m_thread = new std::thread(&TiaLidarDriver::parseScanDataThread, this);
     if (!m_thread)
@@ -293,7 +293,7 @@ result_t TiaLidarDriver::startScan(bool force, uint32_t timeout)
 
     bool ret = setParam(P_TIA_SCANTYPE, 0);
 
-    ret &= createThread();
+    ret &= startThread();
 
     return ret ? RESULT_OK : RESULT_FAIL;
 }
@@ -524,7 +524,7 @@ int TiaLidarDriver::parseScanDataThread()
     size_t         count = TIA_PACKMAXNODES;
     size_t         scan_count = 0;
     result_t       ans = RESULT_FAIL;
-    int timeout_count = 0;
+    int timeoutCount = 0;
 
     memset(local_scan, 0, sizeof(local_scan));
     lastZeroTime = getms();
@@ -539,7 +539,7 @@ int TiaLidarDriver::parseScanDataThread()
         ans = getScanData(local_buf, count);
         if (!IS_OK(ans))
         {
-            if (timeout_count > DEFAULT_TIMEOUT_COUNT)
+            if (timeoutCount > DEFAULT_TIMEOUT_COUNT)
             {
                 if (!isAutoReconnect)
                 {
@@ -551,7 +551,7 @@ int TiaLidarDriver::parseScanDataThread()
                 {
                     ans = checkAutoConnecting(); //重连
                     if (IS_OK(ans)) {
-                        timeout_count = 0;
+                        timeoutCount = 0;
                         local_scan[0].sync = NODE_UNSYNC;
                     } else {
                         m_isScanning = false;
@@ -561,14 +561,14 @@ int TiaLidarDriver::parseScanDataThread()
             }
             else
             {
-                timeout_count ++;
+                timeoutCount ++;
                 local_scan[0].sync = NODE_UNSYNC;
-                error("Timout count [%d]", timeout_count);
+                error("Timout count [%d]", timeoutCount);
             }
         }
         else
         {
-            timeout_count = 0;
+            timeoutCount = 0;
 
             for (size_t i = 0; i < count; ++i)
             {

@@ -200,7 +200,7 @@ private:
     virtual result_t stopScan(
             uint32_t timeout = SDK_TIMEOUT);
     //创建线程
-    bool createThread();
+    bool startThread();
     //销毁线程
     void deleteThread();
     //启动扫描

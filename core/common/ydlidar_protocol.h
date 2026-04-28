@@ -62,15 +62,15 @@
 #define LIDAR_CMD_GET_DEVICE_HEALTH         0x92
 #define LIDAR_CMD_SYNC_BYTE                 0xA5
 #define LIDAR_CMDFLAG_HAS_PAYLOAD           0x80
-#define LIDAR_RESP_SYNCBIT        (0x1<<0)
+#define LIDAR_RESP_SYNCBIT 0x01 //零位包标记
 #define LIDAR_RESP_QUALITY_SHIFT  2
-#define LIDAR_RESP_CHECKBIT       (0x1<<0)
+#define LIDAR_RESP_CHECKBIT 0x01 //点云包中角度标记
 #define LIDAR_RESP_ANGLE_SHIFT    1
 #define LIDAR_RESP_DIST_SHIFT  2
 #define LIDAR_RESP_ANGLE_SAMPLE_SHIFT 8
 
-#define LIDAR_ANS_SYNC_BYTE1                0xA5
-#define LIDAR_ANS_SYNC_BYTE2                0x5A
+#define PHA5 0xA5
+#define PH5A 0x5A
 #define LIDAR_ANS_TYPE_DEVINFO              0x04
 #define LIDAR_ANS_TYPE_DEVHEALTH            0x06
 #define LIDAR_ANS_TYPE_PITCH                0x10
@@ -127,13 +127,14 @@
 
 #define SDK_SNLEN 16 //序列号长度
 
-/// Default Node Quality
-#define Node_Default_Quality (10)
-/// Starting Node
-#define NODE_SYNC 1
-/// Normal Node
-#define NODE_UNSYNC 2
-/// Package Header
+#define NODE_SYNC 1 //Start Node
+#define NODE_UNSYNC 2 // Normal Node
+//信号强度位数
+#define NODE_QUAL0 0
+#define NODE_QUAL8 8
+#define NODE_QUAL10 10
+#define NODE_QUAL16 16
+//Package Header
 #define PH 0x55AA
 #define PH1 0xAA
 #define PH2 0x55 //AA55是点云数据
@@ -173,6 +174,14 @@
 #define SDK_ANGLE180 180.0f
 #define SDK_ANGLE90 90.0f
 #define SDK_ANGLE0 0.0f
+//大小
+#define SDK_SIZE1K 1024
+#define SDK_SIZE1M (1024 * SDK_SIZE1K)
+#define SDK_UNIT10 10.0
+#define SDK_UNIT100 100.0
+#define SDK_UNIT1000 1000.0
+#define SDK_UNIT128 128.0
+#define SDK_UNIT64 64.0
 
 /// CT Package Type
 typedef enum {
@@ -265,6 +274,7 @@ struct tof_node_package {
   uint16_t  cs;
   tof_node  nodes[TRI_PACKMAXNODES];
 } __attribute__((packed));
+#define TOFPACKSIZE sizeof(tof_node_package)
 
 //时间戳结构体
 struct stamp_package {
@@ -274,7 +284,7 @@ struct stamp_package {
   uint32_t stamp; //时间戳
   uint8_t reserved; //保留字段
 } __attribute__((packed));
-#define SIZE_STAMPPACKAGE sizeof(stamp_package)
+#define STAMPPACKSIZE sizeof(stamp_package)
 
 //设备信息结构体
 struct device_info {
@@ -295,44 +305,49 @@ struct device_info_ex {
 struct device_health {
   uint8_t   status; ///< health state
   uint16_t  error_code; ///< error code
-} __attribute__((packed))  ;
+} __attribute__((packed));
+#define HEALTHINFOSIZE sizeof(device_health)
 
 /// LiDAR sampling Rate struct
 struct sampling_rate {
   uint8_t rate;	///< sample rate
-} __attribute__((packed))  ;
+} __attribute__((packed));
+#define SAMPLERATESIZE sizeof(sampling_rate)
 
 /// LiDAR scan frequency struct
 struct scan_frequency {
   uint32_t frequency;	///< scan frequency
-} __attribute__((packed))  ;
+} __attribute__((packed));
+#define SCANFREQSIZE sizeof(scan_frequency)
 
 struct scan_rotation {
   uint8_t rotation;
-} __attribute__((packed))  ;
+} __attribute__((packed));
 
 /// LiDAR Exposure struct
 struct scan_exposure {
   uint8_t exposure;	///< low exposure
-} __attribute__((packed))  ;
+} __attribute__((packed));
 
 /// LiDAR Heart beat struct
 struct scan_heart_beat {
   uint8_t enable;	///< heart beat
 } __attribute__((packed));
+#define HEARTBEATSIZE sizeof(scan_heart_beat)
 
 struct scan_points {
   uint8_t flag;
-} __attribute__((packed))  ;
+} __attribute__((packed));
 
 struct function_state {
   uint8_t state;
-} __attribute__((packed))  ;
+} __attribute__((packed));
 
 /// LiDAR Zero Offset Angle
 struct offset_angle {
   int32_t angle;
-} __attribute__((packed))  ;
+} __attribute__((packed));
+#define OFFSETANGLESIZE sizeof(offset_angle)
 
 /// LiDAR request command packet
 struct cmd_packet {
@@ -340,7 +355,7 @@ struct cmd_packet {
   uint8_t cmd_flag;
   uint8_t size;
   uint8_t data;
-} __attribute__((packed)) ;
+} __attribute__((packed));
 
 /// LiDAR response Header
 struct lidar_ans_header {

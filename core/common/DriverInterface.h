@@ -494,14 +494,6 @@ namespace ydlidar
           return RESULT_FAIL; 
         }
 
-        /**
-         * @brief 解析点云数据并判断带不带强度信息（目前只针对三角雷达）
-         * @return 成功返回RESULT_OK，否则返回非RESULT_OK
-         */
-        virtual result_t getIntensityFlag() { 
-          return RESULT_OK; 
-        }
-
         //获取俯仰角值
         virtual bool getPitchAngle(float& pitch) {
           UNUSED(pitch);

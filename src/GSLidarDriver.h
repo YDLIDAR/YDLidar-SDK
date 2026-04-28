@@ -117,12 +117,6 @@ namespace ydlidar
     virtual std::string getSDKVersion();
 
     /*!
-     * @brief lidarPortList 获取雷达端口
-     * @return 在线雷达列表
-     */
-    static std::map<std::string, std::string> lidarPortList();
-
-    /*!
      * @brief 扫图状态 \n
      * @return 返回当前雷达扫图状态
      * @retval true     正在扫图
@@ -234,7 +228,7 @@ namespace ydlidar
      * @brief 创建解析雷达数据线程 \n
      * @note 创建解析雷达数据线程之前，必须使用::startScan函数开启扫图成功
      */
-    result_t createThread();
+    result_t startThread();
 
     /*!
      * @brief 重新连接开启扫描 \n

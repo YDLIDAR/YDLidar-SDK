@@ -113,7 +113,7 @@ public:
     //激光数据解析线程
     int cacheScanData();
 
-    result_t createThread();
+    result_t startThread();
 
     result_t startScan(bool force = false, uint32_t timeout = DEFAULT_TIMEOUT);
 

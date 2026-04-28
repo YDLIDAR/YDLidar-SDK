@@ -61,64 +61,16 @@ namespace ydlidar {
 using namespace core;
 using namespace core::common;
 
-/*!
-* Class that provides a lidar interface.
-*/
-class YDlidarDriver : public DriverInterface {
- public:
-  /*!
-  * A constructor.
-  * A more elaborate description of the constructor.
-  */
+//通用雷达类
+class YDlidarDriver : public DriverInterface 
+{
+public:
   explicit YDlidarDriver(uint8_t type = YDLIDAR_TYPE_SERIAL);
-
-  /*!
-  * A destructor.
-  * A more elaborate description of the destructor.
-  */
   virtual ~YDlidarDriver();
 
-  /**
-   * @brief Connecting Lidar \n
-   * After the connection if successful, you must use ::disconnect to close
-   * @param[in] port_path    serial port
-   * @param[in] baudrate    serial baudrate，YDLIDAR-SS：
-   *     230400 G2-SS-1 R2-SS-1
-   * @return connection status
-   * @retval 0     success
-   * @retval < 0   failed
-   * @note After the connection if successful, you must use ::disconnect to close
-   * @see function ::YDlidarDriver::disconnect ()
-   */
   virtual result_t connect(const char *port_path, uint32_t baudrate);
-
-  /**
-   * @brief Returns a human-readable description of the given error code
-   *  or the last error code of a socket or serial port
-   * @param isTCP   TCP or UDP
-   * @return error information
-   */
   virtual const char *DescribeError(bool isTCP = true);
-
-
-  /*!
-  * @brief Disconnect the LiDAR.
-  */
   virtual void disconnect();
-
-  /**
-  * @brief Get SDK Version \n
-  * static function
-  * @return Version
-  */
-  virtual std::string getSDKVersion();
-
-  /**
-   * @brief lidarPortList Get Lidar Port lists
-   * @return online lidars
-   */
-  static std::map<std::string, std::string> lidarPortList();
-
 
   /**
    * @brief Is the Lidar in the scan \n
@@ -207,18 +159,6 @@ class YDlidarDriver : public DriverInterface {
    */
   virtual result_t grabScanData(node_info *nodebuffer, size_t &count,
                                 uint32_t timeout = DEFAULT_TIMEOUT) ;
-
-  /**
-   * @brief Normalized angle \n
-   * Normalize the angel between 0 and 360
-   * @param[in] nodebuffer Laser data
-   * @param[in] count      one circle of laser points
-   * @return return status
-   * @retval RESULT_OK       success
-   * @retval RESULT_FAILE    failed
-   * @note Before the normalization, you must use the ::grabScanData function to get the laser data successfully.
-   */
-  result_t ascendScanData(node_info *nodebuffer, size_t count);
 
   /**
   * @brief reset lidar \n
@@ -371,7 +311,7 @@ class YDlidarDriver : public DriverInterface {
   * @brief Data parsing thread \n
   * @note Before you create a dta parsing thread, you must use the ::startScan function to start the lidar scan successfully.
   */
-  result_t createThread();
+  result_t startThread();
 
   /**
   * @brief Automatically reconnect the lidar \n
@@ -402,75 +342,10 @@ class YDlidarDriver : public DriverInterface {
    */
   result_t waitDevicePackage(uint32_t timeout = DEFAULT_TIMEOUT);
 
-  /**
-   * @brief parseResponseHeader
-   * @param packageBuffer
-   * @param timeout
-   * @return
-   */
-  result_t parseResponseHeader(uint8_t *packageBuffer,
-                               uint32_t timeout = DEFAULT_TIMEOUT);
-
-  /**
-   * @brief parseResponseScanData
-   * @param packageBuffer
-   * @param timeout
-   * @return
-   */
-  result_t parseResponseScanData(uint8_t *packageBuffer,
-                                 uint32_t timeout = DEFAULT_TIMEOUT);
-
-  //解析时间戳数据（云鲸雷达）
-  bool parseStampData(uint32_t timeout = DEFAULT_TIMEOUT / 10);
-
-  /**
-  * @brief Unpacking \n
-  * @param[in] node lidar point information
-  * @param[in] timeout     timeout
-  */
-  result_t waitPackage(node_info *node, uint32_t timeout = DEFAULT_TIMEOUT);
-  /**
-  * @brief get unpacked data \n
-  * @param[in] nodebuffer laser node
-  * @param[in] count      lidar points size
-  * @param[in] timeout      timeout
-  * @return result status
-  * @retval RESULT_OK       success
-  * @retval RESULT_TIMEOUT  timeout
-  * @retval RESULT_FAILE    failed
-  */
-  result_t waitScanData(node_info *nodebuffer, size_t &count,
-                        uint32_t timeout = DEFAULT_TIMEOUT);
-
-  /**
-  * @brief data parsing thread \n
-  */
+  //解析数据
+  result_t parseData(uint32_t timeout = DEFAULT_TIMEOUT);
+  //数据解析线程函数
   int cacheScanData();
-
-  /**
-  * @brief send data to lidar \n
-  * @param[in] cmd 	 command code
-  * @param[in] payload      payload
-  * @param[in] payloadsize      payloadsize
-  * @return result status
-  * @retval RESULT_OK       success
-  * @retval RESULT_FAILE    failed
-  */
-  result_t sendCommand(uint8_t cmd, const void *payload = NULL,
-                       size_t payloadsize = 0);
-
-  /**
-  * @brief waiting for package header \n
-  * @param[in] header 	 package header
-  * @param[in] timeout      timeout
-  * @return return status
-  * @retval RESULT_OK       success
-  * @retval RESULT_TIMEOUT  timeout
-  * @retval RESULT_FAILE    failed
-  * @note when timeout = -1, it will block...
-  */
-  result_t waitResponseHeader(lidar_ans_header *header,
-                              uint32_t timeout = DEFAULT_TIMEOUT);
 
   /**
   * @brief Waiting for the specified size data from the lidar \n
@@ -483,8 +358,10 @@ class YDlidarDriver : public DriverInterface {
   * @retval RESULT_FAILE    failed
   * @note when timeout = -1, it will block...
   */
-  result_t waitForData(size_t data_count, uint32_t timeout = DEFAULT_TIMEOUT,
-                       size_t *returned_size = NULL);
+  result_t waitForData(
+    size_t data_count, 
+    uint32_t timeout = DEFAULT_TIMEOUT,
+    size_t *returned_size = NULL);
 
   /**
   * @brief get data from serial \n
@@ -515,7 +392,7 @@ class YDlidarDriver : public DriverInterface {
   /**
   * @brief disable Data scan channel \n
   */
-  void disableDataGrabbing();
+  void stopThread();
 
   /*!
   * @brief set DTR \n
@@ -526,11 +403,8 @@ class YDlidarDriver : public DriverInterface {
   * @brief clear DTR \n
   */
   void clearDTR();
-
-  /*!
-   * @brief flushSerial
-   */
-  void flushSerial();
+  //清除读缓存
+  void clearRead();
 
   /*!
    * @brief checkAutoConnecting
@@ -544,111 +418,68 @@ class YDlidarDriver : public DriverInterface {
   result_t autoHeartBeat();
 
   /**
-   * @brief KeepLiveHeartBeat
+   * @brief keepHeartBeat
    */
-  void KeepLiveHeartBeat();
-
-  /**
-   * @brief CheckLaserStatus
-   */
-  void CheckLaserStatus();
+  void keepHeartBeat();
 
   /**
    * @brief checkBlockStatus
    */
-  void checkBlockStatus(uint8_t currentByte);
-
-  /**
-   * @brief calcuteCheckSum
-   * @param node
-   */
-  void calcuteCheckSum(node_info *node);
-  /**
-   * @brief calcutePackageCT
-   */
-  void calcutePackageCT();
-  /**
-   * @brief parseNodeDebugFromBuffer
-   */
-  void parseNodeDebugFromBuffer(node_info *node);
-
-  /**
-   * @brief parseNodeFromeBuffer
-   */
-  void parseNodeFromeBuffer(node_info *node);
-
-  //解析点云数据包头
-  result_t parseHeader(
-    uint8_t &zero, 
-    uint32_t &headPos, 
-    uint32_t timeout = DEFAULT_TIMEOUT / 2);
-  //解析点云数据并判断带不带强度信息
-  virtual result_t getIntensityFlag();
+  void checkBlockStatus(uint8_t c);
   //获取俯仰角值
   virtual bool getPitchAngle(float& pitch);
 
- private:
-  /// package sample bytes
-  int PackageSampleBytes;
-  /// serial port
-  ChannelDevice *_serial;
-  /// sampling inteval
-  uint32_t trans_delay;
-  /// sampling rate
-  int m_sampling_rate;
-  /// LiDAR model
-  int model;
-  int sample_rate;
+protected:
+  //是否连接
+  bool isOpen() const;
+  //发送数据
+  bool sendCmd(uint8_t cmd);
+  //读取所有数据
+  std::vector<uint8_t> readAll(uint32_t timeout=SDK_TIMEOUT);
+  //等待响应命令
+  bool waitResp(
+    uint8_t type,
+    std::vector<uint8_t>& data,
+    uint32_t timeout=TIMEOUT_500);
+  //获取单点字节数
+  int getPointBytes();
+  //计算延时时间
+  uint64_t calcDelay();
+  //检查校验和
+  bool calcCheckSum(const std::vector<uint8_t>& data);
+  //解析点云帧数据
+  bool parsePoints();
 
-  /// has intensity protocol package
-  tri_node_package2 package;
-  /// TOF Lidar has intensity protocol package
-  tof_node_package tof_package;
-  /// non-intensity protocol package
-  tri_node_package packages;
+private:
+  //单包点云数据
+  struct Pack 
+  {
+    uint64_t stamp = 0;
+    std::vector<uint8_t> data;
 
-  float IntervalSampleAngle;
-  float IntervalSampleAngle_LastPackage;
-  /// First sample angle
-  uint16_t FirstSampleAngle;
-  /// last sample angle
-  uint16_t LastSampleAngle;
-  /// checksum
-  uint16_t CheckSum;
-  /// scan frequency
-  uint8_t scan_frequence;
+    Pack(const std::vector<uint8_t>& data, uint64_t stamp=0) 
+    : data(data), stamp(stamp) {
+      if (!stamp)
+        stamp = getTime();
+    }
+  };
 
-  uint16_t CheckSumCal;
-  uint16_t SampleNumlAndCTCal;
-  uint16_t LastSampleAngleCal;
-  bool CheckSumResult;
-  uint16_t Valu8Tou16;
-  uint8_t ct;
-  uint8_t nowPackageNum;
-  uint8_t package_Sample_Num;
-
-  uint8_t *globalRecvBuffer;
-  bool has_device_header;
-  uint8_t last_device_byte;
-  int         asyncRecvPos;
-  uint16_t    async_size;
-
-  device_health health_;
-  lidar_ans_header header_;
-  uint8_t  *headerBuffer;
-  uint8_t  *healthBuffer;
-  bool get_device_health_success;
-
-  int package_index;
-  bool has_package_error;
+private:
+  ChannelDevice *_serial = NULL; //通信对象
+  uint32_t trans_delay; //传输延时
+  int m_sampling_rate; //采样率
+  int sample_rate; //采样率
+  int model; //型号
   uint32_t m_heartbeat_ts;
   uint8_t m_BlockRevSize;
-
+  std::vector<uint8_t> m_data; //缓存数据
+  std::vector<Pack> m_datas; //帧数据
+  int m_csCount = 0; //校验和错误计数
   uint32_t m_dataPos = 0; //记录当前解析到的数据的位置（解析是否带强度信息专用）
   uint64_t stamp = 0; //时间戳
   bool hasStamp = true; //是否有时间戳数据
 };
 
-}// namespace ydlidar
+} // namespace ydlidar
 
 #endif // YDLIDAR_DRIVER_H
