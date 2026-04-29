@@ -478,6 +478,7 @@ private:
   uint32_t m_dataPos = 0; //记录当前解析到的数据的位置（解析是否带强度信息专用）
   uint64_t stamp = 0; //时间戳
   bool hasStamp = true; //是否有时间戳数据
+  uint32_t m_zeroTime = 0; //零位包时间
 };
 
 } // namespace ydlidar

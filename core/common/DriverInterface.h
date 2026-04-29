@@ -68,7 +68,7 @@ namespace ydlidar
         DriverInterface() : m_port(""),
                             m_baudrate(8000),
                             m_intensities(false),
-                            m_intensityBit(10),
+                            m_intensityBit(0),
                             scan_node_buf(NULL),
                             scan_node_count(0),
                             nodeIndex(0),

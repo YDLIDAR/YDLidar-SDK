@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
   /// unit: Hz
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
-  laser.setAutoIntensity(false);
+  // laser.setAutoIntensity(true);
   // laser.setEnableDebug(true); //启用调试
 
   /// initialize SDK and LiDAR.

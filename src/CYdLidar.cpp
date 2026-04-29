@@ -766,7 +766,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       if (count > all_node_count)
       {
         //如果点过多则直接删除多余的点并打印警告
-        warn("[YDLIDAR]: Real point count %lu > fixed point count %d", count, all_node_count);
+        warn("[YDLIDAR]: Real points %lu > fixed points %d", count, all_node_count);
       	outscan.points.resize(all_node_count);
       }
       else
@@ -1109,7 +1109,7 @@ bool CYdLidar::checkLidarAbnormal()
           //计算采样率
           if (scan_time > 0.05 && scan_time < 0.5)
           {
-            m_SampleRate = static_cast<int>((count / scan_time + 500) / 1000);
+            m_SampleRate = float(count) / scan_time / 1000 + 0.5;
             m_PointTime = 1e9 / (m_SampleRate * 1000);
             lidarPtr->setPointTime(m_PointTime);
           }

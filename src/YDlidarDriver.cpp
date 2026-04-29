@@ -46,6 +46,7 @@ YDlidarDriver::YDlidarDriver(uint8_t type)
   m_isScanning = false;
   // 串口配置参数
   m_intensities = false;
+  m_intensityBit = NODE_QUAL0;
   isAutoReconnect = true;
   isAutoconnting = false;
   m_baudrate = 230400;
@@ -435,6 +436,7 @@ int YDlidarDriver::cacheScanData()
   retryCount = 0;
   m_BufferSize = 0;
   m_heartbeat_ts = getms();
+  m_zeroTime = getms(); //零位包时间
   m_data.clear();
   m_datas.clear();
 
@@ -712,9 +714,16 @@ result_t YDlidarDriver::parseData(uint32_t timeout)
               zero = false;
               parsePoints();
               m_datas.clear();
+              m_zeroTime = getms();
             }
+            else
+            {
+              //如果长时间未获取到零位包则需要清空数据
+              if (getms() - m_zeroTime > TIMEOUT_2S)
+                m_datas.clear();
+            }
+            m_datas.push_back(Pack(data, stamp));
           }
-          m_datas.push_back(Pack(data, stamp));
           trunPos = s;
           i += count;
         }
@@ -1427,7 +1436,8 @@ int YDlidarDriver::getPointBytes()
 {
   if (NODE_QUAL0 == m_intensityBit)
     return 2;
-  else if (NODE_QUAL8 == m_intensityBit)
+  else if (NODE_QUAL8 == m_intensityBit || 
+           NODE_QUAL10 == m_intensityBit)
     return 3;
   else
     return 4;
@@ -1505,7 +1515,8 @@ bool YDlidarDriver::calcCheckSum(const std::vector<uint8_t>& data)
           else
             m_intensityBit = NODE_QUAL16;
           m_csCount = 0;
-          info("已自动将信号强度改为[%d]bit", m_intensityBit);
+          info("The intensity has been automatically adjusted to[%d]bit", 
+            m_intensityBit);
       }
     }
     return false;
@@ -1551,7 +1562,8 @@ bool YDlidarDriver::parsePoints()
               ds >> p;
               ds >> d;
           }
-          else if (NODE_QUAL8 == m_intensityBit)
+          else if (NODE_QUAL8 == m_intensityBit ||
+                   NODE_QUAL10 == m_intensityBit)
           {
             uint8_t p2;
             ds >> p2;
