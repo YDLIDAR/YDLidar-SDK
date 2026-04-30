@@ -42,6 +42,14 @@
  *----------------------------------------------------------------------------*/
 #include "PassiveSocket.h"
 
+#ifndef SETSOCKOPT
+#define SETSOCKOPT setsockopt
+#endif
+
+#ifndef SENDTO
+#define SENDTO sendto
+#endif
+
 using namespace ydlidar;
 using namespace ydlidar::core;
 using namespace ydlidar::core::network;

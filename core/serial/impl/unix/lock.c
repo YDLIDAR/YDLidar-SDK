@@ -15,7 +15,9 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#if !defined(__APPLE__) && !defined(_DARWIN)
 #include <sys/sysmacros.h>
+#endif
 #include <fcntl.h>
 #include <string.h>
 #include <limits.h>
