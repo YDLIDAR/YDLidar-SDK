@@ -1329,6 +1329,7 @@ std::vector<uint8_t> YDlidarDriver::readAll(uint32_t timeout)
   ScopedLocker l(_cmd_lock);
   if (!isOpen())
     return data;
+
   if (YDLIDAR_TYPE_UDP != m_DeviceType)
   {
     //等待数据
@@ -1351,6 +1352,8 @@ std::vector<uint8_t> YDlidarDriver::readAll(uint32_t timeout)
   }
   else
   {
+    // if (rs < data.size())
+    //   warn("Recv data size %u != %u", rs, data.size());
     data.resize(rs);
     if (m_Debug)
       debugh(data.data(), data.size(), "[recv] ");
@@ -1484,12 +1487,12 @@ bool YDlidarDriver::calcCheckSum(const std::vector<uint8_t>& data)
   uint8_t count = uint8_t(data.at(3));
   for (int i = 0; i < count; ++i)
   {
-      if (NODE_QUAL0 == m_intensityBit ||
-          NODE_QUAL16 == m_intensityBit) //如果强度信息2字节
+      if (NODE_QUAL16 == m_intensityBit) //如果强度信息2字节
       {
           ccs ^= *p ++;
       }
-      else //如果强度信息1字节，则先计算第一个字节，再算后边两个字节
+      else if (NODE_QUAL8 == m_intensityBit ||
+        NODE_QUAL10 == m_intensityBit) //如果强度信息1字节，则先计算第一个字节，再算后边两个字节
       {
           const uint8_t *p2 = reinterpret_cast<const uint8_t*>(p);
           ccs ^= *p2 ++;
@@ -1603,11 +1606,11 @@ bool YDlidarDriver::parsePoints()
           node.qual = p;
           node.stamp = data.stamp;
           node.delayTime = delay;
-//            SeLog::debug("i:%d,a:%f,d:%u,p:%u",
+//            debug("i:%d,a:%f,d:%u,p:%u",
 //                i, sa + step * i, d, p);
-
         }
         nodes.insert(nodes.end(), ns.begin(), ns.end());
+        // debug("Points count %u stamp %llu delay %u", count, data.stamp, delay);
     }
     //判断有效点数
     if (validCount < 2)

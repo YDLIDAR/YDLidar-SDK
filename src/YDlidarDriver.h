@@ -460,7 +460,7 @@ private:
     Pack(const std::vector<uint8_t>& data, uint64_t stamp=0) 
     : data(data), stamp(stamp) {
       if (!stamp)
-        stamp = getTime();
+        this->stamp = getTime();
     }
   };
 
