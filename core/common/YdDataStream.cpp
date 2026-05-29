@@ -2,17 +2,27 @@
 
 // ---------- 构造 ----------
 YdDataStream::YdDataStream()
-    : m_readPos(0), m_byteOrder(LittleEndian) {}
+    : m_readPos(0), m_byteOrder(LittleEndian) {
+}
 
 YdDataStream::YdDataStream(ByteOrder order)
-    : m_readPos(0), m_byteOrder(order) {}
+    : m_readPos(0), m_byteOrder(order) {
+}
 
 YdDataStream::YdDataStream(const std::vector<uint8_t>& data, ByteOrder order)
-    : m_buffer(std::move(data)), m_readPos(0), m_byteOrder(order) {}
+    : m_buffer(std::move(data)),
+      m_readPos(0),
+      m_byteOrder(order) {
+}
 
 // ---------- 字节序 ----------
-void YdDataStream::setByteOrder(ByteOrder order) { m_byteOrder = order; }
-YdDataStream::ByteOrder YdDataStream::byteOrder() const { return m_byteOrder; }
+void YdDataStream::setByteOrder(ByteOrder order) {
+    m_byteOrder = order;
+}
+
+YdDataStream::ByteOrder YdDataStream::byteOrder() const {
+    return m_byteOrder;
+}
 
 // ---------- 序列化 ----------
 YdDataStream& YdDataStream::operator<<(uint8_t value) {
@@ -20,14 +30,36 @@ YdDataStream& YdDataStream::operator<<(uint8_t value) {
     return *this;
 }
 
-YdDataStream& YdDataStream::operator<<(uint16_t value) { writeInteger(value); return *this; }
-YdDataStream& YdDataStream::operator<<(uint32_t value) { writeInteger(value); return *this; }
-YdDataStream& YdDataStream::operator<<(uint64_t value) { writeInteger(value); return *this; }
+YdDataStream& YdDataStream::operator<<(uint16_t value) {
+    writeInteger(value);
+    return *this;
+}
 
-YdDataStream& YdDataStream::operator<<(int8_t value)  { return *this << static_cast<uint8_t>(value); }
-YdDataStream& YdDataStream::operator<<(int16_t value) { return *this << static_cast<uint16_t>(value); }
-YdDataStream& YdDataStream::operator<<(int32_t value) { return *this << static_cast<uint32_t>(value); }
-YdDataStream& YdDataStream::operator<<(int64_t value) { return *this << static_cast<uint64_t>(value); }
+YdDataStream& YdDataStream::operator<<(uint32_t value) {
+    writeInteger(value);
+    return *this;
+}
+
+YdDataStream& YdDataStream::operator<<(uint64_t value) {
+    writeInteger(value);
+    return *this;
+}
+
+YdDataStream& YdDataStream::operator<<(int8_t value)  {
+    return *this << static_cast<uint8_t>(value);
+}
+
+YdDataStream& YdDataStream::operator<<(int16_t value) {
+    return *this << static_cast<uint16_t>(value);
+}
+
+YdDataStream& YdDataStream::operator<<(int32_t value) {
+    return *this << static_cast<uint32_t>(value);
+}
+
+YdDataStream& YdDataStream::operator<<(int64_t value) {
+    return *this << static_cast<uint64_t>(value);
+}
 
 YdDataStream& YdDataStream::operator<<(float value) {
     static_assert(sizeof(float) == 4, "float must be 4 bytes");
@@ -51,16 +83,19 @@ YdDataStream& YdDataStream::operator>>(uint8_t& value) {
 }
 
 YdDataStream& YdDataStream::operator>>(uint16_t& value) { 
-    readInteger(value); return *this; 
-    }
+    readInteger(value);
+    return *this;
+}
 
 YdDataStream& YdDataStream::operator>>(uint32_t& value) { 
-    readInteger(value); return *this; 
-    }
+    readInteger(value);
+    return *this;
+}
 
 YdDataStream& YdDataStream::operator>>(uint64_t& value) { 
-    readInteger(value); return *this; 
-    }
+    readInteger(value);
+    return *this;
+}
 
 YdDataStream& YdDataStream::operator>>(int8_t& value) {
     uint8_t tmp;
@@ -118,8 +153,13 @@ YdDataStream& YdDataStream::readBytes(uint8_t* dest, size_t size) {
 }
 
 // ---------- 流状态与定位 ----------
-bool YdDataStream::atEnd() const { return m_readPos >= m_buffer.size(); }
-size_t YdDataStream::readPos() const { return m_readPos; }
+bool YdDataStream::atEnd() const {
+    return m_readPos >= m_buffer.size();
+}
+
+size_t YdDataStream::readPos() const {
+    return m_readPos;
+}
 
 void YdDataStream::seekRead(size_t pos) {
     if (pos > m_buffer.size())
@@ -127,9 +167,13 @@ void YdDataStream::seekRead(size_t pos) {
     m_readPos = pos;
 }
 
-void YdDataStream::skipRead(size_t bytes) { seekRead(m_readPos + bytes); }
+void YdDataStream::skipRead(size_t bytes) {
+    seekRead(m_readPos + bytes);
+}
 
-const std::vector<uint8_t>& YdDataStream::data() const { return m_buffer; }
+const std::vector<uint8_t>& YdDataStream::data() const {
+    return m_buffer;
+}
 
 void YdDataStream::clear() {
     m_buffer.clear();

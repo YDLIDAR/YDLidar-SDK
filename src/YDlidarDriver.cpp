@@ -713,7 +713,6 @@ result_t YDlidarDriver::parseData(uint32_t timeout)
             {
               zero = false;
               parsePoints();
-              m_datas.clear();
               m_zeroTime = getms();
             }
             else
@@ -1352,9 +1351,8 @@ std::vector<uint8_t> YDlidarDriver::readAll(uint32_t timeout)
   }
   else
   {
-    // if (rs < data.size())
-    //   warn("Recv data size %u != %u", rs, data.size());
-    data.resize(rs);
+    if (rs != data.size())
+        data.resize(rs);
     if (m_Debug)
       debugh(data.data(), data.size(), "[recv] ");
   }
@@ -1536,27 +1534,31 @@ bool YDlidarDriver::parsePoints()
     for (const auto& data : m_datas)
     {
         YdDataStream ds(data.data);
-        uint16_t h = 0; //头
+        uint16_t head = 0; //头
         uint8_t freq = 0; //转速
         uint8_t count = 0; //转速
-        uint16_t a = 0; //角度
+        uint16_t angle = 0; //角度
         float sa = .0;
         float ea = .0;
         float step = 0.0; //角度增量
 
-        ds >> h;
+        ds >> head;
         ds >> freq;
         freq = freq >> 1;
         ds >> count;
-        ds >> a;
-        sa = (a >> 1) / SDK_UNIT64;
-        ds >> a;
-        ea = (a >> 1) / SDK_UNIT64;
-        step = fabs(ea - sa) / (count - 1);
-        ds >> h; //跳过校验和
+        ds >> angle;
+        sa = (angle >> 1) / SDK_UNIT64;
+        ds >> angle;
+        ea = (angle >> 1) / SDK_UNIT64;
+        if (ea < sa)
+            ea += SDK_ANGLE360;
+        if (count > 1)
+            step = fabs(ea - sa) / (count - 1);
+        ds >> head; //跳过校验和
         std::vector<node_info> ns(count);
         for (uint8_t i=0; i<count; ++i)
         {
+          auto& node = ns[i];
           float a = (sa + step * i); //角度值
           uint16_t p = 0; //强度
           uint16_t d = 0; //距离
@@ -1565,14 +1567,23 @@ bool YDlidarDriver::parsePoints()
               ds >> p;
               ds >> d;
           }
-          else if (NODE_QUAL8 == m_intensityBit ||
-                   NODE_QUAL10 == m_intensityBit)
+          else if (NODE_QUAL10 == m_intensityBit)
           {
             uint8_t p2;
             ds >> p2;
             ds >> d;
             //距离值低2位为强度值的高2位
-            p = uint16_t(p2) | uint16_t((d & 0x03) << 8);
+            p = uint16_t(p2) | uint16_t((d & 0x0003) << 8);
+            d = d & 0xFFFC;
+          }
+          else if (NODE_QUAL8 == m_intensityBit)
+          {
+              uint8_t p2;
+              ds >> p2;
+              ds >> d;
+              p = p2;
+              node.is = d & 0x0003; //阳光玻璃标记
+              d = d & 0xFFFC;
           }
           else /*if (NODE_QUAL0 == m_intensityBit)*/
           {
@@ -1599,19 +1610,23 @@ bool YDlidarDriver::parsePoints()
             }
             validCount ++;
           }
-          auto& node = ns[i];
-          node.scanFreq = freq;
-          node.angle = (a + ca) * SDK_UNIT128;
+          a += ca;
+          if (a > SDK_ANGLE360)
+            a -= SDK_ANGLE360;
+
+          if (!i)
+            node.scanFreq = freq;
+          node.angle = a * SDK_UNIT128;
           node.dist = d;
           node.qual = p;
           node.stamp = data.stamp;
           node.delayTime = delay;
-//            debug("i:%d,a:%f,d:%u,p:%u",
-//                i, sa + step * i, d, p);
+//            debug("i:%d,a:%f,d:%u,d2:%u",
+//                i, a, d, d/4);
         }
         nodes.insert(nodes.end(), ns.begin(), ns.end());
-        // debug("Points count %u stamp %llu delay %u", count, data.stamp, delay);
     }
+    m_datas.clear(); //清空缓存
     //判断有效点数
     if (validCount < 2)
     {
@@ -1624,6 +1639,7 @@ bool YDlidarDriver::parsePoints()
         setDriverError(NoError);
     }
     //将点云存入缓存
+    if (nodes.size())
     {
         ScopedLocker l(_lock);
         memcpy(scan_node_buf, nodes.data(), nodes.size() * SDKNODESIZE);

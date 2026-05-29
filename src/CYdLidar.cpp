@@ -651,14 +651,13 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
 
       if (isNetTOFLidar(m_LidarType))
       {
-        angle = static_cast<float>(global_nodes[i].angle / 100.0f) +
+        angle = float(global_nodes[i].angle / 100.0f) +
                 m_AngleOffset;
       }
       else
       {
-        angle = static_cast<float>((global_nodes[i].angle >>
-                                    LIDAR_RESP_ANGLE_SHIFT) /
-                                   64.0f) +
+        angle = float((global_nodes[i].angle >> LIDAR_RESP_ANGLE_SHIFT) /
+                                   SDK_UNIT64) +
                 m_AngleOffset;
       }
 

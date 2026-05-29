@@ -214,8 +214,8 @@ struct node_info {
   uint8_t sync; //首包标记
   uint8_t is; //抗干扰标志
   uint16_t qual; //信号强度
-  uint16_t angle; //角度值（°）
-  uint16_t dist; //距离值
+  uint16_t angle = 0; //角度值（°）
+  uint16_t dist = 0; //距离值
   uint64_t stamp; //时间戳
   uint32_t delayTime; //delay time
   uint8_t scanFreq; //扫描频率
