@@ -432,7 +432,7 @@ namespace ydlidar
     virtual result_t setWorkMode(int mode = 0, uint8_t addr = 0x00);
 
     // 开始OTA升级
-    virtual bool ota();
+    virtual bool ota(uint8_t addr = 0x00);
     // 开始OTA
     bool startOta(uint8_t addr);
     // OTA升级中

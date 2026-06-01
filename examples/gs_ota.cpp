@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
   }
 
   //开始OTA升级
-  if (!laser.ota())
+  if (!laser.ota(LIDAR_MODULE_ALL))
   {
     fprintf(stderr, "Fail to ota\n");
     fflush(stderr);

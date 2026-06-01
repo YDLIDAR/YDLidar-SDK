@@ -194,7 +194,7 @@ class YDLIDAR_API CYdLidar {
     otaEncode = e;
   }
   //开始OTA升级
-  bool ota();
+  bool ota(uint8_t addr = 0x00);
 
  private:
   /**

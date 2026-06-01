@@ -1756,7 +1756,7 @@ result_t GSLidarDriver::setWorkMode(int mode, uint8_t addr)
     return RESULT_OK;
 }
 
-bool GSLidarDriver::ota()
+bool GSLidarDriver::ota(uint8_t a)
 {
     if (m_OtaName.empty())
     {
@@ -1788,6 +1788,9 @@ bool GSLidarDriver::ota()
     for (int i = 0; i < count; ++i)
     {
         uint8_t addr = 1 << i;
+        //如果地址有效且不匹配则跳过
+        if (a && !(a & addr))
+          continue;
         // 开始OTA
         if (!startOta(addr))
         {

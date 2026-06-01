@@ -921,10 +921,10 @@ bool CYdLidar::getPitchAngle(float& pitch)
     return false;
 }
 
-bool CYdLidar::ota()
+bool CYdLidar::ota(uint8_t addr)
 {
   if (lidarPtr)
-    return lidarPtr->ota();
+    return lidarPtr->ota(addr);
   return false;
 }
 

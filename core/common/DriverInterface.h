@@ -501,7 +501,8 @@ namespace ydlidar
         }
 
         // 开始OTA升级
-        virtual bool ota() {
+        virtual bool ota(uint8_t addr = 0x00) {
+          UNUSED(addr);
           return false;
         }
 
