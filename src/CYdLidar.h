@@ -194,7 +194,7 @@ class YDLIDAR_API CYdLidar {
     otaEncode = e;
   }
   //开始OTA升级
-  bool ota();
+  bool ota(uint8_t addr = 0x00);
 
  private:
   /**
@@ -222,7 +222,7 @@ class YDLIDAR_API CYdLidar {
    * @brief Get LiDAR Health state
    * @return true if the device is in good health, If it's not
    */
-  bool getDeviceHealth();
+  bool getHealthInfo();
 
   /**
    * @brief Get LiDAR Device information
@@ -265,7 +265,7 @@ class YDLIDAR_API CYdLidar {
    * @brief Check if the LiDAR Offset Angle is corrected.
    * @param serialNumber    LiDAR serial number
    */
-  bool checkCalibrationAngle(const std::string &serialNumber);
+  bool checkZeroAngle(const std::string &serialNumber);
 
   /**
     * @brief Whether the current LiDAR range is valid
@@ -350,7 +350,7 @@ class YDLIDAR_API CYdLidar {
   bool m_SingleChannel;             ///< LiDAR single channel
   bool m_Intensity;                 ///< LiDAR Intensity
   int m_IntensityBit;               ///< LiDAR Intensity bit
-  bool m_AutoIntensity; //自动识别强度
+  bool m_AutoIntensity = true; //自动识别强度
   bool m_SupportMotorDtrCtrl;       ///< LiDAR Motor DTR
   bool m_SupportHearBeat;           ///< LiDAR HeartBeat
 

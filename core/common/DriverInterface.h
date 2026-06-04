@@ -68,7 +68,7 @@ namespace ydlidar
         DriverInterface() : m_port(""),
                             m_baudrate(8000),
                             m_intensities(false),
-                            m_intensityBit(10),
+                            m_intensityBit(0),
                             scan_node_buf(NULL),
                             scan_node_count(0),
                             nodeIndex(0),
@@ -494,14 +494,6 @@ namespace ydlidar
           return RESULT_FAIL; 
         }
 
-        /**
-         * @brief 解析点云数据并判断带不带强度信息（目前只针对三角雷达）
-         * @return 成功返回RESULT_OK，否则返回非RESULT_OK
-         */
-        virtual result_t getIntensityFlag() { 
-          return RESULT_OK; 
-        }
-
         //获取俯仰角值
         virtual bool getPitchAngle(float& pitch) {
           UNUSED(pitch);
@@ -509,7 +501,8 @@ namespace ydlidar
         }
 
         // 开始OTA升级
-        virtual bool ota() {
+        virtual bool ota(uint8_t addr = 0x00) {
+          UNUSED(addr);
           return false;
         }
 

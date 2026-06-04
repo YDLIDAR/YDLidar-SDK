@@ -35,9 +35,9 @@ extern "C" {
 
 /** Device Type ID */
 typedef enum {
-  YDLIDAR_TYPE_SERIAL = 0x0, /**< serial type.*/
-  YDLIDAR_TYPE_TCP = 0x1, /**< socket tcp type.*/
-  YDLIDAR_TYPC_UDP = 0x2, /**< socket udp type.*/
+  YDLIDAR_TYPE_SERIAL = 0x0, //serial type
+  YDLIDAR_TYPE_TCP = 0x1, //socket tcp type
+  YDLIDAR_TYPE_UDP = 0x2, //socket udp type
 } DeviceTypeID;
 
 /** Lidar Type ID */

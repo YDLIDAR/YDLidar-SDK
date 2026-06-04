@@ -472,7 +472,7 @@ int SDMLidarDriver::cacheScanData()
     size_t scan_count = 0;
     result_t ret = RESULT_FAIL;
 
-    int timeout_count = 0;
+    int timeoutCount = 0;
     retryCount = 0;
 
     m_isScanning = true;
@@ -484,7 +484,7 @@ int SDMLidarDriver::cacheScanData()
         if (!IS_OK(ret)) // 如果解析点云失败
         {
             if (IS_FAIL(ret) ||
-                timeout_count > DEFAULT_TIMEOUT_COUNT)
+                timeoutCount > DEFAULT_TIMEOUT_COUNT)
             {
                 if (!isAutoReconnect)
                 {
@@ -498,7 +498,7 @@ int SDMLidarDriver::cacheScanData()
                     ret = checkAutoConnecting();
                     if (IS_OK(ret))
                     {
-                        timeout_count = 0;
+                        timeoutCount = 0;
                     }
                     else
                     {
@@ -509,15 +509,15 @@ int SDMLidarDriver::cacheScanData()
             }
             else
             {
-                timeout_count ++;
-                fprintf(stderr, "[YDLIDAR] Timeout count %d\n", timeout_count);
+                timeoutCount ++;
+                fprintf(stderr, "[YDLIDAR] Timeout count %d\n", timeoutCount);
                 fflush(stderr);
             }
             continue;
         }
         else
         {
-            timeout_count = 0;
+            timeoutCount = 0;
             retryCount = 0;
 
             // printf("[YDLIDAR] SDM points Stored in buffer %lu\n", count);
@@ -765,7 +765,7 @@ result_t SDMLidarDriver::startScan(bool force, uint32_t timeout)
             }
         }
 
-        ret = createThread();
+        ret = startThread();
     }
 
     return ret;
@@ -794,7 +794,7 @@ result_t SDMLidarDriver::stopScan(uint32_t timeout)
     return RESULT_OK;
 }
 
-result_t SDMLidarDriver::createThread()
+result_t SDMLidarDriver::startThread()
 {
     // 如果线程已启动，则先退出线程
     if (_thread.getHandle())

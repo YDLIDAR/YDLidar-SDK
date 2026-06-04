@@ -233,7 +233,7 @@ int DTSLidarDriver::cacheScanData()
     node_info local_buf[SDK_DTS_POINT_COUNT];
     size_t count = SDK_DTS_POINT_COUNT;
     result_t ret = RESULT_FAIL;
-    int timeout_count = 0;
+    int timeoutCount = 0;
     retryCount = 0;
     m_isScanning = true;
     while (m_isScanning)
@@ -243,7 +243,7 @@ int DTSLidarDriver::cacheScanData()
         //如果解析点云失败
         if (!IS_OK(ret))
         {
-            if (timeout_count > DEFAULT_TIMEOUT_COUNT)
+            if (timeoutCount > DEFAULT_TIMEOUT_COUNT)
             {
                 if (!isAutoReconnect)
                 {
@@ -257,7 +257,7 @@ int DTSLidarDriver::cacheScanData()
                     ret = checkAutoConnecting();
                     if (IS_OK(ret))
                     {
-                        timeout_count = 0;
+                        timeoutCount = 0;
                     }
                     else
                     {
@@ -268,14 +268,14 @@ int DTSLidarDriver::cacheScanData()
             }
             else
             {
-                timeout_count ++;
-                fprintf(stderr, "[YDLIDAR] Timeout count %d\n", timeout_count);
+                timeoutCount ++;
+                fprintf(stderr, "[YDLIDAR] Timeout count %d\n", timeoutCount);
                 fflush(stderr);
             }
         }
         else
         {
-            timeout_count = 0;
+            timeoutCount = 0;
             retryCount = 0;
 
             ScopedLocker l(_lock);
@@ -292,7 +292,7 @@ int DTSLidarDriver::cacheScanData()
  *@brief 创建解析雷达数据线程
  *@note 创建解析雷达数据线程之前，必须使用startScan函数开启扫图成功
  */
-result_t DTSLidarDriver::createThread()
+result_t DTSLidarDriver::startThread()
 {
     _thread = CLASS_THREAD(DTSLidarDriver, cacheScanData);
     if (!_thread.getHandle())
@@ -346,7 +346,7 @@ result_t DTSLidarDriver::startScan(bool force, uint32_t timeout)
         }
     }
 
-    ret = createThread(); //创建线程
+    ret = startThread(); //创建线程
     return ret;
 }
 

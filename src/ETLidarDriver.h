@@ -364,10 +364,10 @@ class ETLidarDriver : public DriverInterface {
   bool dataPortConnect(const char *lidarIP, int localPort = 8000);
 
   /**
-   * @brief createThread
+   * @brief startThread
    * @return
    */
-  result_t createThread();
+  result_t startThread();
 
   /**
    * @brief disableDataGrabbing

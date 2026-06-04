@@ -205,8 +205,8 @@ int main(int argc, char *argv[]) {
   /// abnormal count
   optval = 4;
   laser.setlidaropt(LidarPropAbnormalCheckCount, &optval, sizeof(int));
-//  optval = 16;
-//  laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
+  optval = 0;
+  laser.setlidaropt(LidarPropIntenstiyBit, &optval, sizeof(int));
 
   //////////////////////bool property/////////////////
   /// fixed angle resolution
@@ -243,6 +243,9 @@ int main(int argc, char *argv[]) {
   laser.setlidaropt(LidarPropMinRange, &f_optvalue, sizeof(float));
   /// unit: Hz
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
+
+  // laser.setEnableDebug(true);
+  // laser.setAutoIntensity(false);
 
   /// initialize SDK and LiDAR.
   bool ret = laser.initialize();
