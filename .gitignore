@@ -173,3 +173,4 @@ YDLidar-SDK.files
 YDLidar-SDK.includes
 build/Testing/Temporary/LastTest.log
 /cmake-build-debug/
+/.idea/
