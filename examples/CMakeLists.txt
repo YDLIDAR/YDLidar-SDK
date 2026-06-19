@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.16)
 PROJECT(ydlidar_test)
 add_compile_options(-std=c++11) # Use C++11
 
