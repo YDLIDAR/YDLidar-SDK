@@ -97,11 +97,11 @@ function(install_package)
   if( NOT EXPORT_${PROJECT_NAME} )
         # add "installed" library to list of required libraries to link against
         if( PACKAGE_LIB_NAME )
-            if(POLICY CMP0026)
-              cmake_policy( SET CMP0026 OLD )
-            endif()
-            get_target_property( _target_library ${PACKAGE_LIB_NAME} LOCATION )
-            get_filename_component( _lib ${_target_library} NAME )
+#            if(POLICY CMP0026)
+#              cmake_policy( SET CMP0026 OLD )
+#            endif()
+#            get_target_property( _target_library ${PACKAGE_LIB_NAME} LOCATION )
+            get_filename_component( _lib $<TARGET_FILE:PACKAGE_LIB_NAME> NAME )
             list( INSERT PACKAGE_LINK_LIBS 0 ${PACKAGE_LIB_NAME} )
         endif()
 
@@ -164,9 +164,9 @@ function(install_package)
         # Export library for easy inclusion from other cmake projects. APPEND allows
         # call to function even as subdirectory of larger project.
         FILE(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
-        export( TARGETS ${LIBRARY_NAME}
-        APPEND FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake" )
-
+#        export( TARGETS ${LIBRARY_NAME}
+#        APPEND FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake" )
+        
         if("${SDK_SOURCE_DIR}" STREQUAL "")
             # Version information.  So find_package( XXX version ) will work.
             configure_file( ${CMAKE_SOURCE_DIR}/cmake/PackageConfigVersion.cmake.in
@@ -187,16 +187,15 @@ function(install_package)
                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake @ONLY )
         endif()
 
-
-        install(FILES
-            ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-            ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake
-            ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-            DESTINATION
-            lib/cmake/${PROJECT_NAME})
-
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Find${PACKAGE_PKG_NAME}.cmake
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${PACKAGE_PKG_NAME}/ )
+#        install(FILES
+#            ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+#            ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake
+#            ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+#            DESTINATION
+#            lib/cmake/${PROJECT_NAME})
+#
+#        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Find${PACKAGE_PKG_NAME}.cmake
+#            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${PACKAGE_PKG_NAME}/ )
 
 
   #  # Install tree config.  NB we DO NOT use this.  We install using brew or
