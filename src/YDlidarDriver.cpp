@@ -1641,10 +1641,18 @@ bool YDlidarDriver::parsePoints()
     //将点云存入缓存
     if (nodes.size())
     {
-        ScopedLocker l(_lock);
-        memcpy(scan_node_buf, nodes.data(), nodes.size() * SDKNODESIZE);
-        scan_node_count = nodes.size();
-        _dataEvent.set();
+        if (nodes.size() <= MAX_SCAN_NODES)
+        {
+            ScopedLocker l(_lock);
+            memcpy(scan_node_buf, nodes.data(), nodes.size() * SDKNODESIZE);
+            scan_node_count = nodes.size();
+            _dataEvent.set();
+        }
+        else
+        {
+            warn("Current points count %u > max %u",
+                uint32_t(nodes.size()), MAX_SCAN_NODES);
+        }
     }
 
     return true;
