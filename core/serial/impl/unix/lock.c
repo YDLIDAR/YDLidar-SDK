@@ -15,7 +15,9 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#if defined(__linux__)
 #include <sys/sysmacros.h>
+#endif
 #include <fcntl.h>
 #include <string.h>
 #include <limits.h>
