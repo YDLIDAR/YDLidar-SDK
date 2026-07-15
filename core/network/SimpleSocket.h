@@ -53,7 +53,7 @@
 #include <chrono>
 
 
-#if defined(__linux__) || defined (_DARWIN)
+#if defined(__linux__) || defined (__APPLE__) || defined (_DARWIN)
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -67,10 +67,10 @@
 #include <linux/if.h>
 #include <sys/sendfile.h>
 #endif
-#ifdef _DARWIN
+#if defined(__APPLE__) || defined (_DARWIN)
 #include <net/if.h>
 #endif
-#if defined(__linux__) || defined (_DARWIN)
+#if defined(__linux__) || defined (__APPLE__) || defined (_DARWIN)
 #include <sys/time.h>
 #include <sys/uio.h>
 #include <unistd.h>
@@ -100,6 +100,10 @@
 #endif
 
 #define SOCKET_SENDFILE_BLOCKSIZE 8192
+
+#if !defined(_WIN32)
+typedef int SOCKET;
+#endif
 
 namespace ydlidar {
 namespace core {
