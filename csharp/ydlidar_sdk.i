@@ -19,6 +19,7 @@
 
 namespace std {
   %template(LaserPointVector) vector<LaserPoint>;
+  %template(StringStringMap) map<string, string>;
 }
 
 %extend YDLIDAR_API CYdLidar {
