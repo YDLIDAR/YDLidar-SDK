@@ -59,6 +59,58 @@ using namespace base;
  */
 namespace common {
 
+//CRC32相关
+#define CRC32_TABLE_LEN (256)
+#define CRC32_TABLE_POLYGS (0xEA124252) //GS2
+//CRC32表
+static std::vector<uint32_t> s_crc32Table;
+
+//初始化CRC32表
+static void make_crc32_table(std::vector<uint32_t>& table, uint32_t poly)
+{
+    if (table.size() < CRC32_TABLE_LEN)
+        table.resize(CRC32_TABLE_LEN);
+
+    uint32_t c = 0;
+    for (int i = 0; i < CRC32_TABLE_LEN; ++i)
+    {
+        c = uint32_t(i);
+        for (int bit = 0; bit < 8; ++bit)
+        {
+            if (c & 0x01)
+            {
+                c = (c >> 1)^(poly);
+            }
+            else
+            {
+                c =  c >> 1;
+            }
+        }
+        table[i] = c;
+    }
+}
+
+//计算CRC32值
+inline uint32_t calcCrc32(
+        const uint8_t *data,
+        uint32_t size,
+        uint32_t poly=CRC32_TABLE_POLYGS)
+{
+    make_crc32_table(s_crc32Table, poly);
+
+    uint32_t crc = 0;
+    while (size --)
+    {
+        uint8_t temp = *data;
+        if (temp != 0)
+        {
+            crc = (crc >> 8)^(s_crc32Table[(crc ^ temp) & 0xff]);
+        }
+        data ++;
+    }
+    return crc;
+}
+
 //颜色定义
 #ifndef COLOR
     #define COLOFF  "\033[0m"      ///关闭所有属性

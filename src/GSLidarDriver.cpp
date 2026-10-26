@@ -1783,6 +1783,37 @@ bool GSLidarDriver::ota(uint8_t a)
             data.push_back(d.at(i));
     }
     info("[OTA] File size [%.02lf]KB", data.size() / 1024.0);
+    if (data.size() < 4)
+    {
+        error("[OTA] OTA file data is invalid [%s]", m_OtaName.c_str());
+        return false;
+    }
+    // 数据解密
+    if (m_OtaEncode)
+    {
+        //判断末尾是否已添加校验和数据，如未添加则添加
+        int pos = data.size() - 4;
+        uint32_t cr = uint32_t(data[pos]) |
+                (uint32_t(data[pos+1]) << 8) |
+                (uint32_t(data[pos+2]) << 16) |
+                (uint32_t(data[pos+3]) << 24);
+        uint32_t cc = calcCrc32(
+            reinterpret_cast<uint8_t*>(data.data()), pos);
+        if (cr == cc)
+        {
+            info("[OTA] OTA file data has been decrypted");
+        }
+        else
+        {
+            info("[OTA] OTA file data is not decrypted");
+            cc = calcCrc32(
+                reinterpret_cast<uint8_t*>(data.data()), data.size());
+            data.push_back(uint8_t(cc & 0xFF));
+            data.push_back(uint8_t(cc >> 8 & 0xFF));
+            data.push_back(uint8_t(cc >> 16 & 0xFF));
+            data.push_back(uint8_t(cc >> 24 & 0xFF));
+        }
+    }
 
     int count = moduleCount; // 雷达数量
     for (int i = 0; i < count; ++i)
