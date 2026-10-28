@@ -294,6 +294,7 @@ serial::list_ports()
   search_globs.push_back("/dev/ttyUSB*");
   search_globs.push_back("/dev/tty.*");
   search_globs.push_back("/dev/cu.*");
+  search_globs.push_back("/dev/ttyTHS*");
 
   vector<string> devices_found = glob(search_globs);
 
