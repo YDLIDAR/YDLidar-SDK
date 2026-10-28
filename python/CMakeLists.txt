@@ -46,10 +46,14 @@ set_property(TEST ydlidar_py_test PROPERTY ENVIRONMENT
              "PYTHONPATH=$ENV{PYTHONPATH}:${PROJECT_BINARY_DIR}/python")
 
 execute_process(COMMAND "${PYTHON_EXECUTABLE}" -c "if True:
-                  from distutils import sysconfig as sc;
-                  print(sc.get_python_lib(prefix='', plat_specific=True))"
+                                    import sysconfig;
+                                    print(sysconfig.get_paths().get('platlib', ''))"
                 OUTPUT_VARIABLE PYTHON_SITE
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(NOT PYTHON_SITE)
+    message(WARNING "Python site-packages path not found; using CMAKE_INSTALL_PREFIX")
+    set(PYTHON_SITE "${CMAKE_INSTALL_PREFIX}/lib")
+endif()
 # Install the wrapper.
 install(TARGETS _${MODULE_NAME} DESTINATION ${PYTHON_SITE})
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${MODULE_NAME}.py" DESTINATION ${PYTHON_SITE})

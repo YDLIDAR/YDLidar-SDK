@@ -5,6 +5,8 @@ add_to_ydlidar_sources(${SRCS})
 
 IF (WIN32)
 add_to_ydlidar_libraries(setupapi ws2_32)
+ELSEIF(APPLE)
+add_to_ydlidar_libraries()
 ELSE()
 add_to_ydlidar_libraries(rt)
 ENDIF()                                            

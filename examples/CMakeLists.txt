@@ -1,7 +1,8 @@
 
 cmake_minimum_required(VERSION 2.8)
 PROJECT(ydlidar_test)
-add_compile_options(-std=c++11) # Use C++11
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #Include directories
 INCLUDE_DIRECTORIES(

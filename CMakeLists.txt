@@ -24,6 +24,10 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
     MESSAGE(STATUS "Current platform: Linux")
 	#Linux add -fPIC
 	add_compile_options(-fPIC)
+ELSEIF (APPLE)
+    MESSAGE(STATUS "Current platform: macOS")
+    add_definitions(-D_DARWIN)
+    add_compile_options(-fPIC)
 ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
     MESSAGE(STATUS "Current platform: Windows")
 	MESSAGE(STATUS "Current compiler: ${CMAKE_CXX_COMPILER_ID}")
@@ -55,13 +59,13 @@ if(COMMAND cmake_policy)
 	cmake_policy(SET CMP0003 NEW) # We don't want to mix relative and absolute paths in linker lib lists.
 	cmake_policy(SET CMP0005 NEW) # Escape definitions (-D) strings
 	if(POLICY CMP0053)
-		cmake_policy(SET CMP0053 OLD) # Simplify variable reference and escape sequence evaluation.
+        cmake_policy(SET CMP0053 NEW) # Simplify variable reference and escape sequence evaluation.
 	endif()
 	if(POLICY CMP0037)
-		cmake_policy(SET CMP0037 OLD)  # Allow defining target "test"
+        cmake_policy(SET CMP0037 NEW)  # Allow defining target "test"
 	endif()
 	if(POLICY CMP0043)
-		cmake_policy(SET CMP0043 OLD) #  Ignore COMPILE_DEFINITIONS_<Config> properties.
+        cmake_policy(SET CMP0043 NEW) #  Ignore COMPILE_DEFINITIONS_<Config> properties.
 	endif()
 endif()
 
@@ -71,12 +75,16 @@ option( BUILD_SHARED_LIBS "Build shared libraries." OFF)
 option( BUILD_EXAMPLES "Build Example." ON)
 option( BUILD_CSHARP "Build CSharp." OFF)
 option( BUILD_TEST "Build Test." OFF)
+option( BUILD_PYTHON "Build Python API." OFF)
+option( BUILD_INSTALL_PACKAGE "Enable install package export rules." OFF)
 
 ############################################################################
 # find package
+if(BUILD_PYTHON)
 find_package(SWIG)
 find_package(PythonInterp)
 find_package(PythonLibs)
+endif()
 find_package(GTest)
 
 ############################################################################
@@ -140,7 +148,7 @@ enable_testing()
 
 ############################################################################
 # build ydlidar sdk python version
-if(${SWIG_FOUND} AND ${PYTHONLIBS_FOUND})
+if(BUILD_PYTHON AND ${SWIG_FOUND} AND ${PYTHONLIBS_FOUND})
     message(STATUS "build python API....")
     include_directories(python)
     add_subdirectory(python)
@@ -173,16 +181,18 @@ list(APPEND SDK_INCS ${CMAKE_INSTALL_PREFIX}/include/src
 ###############################################################################
 # install package
 string(TOUPPER ${PROJECT_NAME} PROJECT_PKG_NAME)
-install_package(
-    PKG_NAME ${PROJECT_PKG_NAME}
-    LIB_NAME ${PROJECT_NAME}
-    VERSION ${YDLIDAR_SDK_VERSION}
-    INSTALL_HEADERS ${SDK_HEADERS}
-    INSTALL_GENERATED_HEADERS ${GENERATED_HEADERS}
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/include
-    INCLUDE_DIRS ${SDK_INCS}
-    LINK_LIBS ${SDK_LIBS}
-    )
+if(BUILD_INSTALL_PACKAGE)
+    install_package(
+        PKG_NAME ${PROJECT_PKG_NAME}
+        LIB_NAME ${PROJECT_NAME}
+        VERSION ${YDLIDAR_SDK_VERSION}
+        INSTALL_HEADERS ${SDK_HEADERS}
+        INSTALL_GENERATED_HEADERS ${GENERATED_HEADERS}
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+        INCLUDE_DIRS ${SDK_INCS}
+        LINK_LIBS ${SDK_LIBS}
+        )
+endif()
 #########################################################################################
 # install doc
 install(DIRECTORY cmake/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_PKG_NAME})

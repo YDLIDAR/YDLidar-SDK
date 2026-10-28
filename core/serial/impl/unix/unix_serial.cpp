@@ -19,7 +19,9 @@
 #include <poll.h>
 #include <sys/utsname.h>
 
+#if defined(__linux__)
 #include <asm/ioctls.h>
+#endif
 
 #if defined(__linux__) &&!defined(__ANDROID__)
 # include <linux/serial.h>
@@ -1366,6 +1368,10 @@ bool Serial::SerialImpl::setStandardBaudRate(speed_t baudrate) {
 
 
 bool Serial::SerialImpl::setCustomBaudRate(unsigned long baudrate) {
+#if !defined(__linux__)
+  (void)baudrate;
+  return false;
+#else
   struct termios2 tio2;
 
   if (::ioctl(fd_, TCGETS2, &tio2) != -1) {
@@ -1420,6 +1426,7 @@ bool Serial::SerialImpl::setCustomBaudRate(unsigned long baudrate) {
   }
 
   return setStandardBaudRate(B38400);
+#endif
 }
 
 
