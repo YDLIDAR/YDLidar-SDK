@@ -99,6 +99,10 @@ endif()
 #############################################################################
 # PARSE libraries
 include(common/ydlidar_parse)
+if(APPLE)
+    list(REMOVE_ITEM SDK_LIBS rt)
+endif()
+
 include_directories(${SDK_INCS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 

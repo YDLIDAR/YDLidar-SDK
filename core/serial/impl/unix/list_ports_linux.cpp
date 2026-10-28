@@ -329,3 +329,23 @@ serial::list_ports()
 }
 
 #endif // defined(__linux__)
+
+#if defined(__APPLE__) || defined(_DARWIN)
+
+#include "core/serial/serial.h"
+#include <vector>
+
+namespace ydlidar {
+namespace core {
+namespace serial {
+
+std::vector<PortInfo> list_ports() {
+    std::vector<PortInfo> ports;
+    return ports;
+}
+
+} // namespace serial
+} // namespace core
+} // namespace ydlidar
+
+#endif

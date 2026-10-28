@@ -42,6 +42,10 @@
  *----------------------------------------------------------------------------*/
 #include "ActiveSocket.h"
 
+#ifndef GETHOSTBYNAME
+#define GETHOSTBYNAME gethostbyname
+#endif
+
 using namespace ydlidar;
 using namespace ydlidar::core;
 using namespace ydlidar::core::network;

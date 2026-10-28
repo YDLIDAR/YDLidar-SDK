@@ -94,13 +94,19 @@ class Locker {
 
 #if !defined(__ANDROID__)
 
-      switch (pthread_mutex_timedlock(&_lock, &wait_time)) {
-        case 0:
-          return LOCK_OK;
+#if defined(__APPLE__) || defined(_DARWIN)
+    if (pthread_mutex_lock(&_lock) == 0) {
+    return LOCK_OK;
+    }
+#else
+    switch (pthread_mutex_timedlock(&_lock, &wait_time)) {
+    case 0:
+        return LOCK_OK;
 
-        case ETIMEDOUT:
-          return LOCK_TIMEOUT;
-      }
+    case ETIMEDOUT:
+        return LOCK_TIMEOUT;
+    }
+#endif
 
 #else
       struct timeval timenow;
@@ -212,7 +218,12 @@ class Event {
       fflush(stderr);
     }
 
+#if !defined(__APPLE__) && !defined(_DARWIN)
     ret = pthread_condattr_setclock(&_cond_cattr, CLOCK_MONOTONIC);
+    if (ret != 0) {
+      return ;
+    }
+#endif
     pthread_mutex_init(&_cond_locker, NULL);
     ret =  pthread_cond_init(&_cond_var, &_cond_cattr);
 #endif
