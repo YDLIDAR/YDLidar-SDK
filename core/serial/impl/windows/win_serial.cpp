@@ -698,7 +698,13 @@ size_t Serial::SerialImpl::write(const uint8_t *data, size_t length) {
 
   if (!::WriteFile(fd_, data, static_cast<DWORD>(length), &bytes_written,
                    &writeCompletionOverlapped)) {
-    return 0;
+    // Overlapped port: the write may complete asynchronously (common with
+    // newer CP210x drivers). Wait for it instead of treating it as a failure.
+    if (::GetLastError() != ERROR_IO_PENDING ||
+        !::GetOverlappedResult(fd_, &writeCompletionOverlapped,
+                               &bytes_written, TRUE)) {
+      return 0;
+    }
   }
 
   return (int)(bytes_written);
