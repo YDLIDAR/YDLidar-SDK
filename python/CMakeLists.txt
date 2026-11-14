@@ -46,8 +46,8 @@ set_property(TEST ydlidar_py_test PROPERTY ENVIRONMENT
              "PYTHONPATH=$ENV{PYTHONPATH}:${PROJECT_BINARY_DIR}/python")
 
 execute_process(COMMAND "${PYTHON_EXECUTABLE}" -c "if True:
-                  from distutils import sysconfig as sc;
-                  print(sc.get_python_lib(prefix='', plat_specific=True))"
+                  import os, sys, sysconfig;
+                  print(os.path.relpath(sysconfig.get_path('platlib'), sys.prefix).replace(os.sep, '/'))"
                 OUTPUT_VARIABLE PYTHON_SITE
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 # Install the wrapper.
