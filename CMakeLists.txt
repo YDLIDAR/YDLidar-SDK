@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 project(ydlidar_sdk C CXX)
-
 #########################################################
 # version
 set(YDLIDAR_SDK_VERSION_MAJOR 1)
@@ -52,16 +51,16 @@ include(install_package)
 #############################################################################
 # Policy CMP0023 allows to mix old and new interfaces of target_link_libraries
 if(COMMAND cmake_policy)
-	cmake_policy(SET CMP0003 NEW) # We don't want to mix relative and absolute paths in linker lib lists.
-	cmake_policy(SET CMP0005 NEW) # Escape definitions (-D) strings
+	cmake_policy(SET CMP0003 NEW)
+	cmake_policy(SET CMP0005 NEW)
 	if(POLICY CMP0053)
-		cmake_policy(SET CMP0053 OLD) # Simplify variable reference and escape sequence evaluation.
+		cmake_policy(SET CMP0053 NEW)
 	endif()
 	if(POLICY CMP0037)
-		cmake_policy(SET CMP0037 OLD)  # Allow defining target "test"
+		cmake_policy(SET CMP0037 NEW)
 	endif()
 	if(POLICY CMP0043)
-		cmake_policy(SET CMP0043 OLD) #  Ignore COMPILE_DEFINITIONS_<Config> properties.
+		cmake_policy(SET CMP0043 NEW)
 	endif()
 endif()
 
@@ -140,7 +139,7 @@ enable_testing()
 
 ############################################################################
 # build ydlidar sdk python version
-if(${SWIG_FOUND} AND ${PYTHONLIBS_FOUND})
+if(SWIG_FOUND AND PYTHONLIBS_FOUND)
     message(STATUS "build python API....")
     include_directories(python)
     add_subdirectory(python)
